@@ -1,12 +1,13 @@
-========================
-Zabbix Docker Monitoring
-========================
+========================================
+Zabbix Docker Monitoring - alpha version
+========================================
 
 About
 =====
 
-This is alpha version. I started it, because Zabbix don't support container monitoring.
+This is alpha version. I started it, because Zabbix doesn't support container monitoring.
 Project is tested with Zabbix 2.2 and Docker 1.1. It should works also with another Zabbix/Docker versions.
+Please feel free to test and comment it.
 
 What is done
 ============
