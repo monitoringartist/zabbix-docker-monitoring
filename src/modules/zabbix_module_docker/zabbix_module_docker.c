@@ -83,7 +83,7 @@ void    zbx_module_item_timeout(int timeout)
  * Purpose: returns list of item keys supported by the module                 *
  *                                                                            *
  * Return value: list of item keys                                            *
-*                                                                            *
+ *                                                                            *
  ******************************************************************************/
 ZBX_METRIC      *zbx_module_item_list()
 {
@@ -91,6 +91,15 @@ ZBX_METRIC      *zbx_module_item_list()
         return keys;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_up                                             *
+ *                                                                            *
+ * Purpose: check if container is running                                     *
+ *                                                                            *
+ * Return value: 1 - is running, 0 - is not running                           *
+ *                                                                            *
+ ******************************************************************************/
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_up()");
@@ -103,6 +112,12 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
                 return SYSINFO_RET_FAIL;
         }
+        
+        if (stat_dir == NULL) {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no stat directory.");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory."));
+                return SYSINFO_RET_OK;
+        }        
 
         container = get_rparam(request, 0);
         char    *stat_file = "/cpuacct.stat";
@@ -128,6 +143,17 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         return SYSINFO_RET_OK;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_dev                                            *
+ *                                                                            *
+ * Purpose: container device blkio metrics                                    *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
 int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         // documentation https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
@@ -141,6 +167,12 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
                 return SYSINFO_RET_FAIL;
         }
+        
+        if (stat_dir == NULL) {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.dev metrics are not available at the moment - no stat directory.");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev metrics are not available at the moment - no stat directory."));
+                return SYSINFO_RET_OK;
+        }        
 
         container = get_rparam(request, 0);
         metric = get_rparam(request, 1);
@@ -165,7 +197,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         char    line[MAX_STRING_LEN];
         char    *metric2 = malloc(strlen(metric)+1);
-       memcpy(metric2, metric, strlen(metric));
+        memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
         zbx_uint64_t    value = 0;
         zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in blkio file", metric);
@@ -192,6 +224,17 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_mem                                            *
+ *                                                                            *
+ * Purpose: container memory metrics                                          *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
 int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         // documentation https://www.kernel.org/doc/Documentation/cgroups/memory.txt
@@ -205,6 +248,12 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
                 return SYSINFO_RET_FAIL;
         }
+        
+        if (stat_dir == NULL) {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory.");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory."));
+                return SYSINFO_RET_OK;
+        }        
 
         container = get_rparam(request, 0);
         metric = get_rparam(request, 1);
@@ -255,6 +304,17 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_cpu                                            *
+ *                                                                            *
+ * Purpose: container CPU metrics                                             *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         // documentation https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
@@ -269,6 +329,17 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         return SYSINFO_RET_OK;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_net                                            *
+ *                                                                            *
+ * Purpose: container network metrics                                         *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
 int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_net()");
@@ -278,10 +349,23 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
         return SYSINFO_RET_OK;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_discovery                                      *
+ *                                                                            *
+ * Purpose: container discovery                                               *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         #include "zbxjson.h"
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_discovery()");
+        zbx_docker_stat_detect();
+                
         char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container;
         FILE            *f;
         DIR             *dir;
@@ -289,7 +373,7 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
         char            *file = NULL;
         struct zbx_json j;
         struct dirent   *d;
-       char    *cgroup = "cpuacct/";
+        char    *cgroup = "cpuacct/";
         size_t  ddir_size = strlen(base_dir) + strlen(cgroup) + strlen(stat_dir) + 2;
         char    *ddir = malloc(ddir_size);
         zbx_strlcpy(ddir, base_dir, ddir_size);
@@ -359,21 +443,41 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
 int     zbx_module_init()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_init()");
+        zbx_docker_stat_detect();
+        return ZBX_MODULE_OK;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_docker_stat_detect                                           *
+ *                                                                            *
+ * Purpose: it should find metric folder - it depends on docker version       *
+ *            or execution environment                                        *
+ *                                                                            *
+ * Return value: ???                                                          *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_docker_stat_detect()
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_stat_detect()");
         // detect the right stat docker directory
         struct stat s;
+        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/docker/");
         int err = stat("/sys/fs/cgroup/cpuacct/docker/", &s);
         if(0 != err) {
                 // try another stat directory (maybe it's older docker version)
-                int err = stat("/sys/fs/cgroup/cpuacct/libvirt/lxc/", &s);
+                zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/lxc/");
+                int err = stat("/sys/fs/cgroup/cpuacct/lxc/", &s);
                 if(0 != err) {
                         // try another stat directory (maybe it's another older docker version)
-                        int err = stat("/sys/fs/cgroup/cpuacct/lxc/", &s);
+                        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/libvirt/lxc/");
+                        int err = stat("/sys/fs/cgroup/cpuacct/libvirt/lxc/", &s);
                         if(0 != err) {
-                                zabbix_log(LOG_LEVEL_ERR, "Can't detect docker stat directory");
-                                return ZBX_MODULE_FAIL;
+                                zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
+                                //return ZBX_MODULE_FAIL;
                         } else {
                                stat_dir = "lxc/";
-                                zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
+                               zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
                         }
                 } else {
                         stat_dir = "libvirt/lxc/";
@@ -385,11 +489,12 @@ int     zbx_module_init()
                         zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
                 } else {
                         zabbix_log(LOG_LEVEL_ERR, "/sys/fs/cgroup/cpuacct/docker/ is not directory");
-                        return ZBX_MODULE_FAIL;
+                        //return ZBX_MODULE_FAIL;
                 }
         }
-        return ZBX_MODULE_OK;
+        return 0;
 }
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_module_uninit                                                *
