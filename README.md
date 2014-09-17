@@ -9,6 +9,13 @@ This is alpha version. I started it, because Zabbix doesn't support container mo
 Project is tested with Zabbix 2.2 and Docker 1.1. It should works also with another Zabbix/Docker versions.
 Please feel free to test and comment it.
 
+Build
+=====
+
+[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)
+[Download latest build](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
+
+
 What is done
 ============
 
