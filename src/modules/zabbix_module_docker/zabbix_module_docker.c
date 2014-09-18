@@ -211,7 +211,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
                         continue;
                 }
                 // production severity only DEBUG
-                zabbix_log(LOG_LEVEL_ERR, "Container: %s; metric: %s; value: %d", container, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -291,7 +291,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
                         continue;
                 }
                 // production severity only DEBUG
-                zabbix_log(LOG_LEVEL_ERR, "Container: %s; metric: %s; value: %d", container, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;

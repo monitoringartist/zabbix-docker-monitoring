@@ -29,7 +29,7 @@
                     <snmp_community/>
                     <snmp_oid/>
                     <key>docker.discovery</key>
-                    <delay>10</delay>
+                    <delay>300</delay>
                     <status>0</status>
                     <allowed_hosts/>
                     <snmpv3_contextname/>

@@ -41,5 +41,5 @@ https://www.zabbix.com/documentation/2.2/manual/config/items/loadablemodules
 Links
 =====
 
-Author: Jan Garaj - www.jangaraj.com
-Zabbix: www.zabbix.com
+- Author: Jan Garaj - www.jangaraj.com
+- Zabbix: www.zabbix.com
