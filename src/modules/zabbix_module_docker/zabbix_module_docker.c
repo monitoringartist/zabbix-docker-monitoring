@@ -25,7 +25,7 @@
 
 /* the variable keeps timeout setting for item processing */
 static int      item_timeout = 0;
-const char      *stat_dir;
+const char      *stat_dir = NULL;
 char    *base_dir = "/sys/fs/cgroup/";
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
