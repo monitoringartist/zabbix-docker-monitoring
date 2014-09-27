@@ -364,14 +364,23 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
 {
         #include "zbxjson.h"
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_discovery()");
-        zbx_docker_stat_detect();
+        
+        struct zbx_json j;
+        if (stat_dir == NULL && zbx_docker_stat_detect() == SYSINFO_RET_FAIL) {
+            zabbix_log(LOG_LEVEL_DEBUG, "docker.discovery is not available at the moment - no stat directory - empty discovery");
+            zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
+            zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+            zbx_json_close(&j);
+            SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
+            zbx_json_free(&j);
+            return SYSINFO_RET_OK;
+        }        
                 
         char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container;
         FILE            *f;
         DIR             *dir;
         zbx_stat_t      sb;
         char            *file = NULL;
-        struct zbx_json j;
         struct dirent   *d;
         char    *cgroup = "cpuacct/";
         size_t  ddir_size = strlen(base_dir) + strlen(cgroup) + strlen(stat_dir) + 2;
@@ -401,8 +410,7 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
 
                 if (0 != zbx_stat(file, &sb) || 0 == S_ISDIR(sb.st_mode))
                         continue;
-
-
+        
                 zbx_json_addobject(&j, NULL);
                 zbx_json_addstring(&j, "{#FCONTAINERID}", d->d_name, ZBX_JSON_TYPE_STRING);
                 zbx_strlcpy(scontainerid, d->d_name, 13);
