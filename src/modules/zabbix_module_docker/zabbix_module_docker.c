@@ -462,7 +462,8 @@ int     zbx_module_init()
  * Purpose: it should find metric folder - it depends on docker version       *
  *            or execution environment                                        *
  *                                                                            *
- * Return value: ???                                                          *
+ * Return value: SYSINFO_RET_FAIL - stat folder was not found                 *
+ *               SYSINFO_RET_OK - stat folder was found                       *
  *                                                                            *
  ******************************************************************************/
 int     zbx_docker_stat_detect()
@@ -482,7 +483,7 @@ int     zbx_docker_stat_detect()
                         int err = stat("/sys/fs/cgroup/cpuacct/libvirt/lxc/", &s);
                         if(0 != err) {
                                 zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
-                                //return ZBX_MODULE_FAIL;
+                                return SYSINFO_RET_FAIL;
                         } else {
                                stat_dir = "lxc/";
                                zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
@@ -497,10 +498,10 @@ int     zbx_docker_stat_detect()
                         zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
                 } else {
                         zabbix_log(LOG_LEVEL_ERR, "/sys/fs/cgroup/cpuacct/docker/ is not directory");
-                        //return ZBX_MODULE_FAIL;
+                        return SYSINFO_RET_FAIL;
                 }
         }
-        return 0;
+        return SYSINFO_RET_OK;
 }
 
 /******************************************************************************
