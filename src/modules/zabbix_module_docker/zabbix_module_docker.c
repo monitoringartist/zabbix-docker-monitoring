@@ -469,37 +469,45 @@ int     zbx_module_init()
 int     zbx_docker_stat_detect()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_stat_detect()");
-        // detect the right stat docker directory
+        // detect the stat docker directory (CentOS 7)
         struct stat s;
-        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/docker/");
-        int err = stat("/sys/fs/cgroup/cpuacct/docker/", &s);
+        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/system.slice/");
+        int err = stat("/sys/fs/cgroup/cpuacct/system.slice/", &s);
         if(0 != err) {
-                // try another stat directory (maybe it's older docker version)
-                zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/lxc/");
-                int err = stat("/sys/fs/cgroup/cpuacct/lxc/", &s);
+                // detect the older stat docker directory        
+                zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/docker/");
+                int err = stat("/sys/fs/cgroup/cpuacct/docker/", &s);
                 if(0 != err) {
-                        // try another stat directory (maybe it's another older docker version)
-                        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/libvirt/lxc/");
-                        int err = stat("/sys/fs/cgroup/cpuacct/libvirt/lxc/", &s);
+                        // try another stat directory (maybe it's older docker version)
+                        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/lxc/");
+                        int err = stat("/sys/fs/cgroup/cpuacct/lxc/", &s);
                         if(0 != err) {
-                                zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
-                                return SYSINFO_RET_FAIL;
+                                // try another stat directory (maybe it's another older docker version)
+                                zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/libvirt/lxc/");
+                                int err = stat("/sys/fs/cgroup/cpuacct/libvirt/lxc/", &s);
+                                if(0 != err) {
+                                        zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
+                                        return SYSINFO_RET_FAIL;
+                                } else {
+                                       stat_dir = "lxc/";
+                                       zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
+                                }
                         } else {
-                               stat_dir = "lxc/";
-                               zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
+                                stat_dir = "libvirt/lxc/";
+                                zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
                         }
                 } else {
-                        stat_dir = "libvirt/lxc/";
+                        stat_dir = "docker/";
                         zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
                 }
         } else {
                 if(S_ISDIR(s.st_mode)) {
-                        stat_dir = "docker/";
+                        stat_dir = "system.slice/";
                         zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
                 } else {
-                        zabbix_log(LOG_LEVEL_ERR, "/sys/fs/cgroup/cpuacct/docker/ is not directory");
+                        zabbix_log(LOG_LEVEL_ERR, "/sys/fs/cgroup/cpuacct/system.slice/ is not directory");
                         return SYSINFO_RET_FAIL;
-                }
+                }   
         }
         return SYSINFO_RET_OK;
 }
