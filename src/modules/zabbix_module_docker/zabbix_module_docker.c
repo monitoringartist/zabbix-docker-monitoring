@@ -26,7 +26,6 @@
 /* the variable keeps timeout setting for item processing */
 static int      item_timeout = 0;
 char      *stat_dir;
-char    *base_dir = "/sys/fs/cgroup/";
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -122,9 +121,8 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         container = get_rparam(request, 0);
         char    *stat_file = "/cpuacct.stat";
         char    *cgroup = "cpuacct/";
-        size_t  filename_size = strlen(base_dir) + strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
         char    *filename = malloc(filename_size);
-        zbx_strlcpy(filename, base_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, stat_dir, filename_size);
         zbx_strlcat(filename, container, filename_size);
@@ -179,9 +177,8 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         // TODO stat file depends on metric - create map metric->stat_file
         char    *stat_file = "/blkio.throttle.read_iops_device";
         char    *cgroup = "blkio/";
-        size_t  filename_size = strlen(base_dir) + strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
         char    *filename = malloc(filename_size);
-        zbx_strlcpy(filename, base_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, stat_dir, filename_size);
         zbx_strlcat(filename, container, filename_size);
@@ -259,9 +256,8 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         metric = get_rparam(request, 1);
         char    *stat_file = "/memory.stat";
         char    *cgroup = "memory/";
-        size_t  filename_size = strlen(base_dir) + strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
+        size_t  filename_size =  strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
         char    *filename = malloc(filename_size);
-        zbx_strlcpy(filename, base_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, stat_dir, filename_size);
         zbx_strlcat(filename, container, filename_size);
@@ -383,12 +379,10 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
         char            *file = NULL;
         struct dirent   *d;
         char    *cgroup = "cpuacct/";
-        size_t  ddir_size = strlen(base_dir) + strlen(cgroup) + strlen(stat_dir) + 2;
+        size_t  ddir_size = strlen(cgroup) + strlen(stat_dir) + 2;
         char    *ddir = malloc(ddir_size);
-        zbx_strlcpy(ddir, base_dir, ddir_size);
         zbx_strlcat(ddir, cgroup, ddir_size);
         zbx_strlcat(ddir, stat_dir, ddir_size);
-
 
         if (NULL == (dir = opendir(ddir)))
         {
@@ -466,50 +460,32 @@ int     zbx_module_init()
  *               SYSINFO_RET_OK - stat folder was found                       *
  *                                                                            *
  ******************************************************************************/
-int     zbx_docker_stat_detect()
+int zbx_docker_stat_detect() 
 {
-        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_stat_detect()");
-        // detect the stat docker directory (CentOS 7)
-        struct stat s;
-        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/system.slice/");
-        int err = stat("/sys/fs/cgroup/cpuacct/system.slice/", &s);
-        if(0 != err) {
-                // detect the older stat docker directory        
-                zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/docker/");
-                int err = stat("/sys/fs/cgroup/cpuacct/docker/", &s);
-                if(0 != err) {
-                        // try another stat directory (maybe it's older docker version)
-                        zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/lxc/");
-                        int err = stat("/sys/fs/cgroup/cpuacct/lxc/", &s);
-                        if(0 != err) {
-                                // try another stat directory (maybe it's another older docker version)
-                                zabbix_log(LOG_LEVEL_DEBUG, "Test: /sys/fs/cgroup/cpuacct/libvirt/lxc/");
-                                int err = stat("/sys/fs/cgroup/cpuacct/libvirt/lxc/", &s);
-                                if(0 != err) {
-                                        zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
-                                        return SYSINFO_RET_FAIL;
-                                } else {
-                                       stat_dir = "lxc/";
-                                       zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
-                                }
-                        } else {
-                                stat_dir = "libvirt/lxc/";
-                                zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
-                        }
-                } else {
-                        stat_dir = "docker/";
-                        zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
-                }
-        } else {
-                if(S_ISDIR(s.st_mode)) {
-                        stat_dir = "system.slice/";
-                        zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
-                } else {
-                        zabbix_log(LOG_LEVEL_ERR, "/sys/fs/cgroup/cpuacct/system.slice/ is not directory");
-                        return SYSINFO_RET_FAIL;
-                }   
+    zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_stat_detect()");
+
+    char path[512];
+    char *temp;
+    FILE *fp;
+
+    if((fp = fopen("/proc/mounts", "r")) == NULL) {
+        zabbix_log(LOG_LEVEL_DEBUG, "Cannot open /proc/mounts: %s", zbx_strerror(errno));
+        return SYSINFO_RET_FAIL;
+    }
+    
+    while(fgets(path, 512, fp) != NULL) {
+        if((strstr(path, "/cpuacct cgroup")) != NULL) {
+            // found line e.g. cgroup /cgroup/cpuacct cgroup rw,relatime,cpuacct 0 0
+            temp = string_replace(path, "cgroup ", "");
+            temp = string_replace(temp, strstr(temp, " "), "");
+            stat_dir = string_replace(temp, "cpuacct", "");
+            zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
+            return SYSINFO_RET_OK;
         }
-        return SYSINFO_RET_OK;
+    }
+    
+    zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
+    return SYSINFO_RET_FAIL;
 }
 
 /******************************************************************************
