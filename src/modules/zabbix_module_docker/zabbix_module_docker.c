@@ -1,6 +1,6 @@
 /*
-** Zabbix module for docker container monitoring - v 0.0.2
-** Copyright (C) 2001-2014 Jan Garaj - www.jangaraj.com
+** Zabbix module for docker container monitoring - v 0.0.3
+** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 /* the variable keeps timeout setting for item processing */
 static int      item_timeout = 0;
-char      *stat_dir;
+char      *stat_dir, *driver;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -112,7 +112,7 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
         
-        if (stat_dir == NULL) {
+        if (stat_dir == NULL || driver == NULL) {
                 zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no stat directory.");
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory."));
                 return SYSINFO_RET_OK;
@@ -121,10 +121,11 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         container = get_rparam(request, 0);
         char    *stat_file = "/cpuacct.stat";
         char    *cgroup = "cpuacct/";
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
         char    *filename = malloc(filename_size);
+        zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
-        zbx_strlcat(filename, stat_dir, filename_size);
+        zbx_strlcat(filename, driver, filename_size);
         zbx_strlcat(filename, container, filename_size);
         zbx_strlcat(filename, stat_file, filename_size);
         zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
@@ -166,7 +167,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
         
-        if (stat_dir == NULL) {
+        if (stat_dir == NULL || driver == NULL) {
                 zabbix_log(LOG_LEVEL_DEBUG, "docker.dev metrics are not available at the moment - no stat directory.");
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev metrics are not available at the moment - no stat directory."));
                 return SYSINFO_RET_OK;
@@ -177,10 +178,11 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         // TODO stat file depends on metric - create map metric->stat_file
         char    *stat_file = "/blkio.throttle.read_iops_device";
         char    *cgroup = "blkio/";
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
         char    *filename = malloc(filename_size);
+        zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
-        zbx_strlcat(filename, stat_dir, filename_size);
+        zbx_strlcat(filename, driver, filename_size);
         zbx_strlcat(filename, container, filename_size);
         zbx_strlcat(filename, stat_file, filename_size);
         zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
@@ -202,12 +204,10 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 if (0 != strncmp(line, metric2, strlen(metric2)))
                         continue;
-                // aaa
                 if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value)) {
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
-                // production severity only DEBUG
                 zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
@@ -246,9 +246,9 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
         
-        if (stat_dir == NULL) {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory.");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory."));
+        if (stat_dir == NULL || driver == NULL) {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.mem metrics are not available at the moment - no stat directory.");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem metrics are not available at the moment - no stat directory."));
                 return SYSINFO_RET_OK;
         }        
 
@@ -256,10 +256,11 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         metric = get_rparam(request, 1);
         char    *stat_file = "/memory.stat";
         char    *cgroup = "memory/";
-        size_t  filename_size =  strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(stat_file) + 2;
+        size_t  filename_size =  strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
         char    *filename = malloc(filename_size);
+        zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
-        zbx_strlcat(filename, stat_dir, filename_size);
+        zbx_strlcat(filename, driver, filename_size);        
         zbx_strlcat(filename, container, filename_size);
         zbx_strlcat(filename, stat_file, filename_size);
         zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
@@ -281,12 +282,10 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 if (0 != strncmp(line, metric2, strlen(metric2)))
                         continue;
-                // aaa
                 if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value)) {
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
-                // production severity only DEBUG
                 zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
@@ -318,11 +317,68 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         // TODO
         // use shared memory for "global" cpu variables - because method can be executed in different agent workers
         // use code libs/zbxsysinfo/linux/cpu.c for parsing /proc/stat
-        // use similar code for container cpu stat
-        // /sys/fs/cgroup/cpuacct/docker/<container_id>/cpuacct.stat
-        zabbix_log(LOG_LEVEL_ERR, "docker.cpu metrics are not implemented.");
-        SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not implemented."));
-        return SYSINFO_RET_OK;
+        
+        char    *container, *metric;
+        int     ret = SYSINFO_RET_FAIL;
+
+        if (2 != request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                return SYSINFO_RET_FAIL;
+        }
+        
+        if (stat_dir == NULL || driver == NULL) {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory.");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory."));
+                return SYSINFO_RET_OK;
+        }        
+
+        container = get_rparam(request, 0);
+        metric = get_rparam(request, 1);
+        char    *stat_file = "/cpuacct.stat";
+        char    *cgroup = "cpuacct/";
+        size_t  filename_size =  strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+        char    *filename = malloc(filename_size);
+        zbx_strlcpy(filename, stat_dir, filename_size);
+        zbx_strlcat(filename, cgroup, filename_size);
+        zbx_strlcat(filename, driver, filename_size);        
+        zbx_strlcat(filename, container, filename_size);
+        zbx_strlcat(filename, stat_file, filename_size);
+        zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
+        FILE    *file;
+        if (NULL == (file = fopen(filename, "r")))
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Can't open docker container metric file: '%s'", filename);
+                SET_MSG_RESULT(result, strdup("Can't open docker container memory.stat file"));
+                return SYSINFO_RET_FAIL;
+        }
+
+        char    line[MAX_STRING_LEN];
+        char    *metric2 = malloc(strlen(metric)+1);
+        memcpy(metric2, metric, strlen(metric));
+        memcpy(metric2 + strlen(metric), " ", 2);
+        zbx_uint64_t    value = 0;
+        zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in memory.stat file", metric);
+        while (NULL != fgets(line, sizeof(line), file))
+        {
+                if (0 != strncmp(line, metric2, strlen(metric2)))
+                        continue;
+                if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value)) {
+                        zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
+                        continue;
+                }
+                zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
+                SET_UI64_RESULT(result, value);
+                ret = SYSINFO_RET_OK;
+                break;
+        }
+        zbx_fclose(file);
+
+        if (SYSINFO_RET_FAIL == ret)
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in docker container cpuacct.stat file."));
+
+        return ret;        
 }
 
 /******************************************************************************
@@ -371,6 +427,9 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
             zbx_json_free(&j);
             return SYSINFO_RET_OK;
         }        
+        
+        // TODO if zabbix has root permission, we can read human names of containers
+        // https://docs.docker.com/reference/api/docker_remote_api/
                 
         char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container;
         FILE            *f;
@@ -379,14 +438,16 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
         char            *file = NULL;
         struct dirent   *d;
         char    *cgroup = "cpuacct/";
-        size_t  ddir_size = strlen(cgroup) + strlen(stat_dir) + 2;
+        size_t  ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(driver) + 2;
         char    *ddir = malloc(ddir_size);
+        zbx_strlcpy(ddir, stat_dir, ddir_size);
         zbx_strlcat(ddir, cgroup, ddir_size);
-        zbx_strlcat(ddir, stat_dir, ddir_size);
+        zbx_strlcat(ddir, driver, ddir_size);
 
         if (NULL == (dir = opendir(ddir)))
         {
-                zbx_error("%s: %s\n", ddir, zbx_strerror(errno));
+                zabbix_log(LOG_LEVEL_WARNING, "%s: %s", ddir, zbx_strerror(errno));
+                return SYSINFO_RET_FAIL;
         }
 
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
@@ -464,12 +525,19 @@ int zbx_docker_stat_detect()
 {
     zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_stat_detect()");
 
+    char *drivers[] = {
+        "docker/",        // exec driver native: docker -d -e native
+        "system.slice/",  // ???    
+        "lxc/",           // exec driver lxc: docker -d -e lxc
+        ""
+    }, **tdriver;
     char path[512];
     char *temp;
     FILE *fp;
+    DIR  *dir;
 
     if((fp = fopen("/proc/mounts", "r")) == NULL) {
-        zabbix_log(LOG_LEVEL_DEBUG, "Cannot open /proc/mounts: %s", zbx_strerror(errno));
+        zabbix_log(LOG_LEVEL_WARNING, "Cannot open /proc/mounts: %s", zbx_strerror(errno));
         return SYSINFO_RET_FAIL;
     }
     
@@ -480,10 +548,28 @@ int zbx_docker_stat_detect()
             temp = string_replace(temp, strstr(temp, " "), "");
             stat_dir = string_replace(temp, "cpuacct", "");
             zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
-            return SYSINFO_RET_OK;
+            
+            char *cgroup = "cpuacct/";
+            tdriver = drivers;
+            while (*tdriver != "") {                
+                size_t  ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(*tdriver) + 1;
+                char    *ddir = malloc(ddir_size);
+                zbx_strlcpy(ddir, stat_dir, ddir_size);
+                zbx_strlcat(ddir, cgroup, ddir_size);
+                zbx_strlcat(ddir, *tdriver, ddir_size);                
+                if (NULL != (dir = opendir(ddir)))
+                {
+                    driver = *tdriver;
+                    zabbix_log(LOG_LEVEL_DEBUG, "Detected used docker driver: %s", driver);                    
+                    return SYSINFO_RET_OK; 
+                }
+                *tdriver++;
+                free(ddir);                                
+            }
+            zabbix_log(LOG_LEVEL_DEBUG, "Can't detect used docker driver");            
+            return SYSINFO_RET_FAIL;
         }
-    }
-    
+    }    
     zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
     return SYSINFO_RET_FAIL;
 }
