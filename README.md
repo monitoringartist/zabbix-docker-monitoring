@@ -61,4 +61,4 @@ Output will be binary file zabbix_module_docker.so, which can be loaded by zabbi
 Author
 ======
  
-[Devops Monitoring zExpert](http://www.jangaraj.com), who loves monitoring systems, which start with letter Z. Those are Zabbix and Zenoss. [LinkeIn] (http://uk.linkedin.com/in/jangaraj/).
+[Devops Monitoring zExpert](http://www.jangaraj.com), who loves monitoring systems, which start with letter Z. Those are Zabbix and Zenoss. [LinkedIn] (http://uk.linkedin.com/in/jangaraj/).
