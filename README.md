@@ -34,8 +34,8 @@ Installation
 ============
 
 * Import provided template Zabbix-Template-App-Docker.xml. 
-* Configure your Zabbix agent(s)- load zabbix-module-docker.so
-https://www.zabbix.com/documentation/2.2/manual/config/items/loadablemodules
+* Configure your Zabbix agent(s) - load zabbix-module-docker.so
+https://www.zabbix.com/documentation/2.4/manual/config/items/loadablemodules
 
 
 Compilation
