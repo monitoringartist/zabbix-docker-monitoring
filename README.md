@@ -41,8 +41,8 @@ You have to options, how to get additional Docker permission:
 
 - Add zabbix user to docker group:
 
-    usermod -aG docker zabbix      
-    
+    usermod -aG docker zabbix
+
 Installation
 ============
 
