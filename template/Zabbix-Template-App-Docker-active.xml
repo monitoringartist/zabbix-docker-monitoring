@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-03-06T01:31:09Z</date>
+    <date>2015-03-10T09:13:38Z</date>
     <groups>
         <group>
             <name>Linux servers</name>
@@ -58,7 +58,7 @@
                     <description/>
                     <item_prototypes>
                         <item_prototype>
-                            <name>Container {#SCONTAINERID} is running</name>
+                            <name>Container {#HCONTAINERID} is running</name>
                             <type>7</type>
                             <snmp_community/>
                             <multiplier>0</multiplier>
@@ -105,7 +105,7 @@
                             <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
-                            <name>CPU system time {#SCONTAINERID}</name>
+                            <name>CPU system time {#HCONTAINERID}</name>
                             <type>7</type>
                             <snmp_community/>
                             <multiplier>1</multiplier>
@@ -148,7 +148,7 @@
                             <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
-                            <name>CPU user time {#SCONTAINERID}</name>
+                            <name>CPU user time {#HCONTAINERID}</name>
                             <type>7</type>
                             <snmp_community/>
                             <multiplier>1</multiplier>
@@ -191,7 +191,7 @@
                             <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
-                            <name>Used cache memory on {#SCONTAINERID}</name>
+                            <name>Used cache memory {#HCONTAINERID}</name>
                             <type>7</type>
                             <snmp_community/>
                             <multiplier>0</multiplier>
@@ -234,7 +234,7 @@
                             <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
-                            <name>Used RSS memory on {#SCONTAINERID}</name>
+                            <name>Used RSS memory {#HCONTAINERID}</name>
                             <type>7</type>
                             <snmp_community/>
                             <multiplier>0</multiplier>
@@ -277,7 +277,7 @@
                             <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
-                            <name>Used swap on {#SCONTAINERID}</name>
+                            <name>Used swap {#HCONTAINERID}</name>
                             <type>7</type>
                             <snmp_community/>
                             <multiplier>0</multiplier>
@@ -323,7 +323,7 @@
                     <trigger_prototypes/>
                     <graph_prototypes>
                         <graph_prototype>
-                            <name>CPU utilization of container {#SCONTAINERID}</name>
+                            <name>CPU utilization of {#HCONTAINERID} container</name>
                             <width>900</width>
                             <height>200</height>
                             <yaxismin>0.0000</yaxismin>
@@ -367,7 +367,7 @@
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Memory usage of container {#SCONTAINERID}</name>
+                            <name>Memory usage of {#HCONTAINERID} container</name>
                             <width>900</width>
                             <height>200</height>
                             <yaxismin>0.0000</yaxismin>
@@ -423,7 +423,7 @@
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>State of container {#SCONTAINERID}</name>
+                            <name>State of {#HCONTAINERID} container</name>
                             <width>900</width>
                             <height>200</height>
                             <yaxismin>0.0000</yaxismin>
