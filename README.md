@@ -17,7 +17,7 @@ Build
 What is done
 ============
 
-| Key  | Description | Root permission |
+| Key  | Description | Additional Docker permission |
 | ---- | ----------- | --------------- |
 | docker.discovery  | Zabbix LLD discovering of running containers | Required if you need Docker container name (human name) in metrics/graphs, otherwise short container ID is used |
 | docker.mem | memory metrics (file memory.stat) | - |
@@ -30,12 +30,18 @@ TODO
 * docker.dev - blkio metrics
 * Docker API metrics/details queries (when zabbix-agent has root permission)
 
-How to allow root permission
-============================
+How to get additional Docker permission
+=======================================
 
-Edit your zabbix_agentd.conf and set AllowRoot:
+You have to options, how to get additional Docker permission:
 
-    AllowRoot=1 
+- Edit your zabbix_agentd.conf and set AllowRoot:
+
+    AllowRoot=1
+
+- Add zabbix user to docker group:
+
+    usermod -aG docker zabbix      
     
 Installation
 ============

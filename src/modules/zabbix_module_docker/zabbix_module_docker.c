@@ -23,6 +23,7 @@
 #include "common.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <grp.h>
 #include "zbxjson.h"
 /* docker unix connections */
 #include <sys/socket.h>
@@ -633,6 +634,51 @@ int     zbx_module_uninit()
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_docker_perm                                                  *
+ *                                                                            *
+ * Purpose: test if agent has docker permission (docker group membership)     *
+ *                                                                            *
+ * Return value: ZBX_MODULE_OK - has docker perm                              *
+ *               ZBX_MODULE_FAIL - has not docker perm                        *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_docker_perm()
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_perm()");
+        // I hope that zabbix user can't be member of more than 10 groups
+        int j, ngroups = 2;
+        gid_t *groups;
+        struct passwd *pw;
+        struct group *gr;  
+        groups = malloc(ngroups * sizeof (gid_t));
+        if (groups == NULL) 
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "Malloc error");
+            return 0;
+        }        
+        
+        if (getgrouplist("zabbix", geteuid(), groups, &ngroups) == -1) 
+        {
+             zabbix_log(LOG_LEVEL_WARNING, "getgrouplist() returned -1; ngroups = %d\n", ngroups);               
+             return 0;
+        }
+
+        for (j = 0; j < ngroups; j++) 
+        {               
+               gr = getgrgid(groups[j]);
+               if (gr != NULL) 
+               {
+                   if (strcmp(gr->gr_name, "docker") == 0) {
+                       zabbix_log(LOG_LEVEL_DEBUG, "zabbix agent user has docker perm");
+                       return 1;
+                   }                   
+               }
+        }
+        return 0;        
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_module_init                                                  *
  *                                                                            *
  * Purpose: the function is called on agent startup                           *
@@ -648,10 +694,10 @@ int     zbx_module_init()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_init()");
         zbx_docker_dir_detect();        
-        // test root permission
-        if (geteuid() != 0) 
+        // test root or docker permission
+        if (geteuid() != 0 && zbx_docker_perm() != 1 ) 
         {
-            zabbix_log(LOG_LEVEL_DEBUG, "Root permission of Zabbix Agent are not detected - only basic docker metrics are availaible");
+            zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are availaible");
             socket_api = 0;
             //zbx_docker_dir_detect();
         } else {
