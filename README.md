@@ -19,16 +19,16 @@ What is done
 
 | Key  | Description | Root permission |
 | ---- | ----------- | --------------- |
-| docker.discovery  | Zabbix LLD discovering of running containers | Required if docker container should be used in metrics/graphs, otherwise short container ID is used |
+| docker.discovery  | Zabbix LLD discovering of running containers | Required if you need Docker container name (human name) in metrics/graphs, otherwise short container ID is used |
 | docker.mem | memory metrics (file memory.stat) | - |
 | docker.cpu | cpu usage metric (file cpuacct.stat) | - |
 | docker.up | check if container is running | - |
  
 TODO
 ----
-* docker.net - tricky metrics, because it will need root permissions
+* docker.net - tricky metrics
 * docker.dev - blkio metrics
-* Docker API metrics and details queries (if zabbix-agent has root permissions)
+* Docker API metrics/details queries (when zabbix-agent has root permission)
 
 How to allow root permission
 ============================
@@ -36,16 +36,7 @@ How to allow root permission
 Edit your zabbix_agentd.conf and set AllowRoot:
 
     AllowRoot=1 
-
-Troubleshooting
-===============
-
-Edit your zabbix_agentd.conf and set DebugLevel:
-
-    DebugLevel=4
     
-Debug messages from this module will be available in standard zabbix_agentd.log.    
-
 Installation
 ============
 
@@ -83,7 +74,16 @@ also Docker API https://docs.docker.com/reference/api/docker_remote_api. However
 for communication with Docker via unix socket is required root permission. You 
 can test API also in your command line:
 
-    echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock                                          *  
+    echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock                                          *
+    
+Troubleshooting
+===============
+
+Edit your zabbix_agentd.conf and set DebugLevel:
+
+    DebugLevel=4
+    
+Debug messages from this module will be available in standard zabbix_agentd.log.      
 
 Author
 ======
