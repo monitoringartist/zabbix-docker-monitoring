@@ -33,20 +33,20 @@ TODO
 How to get additional Docker permission
 =======================================
 
-You have to options, how to get additional Docker permission:
+You have two options, how to get additional Docker permission:
 
 - Edit your zabbix_agentd.conf and set AllowRoot:
 
     AllowRoot=1
 
-- Add zabbix user to docker group:
+- Or add zabbix user to docker group:
 
     usermod -aG docker zabbix
 
 Installation
 ============
 
-* Import provided template Zabbix-Template-App-Docker.xml. 
+* Import provided template Zabbix-Template-App-Docker.xml.
 * Configure your Zabbix agent(s) - load zabbix-module-docker.so
 https://www.zabbix.com/documentation/2.4/manual/config/items/loadablemodules
 
@@ -68,7 +68,7 @@ Basic steps:
     wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/zabbix_module_docker.c
     wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
     make
-    
+
 Output will be binary file zabbix_module_docker.so, which can be loaded by zabbix agent.
 
 How it works
@@ -80,8 +80,8 @@ also Docker API https://docs.docker.com/reference/api/docker_remote_api. However
 for communication with Docker via unix socket is required root permission. You 
 can test API also in your command line:
 
-    echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock                                          *
-    
+    echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
+
 Troubleshooting
 ===============
 
@@ -93,5 +93,5 @@ Debug messages from this module will be available in standard zabbix_agentd.log.
 
 Author
 ======
- 
+
 [Devops Monitoring zExpert](http://www.jangaraj.com), who loves monitoring systems, which start with letter Z. Those are Zabbix and Zenoss. [LinkedIn] (http://uk.linkedin.com/in/jangaraj/).
