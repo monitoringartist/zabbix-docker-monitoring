@@ -1,9 +1,6 @@
 Zabbix Docker Monitoring - beta version
 ========================================
 
-About
-=====
-
 This is beta version. I've started it, because Zabbix doesn't support container monitoring.
 Project is developed with Zabbix 2.4 and Docker 1.4. It should works also with another Zabbix/Docker versions.
 Please feel free to test and provide feedback.
@@ -12,20 +9,20 @@ Build
 =====
 
 [Download latest build](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
-[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)
+[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest) Please see section Compilation, if provided build is not working on your system.
 
 Available keys
 ==============
 
 Note: fci - full container ID
+Doc: https://docs.docker.com/articles/runmetrics/
 
 | Key | Description | Comments |
 | --- | ----------- | -------- |
 | **docker.discovery** | LLD discovering | Only running containers are discovered<br>Additional Docker permissions are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID |  
 | **docker.mem[fci,mmetric]** | Memory metrics | mmetric - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable* |
 | **docker.cpu[fci,cmetric]** | CPU metrics | cmetric - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Counter is recalculated to % value by Zabbix | 
-| **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 |
-Reference: https://docs.docker.com/articles/runmetrics/ 
+| **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 | 
  
 Not available at the moment, maybe in the (near) future:
 
@@ -170,8 +167,8 @@ Edit your zabbix_agentd.conf and set DebugLevel:
     
 Debug messages from this module will be available in standard zabbix_agentd.log.
 
-Issue and feature requests
-==========================
+Issues and feature requests
+===========================
 
 Please use Github functionality.       
 
