@@ -41,13 +41,13 @@ You have two options, how to get additional Docker permission:
 - Edit your zabbix_agentd.conf and set AllowRoot:
 
 ```
-    AllowRoot=1
+AllowRoot=1
 ```    
 
 - Or add zabbix user to docker group:
 
 ```
-    usermod -aG docker zabbix
+usermod -aG docker zabbix
 ```
 
 Installation
@@ -88,7 +88,77 @@ for communication with Docker via unix socket is required root permission. You
 can test API also in your command line:
 
     echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
+    
+Why is module better than Userparameter script?
+===============================================
 
+Simple answer is because performance. Module is ~10x quicker, because it's compiled binary code.
+I've used my project https://github.com/jangaraj/zabbix-agent-stress-test for performance tests.
+zabbix_agentd.conf:
+
+    UserParameter=xdocker.cpu[*],grep $2 /cgroup/cpuacct/docker/$1/cpuacct.stat | awk '{print $$2}'
+    LoadModule=zabbix_module_docker.so
+    
+Tests:
+
+    [root@dev zabbix-agent-stress-test]# ./zabbix-agent-stress-test.py -s 127.0.0.1 -k "xdocker.cpu[d5bf68ec1fb570d8ac3047226397edd8618eed14278ce035c98fbceef02d7730,system]" -t 20
+    Warning: you are starting more threads, than your system has available CPU cores (4)!
+    Starting 20 threads, host: 127.0.0.1:10050, key: xdocker.cpu[d5bf68ec1fb570d8ac3047226397edd8618eed14278ce035c98fbceef02d7730,system]
+    Success: 291    Errors: 0       Avg speed: 279.68 qps   Execution time: 1.00 sec
+    Success: 548    Errors: 0       Avg speed: 349.04 qps   Execution time: 2.00 sec
+    Success: 803    Errors: 0       Avg speed: 282.72 qps   Execution time: 3.00 sec
+    Success: 1060   Errors: 0       Avg speed: 209.31 qps   Execution time: 4.00 sec
+    Success: 1310   Errors: 0       Avg speed: 187.14 qps   Execution time: 5.00 sec
+    Success: 1570   Errors: 0       Avg speed: 178.80 qps   Execution time: 6.01 sec
+    Success: 1838   Errors: 0       Avg speed: 189.36 qps   Execution time: 7.01 sec
+    Success: 2106   Errors: 0       Avg speed: 225.68 qps   Execution time: 8.01 sec
+    Success: 2382   Errors: 0       Avg speed: 344.51 qps   Execution time: 9.01 sec
+    Success: 2638   Errors: 0       Avg speed: 327.88 qps   Execution time: 10.01 sec
+    Success: 2905   Errors: 0       Avg speed: 349.93 qps   Execution time: 11.01 sec
+    Success: 3181   Errors: 0       Avg speed: 352.23 qps   Execution time: 12.01 sec
+    Success: 3450   Errors: 0       Avg speed: 239.38 qps   Execution time: 13.01 sec
+    Success: 3678   Errors: 0       Avg speed: 209.88 qps   Execution time: 14.02 sec
+    Success: 3923   Errors: 0       Avg speed: 180.30 qps   Execution time: 15.02 sec
+    Success: 4178   Errors: 0       Avg speed: 201.58 qps   Execution time: 16.02 sec
+    Success: 4434   Errors: 0       Avg speed: 191.92 qps   Execution time: 17.02 sec
+    Success: 4696   Errors: 0       Avg speed: 332.06 qps   Execution time: 18.02 sec
+    Success: 4968   Errors: 0       Avg speed: 325.55 qps   Execution time: 19.02 sec
+    Success: 5237   Errors: 0       Avg speed: 325.61 qps   Execution time: 20.02 sec
+    ^C
+    Success: 5358   Errors: 0       Avg rate: 192.56 qps    Execution time: 20.53 sec
+    Avg rate based on total execution time and success connections: 261.02 qps
+    
+    [root@dev zabbix-agent-stress-test]# ./zabbix-agent-stress-test.py -s 127.0.0.1 -k "docker.cpu[d5bf68ec1fb570d8ac3047226397edd8618eed14278ce035c98fbceef02d7730,system]" -t 20
+    Warning: you are starting more threads, than your system has available CPU cores (4)!
+    Starting 20 threads, host: 127.0.0.1:10050, key: docker.cpu[d5bf68ec1fb570d8ac3047226397edd8618eed14278ce035c98fbceef02d7730,system]
+    Success: 2828   Errors: 0       Avg speed: 2943.98 qps  Execution time: 1.00 sec
+    Success: 5095   Errors: 0       Avg speed: 1975.77 qps  Execution time: 2.01 sec
+    Success: 7623   Errors: 0       Avg speed: 2574.55 qps  Execution time: 3.01 sec
+    Success: 10098  Errors: 0       Avg speed: 4720.20 qps  Execution time: 4.02 sec
+    Success: 12566  Errors: 0       Avg speed: 3423.56 qps  Execution time: 5.02 sec
+    Success: 14706  Errors: 0       Avg speed: 2397.01 qps  Execution time: 6.03 sec
+    Success: 17128  Errors: 0       Avg speed: 903.63 qps   Execution time: 7.05 sec
+    Success: 19520  Errors: 0       Avg speed: 2663.53 qps  Execution time: 8.05 sec
+    Success: 21899  Errors: 0       Avg speed: 1516.36 qps  Execution time: 9.07 sec
+    Success: 24219  Errors: 0       Avg speed: 3570.47 qps  Execution time: 10.07 sec
+    Success: 26676  Errors: 0       Avg speed: 1204.58 qps  Execution time: 11.08 sec
+    Success: 29162  Errors: 0       Avg speed: 2719.87 qps  Execution time: 12.08 sec
+    Success: 31671  Errors: 0       Avg speed: 2265.67 qps  Execution time: 13.08 sec
+    Success: 34186  Errors: 0       Avg speed: 3490.64 qps  Execution time: 14.08 sec
+    Success: 36749  Errors: 0       Avg speed: 2094.59 qps  Execution time: 15.09 sec
+    Success: 39047  Errors: 0       Avg speed: 3213.35 qps  Execution time: 16.09 sec
+    Success: 41361  Errors: 0       Avg speed: 3171.67 qps  Execution time: 17.09 sec
+    Success: 43739  Errors: 0       Avg speed: 3946.53 qps  Execution time: 18.09 sec
+    Success: 46100  Errors: 0       Avg speed: 1308.88 qps  Execution time: 19.09 sec
+    Success: 48556  Errors: 0       Avg speed: 2663.52 qps  Execution time: 20.09 sec
+    ^C
+    Success: 49684  Errors: 0       Avg rate: 2673.85 qps   Execution time: 20.52 sec
+    Avg rate based on total execution time and success connections: 2420.70 qps
+    
+Results:
+- 2420.70 qps for module concept    
+- 261.02 qps for script concept
+       
 Troubleshooting
 ===============
 
@@ -96,7 +166,12 @@ Edit your zabbix_agentd.conf and set DebugLevel:
 
     DebugLevel=4
     
-Debug messages from this module will be available in standard zabbix_agentd.log.      
+Debug messages from this module will be available in standard zabbix_agentd.log.
+
+Issue and feature requests
+==========================
+
+Please use Github functionality.       
 
 Author
 ======
