@@ -154,9 +154,12 @@ Tests:
     Success: 49684  Errors: 0       Avg rate: 2673.85 qps   Execution time: 20.52 sec
     Avg rate based on total execution time and success connections: 2420.70 qps
     
-Results:
-- 2420.70 qps for module concept    
-- 261.02 qps for script concept
+Results of 20s stress test:
+| StartAgent value | Module qps | UserParameter script qps |
+| ---------------- | ---------- | ------------------------ |
+| 3 | 2420.70 | 261.02 |     
+| 10 | 2612.20 | 332.62 |
+| 20 | 2487.93 | 348.52 |
        
 Troubleshooting
 ===============
