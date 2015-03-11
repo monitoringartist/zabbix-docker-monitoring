@@ -89,12 +89,13 @@ can test API also in your command line:
 
     echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
     
-Why is module better than Userparameter script?
-===============================================
+Module vs. UserParameter script
+===============================
 
-Simple answer is because performance. Module is ~10x quicker, because it's compiled binary code.
+Module is ~10x quicker, because it's compiled binary code.
 I've used my project https://github.com/jangaraj/zabbix-agent-stress-test for performance tests.
-zabbix_agentd.conf:
+
+Part of config in zabbix_agentd.conf:
 
     UserParameter=xdocker.cpu[*],grep $2 /cgroup/cpuacct/docker/$1/cpuacct.stat | awk '{print $$2}'
     LoadModule=zabbix_module_docker.so
