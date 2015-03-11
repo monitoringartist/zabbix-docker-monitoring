@@ -24,7 +24,8 @@ Note: fci - full container ID
 | **docker.discovery** | LLD discovering | Only running containers are discovered<br>Additional Docker permissions are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID |  
 | **docker.mem[fci,mmetric]** | Memory metrics | mmetric - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable* |
 | **docker.cpu[fci,cmetric]** | CPU metrics | cmetric - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Counter is recalculated to % value by Zabbix | 
-| **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 | 
+| **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 |
+Reference: https://docs.docker.com/articles/runmetrics/ 
  
 Not available at the moment, maybe in the (near) future:
 
