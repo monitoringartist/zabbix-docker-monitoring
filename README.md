@@ -14,20 +14,23 @@ Build
 [Download latest build](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
 [![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)
 
-What is done
-============
+Available keys
+==============
 
-| Key  | Description | Additional Docker permission |
-| ---- | ----------- | --------------- |
-| docker.discovery  | Zabbix LLD discovering of running containers | Required if you need Docker container name (human name) in metrics/graphs, otherwise short container ID is used |
-| docker.mem | memory metrics (file memory.stat) | - |
-| docker.cpu | cpu usage metric (file cpuacct.stat) | - |
-| docker.up | check if container is running | - |
+Note: fci - full container ID
+
+| Key | Description | Comments |
+| --- | ----------- | -------- |
+| **docker.discovery** | LLD discovering | Only running containers are discovered<br>Additional Docker permissions are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID |  
+| **docker.mem[fci,mmetric]** | Memory metrics | mmetric - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable* |
+| **docker.cpu[fci,cmetric]** | CPU metrics | cmetric - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Counter is recalculated to % value by Zabbix | 
+| **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 | 
  
-TODO
-----
+Not available at the moment, maybe in the (near) future:
+
 * docker.net - tricky metrics
 * docker.dev - blkio metrics
+* docker.stat - stat about number of available images, running/crashed/stopped containers
 * Docker API metrics/details queries (when zabbix-agent has root permission)
 
 How to get additional Docker permission
@@ -37,11 +40,15 @@ You have two options, how to get additional Docker permission:
 
 - Edit your zabbix_agentd.conf and set AllowRoot:
 
+```
     AllowRoot=1
+```    
 
 - Or add zabbix user to docker group:
 
+```
     usermod -aG docker zabbix
+```
 
 Installation
 ============
