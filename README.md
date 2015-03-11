@@ -9,32 +9,32 @@ Build
 =====
 
 [Download latest build](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
-[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest) Please see section Compilation, if provided build is not working on your system.
+[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest) Please see section Compilation, if provided build doesn't work on your system.
 
 Available keys
 ==============
 
 Note: fci - full container ID
-Doc: https://docs.docker.com/articles/runmetrics/
 
 | Key | Description | Comments |
 | --- | ----------- | -------- |
-| **docker.discovery** | LLD discovering | Only running containers are discovered<br>Additional Docker permissions are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID |  
+| **docker.discovery** | LLD discovering | Only running containers are discovered.<br>Additional Docker permissions are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID |  
 | **docker.mem[fci,mmetric]** | Memory metrics | mmetric - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable* |
-| **docker.cpu[fci,cmetric]** | CPU metrics | cmetric - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Counter is recalculated to % value by Zabbix | 
-| **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 | 
+| **docker.cpu[fci,cmetric]** | CPU metrics | cmetric - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Jiffy CPU counter is recalculated to % value by Zabbix | 
+| **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 |
+Doc: https://docs.docker.com/articles/runmetrics/ 
  
-Not available at the moment, maybe in the (near) future:
+Not available at the moment, probably in the (near) future:
 
 * docker.net - tricky metrics
 * docker.dev - blkio metrics
 * docker.stat - stat about number of available images, running/crashed/stopped containers
 * Docker API metrics/details queries (when zabbix-agent has root permission)
 
-How to get additional Docker permission
-=======================================
+Additional Docker permissions
+=============================
 
-You have two options, how to get additional Docker permission:
+You have two options, how to get additional Docker permissions:
 
 - Edit your zabbix_agentd.conf and set AllowRoot:
 
@@ -59,7 +59,7 @@ https://www.zabbix.com/documentation/2.4/manual/config/items/loadablemodules
 Compilation
 ===========
 
-You have to compile module, if provided binary is not working on your system.
+You have to compile module, if provided binary doesn't work on your system.
 Basic steps:
 
     cd ~
