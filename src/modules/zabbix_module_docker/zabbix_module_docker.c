@@ -646,7 +646,7 @@ int     zbx_docker_perm()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_perm()");
         // I hope that zabbix user can't be member of more than 10 groups
-        int j, ngroups = 2;
+        int j, ngroups = 10;
         gid_t *groups;
         struct passwd *pw;
         struct group *gr;  
