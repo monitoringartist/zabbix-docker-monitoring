@@ -34,7 +34,17 @@ Recommended docs:
 - https://docs.docker.com/articles/runmetrics/
 - https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
 - https://www.kernel.org/doc/Documentation/cgroups/memory.txt
-- https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt 
+- https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
+
+Images
+======
+
+Docker container CPU graph in Zabbix:
+![Docker container CPU graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-cpu-graph.png)
+Docker container memory graph in Zabbix:
+![Docker container memory graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-memory-graph.png)
+Docker container state graph in Zabbix:
+![Docker container state graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-state-graph.png)
 
 Additional Docker permissions
 =============================
