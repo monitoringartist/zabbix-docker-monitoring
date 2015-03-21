@@ -38,6 +38,7 @@ char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL;
 static int socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -49,6 +50,7 @@ static ZBX_METRIC keys[] =
 {
         {"docker.discovery", 0, zbx_module_docker_discovery,    NULL},
         {"docker.inspect", CF_HAVEPARAMS, zbx_module_docker_inspect, "full container id, parameter 1,<parameter 2>"},
+        {"docker.info", CF_HAVEPARAMS,  zbx_module_docker_info, "full container id, info"},
         {"docker.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full container id"},
         {"docker.mem",  CF_HAVEPARAMS,  zbx_module_docker_mem,  "full container id, memory metric name"},
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
@@ -628,7 +630,6 @@ int     zbx_module_docker_net_extended(AGENT_REQUEST *request, AGENT_RESULT *res
  *               SYSINFO_RET_OK - stat folder was found                       *
  *                                                                            *
  ******************************************************************************/
-
 int     zbx_docker_dir_detect() 
 {
         // TODO logic should be changed for all lxc/docker/systemd container support
@@ -1013,9 +1014,9 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_module_docker_inspect                             *
+ * Function: zbx_module_docker_inspect                                        *
  *                                                                            *
- * Purpose: container inspection                                               *
+ * Purpose: container inspection                                              *
  *                                                                            *
  * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
  *                                 as not supported by zabbix                 *
@@ -1043,7 +1044,7 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
         char    *container, *query;
         container = get_rparam(request, 0);       
         
-        size_t s_size = strlen("GET /containers/FID/json HTTP/1.0\r\n\n") + strlen(container);
+        size_t s_size = strlen("GET /containers//json HTTP/1.0\r\n\n") + strlen(container);
         query = malloc(s_size);                
         zbx_strlcpy(query, "GET /containers/", s_size);
         zbx_strlcat(query, container, s_size);
@@ -1103,4 +1104,58 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
             }        
         }            
         return SYSINFO_RET_OK;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_info                                           *
+ *                                                                            *
+ * Purpose: docker information                                                *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_info()");
+        
+        if (socket_api != 1) 
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
+            SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
+            return SYSINFO_RET_FAIL;        
+        }
+
+        if (1 > request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                return SYSINFO_RET_FAIL;
+        }           
+
+        char    *info;
+        info = get_rparam(request, 0);
+        // TODO info: specific info for running_containers, crashed_containers - Exited (non 0)
+        const char *answer = zbx_module_docker_socket_query("GET /info HTTP/1.0\r\n\n");
+        if(strcmp(answer, "") == 0) 
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "docker.info is not available at the moment - some problem with Docker's socket API");
+            SET_MSG_RESULT(result, strdup("docker.info is not available at the moment - some problem with Docker's socket API"));
+            return SYSINFO_RET_FAIL;
+        }
+
+        char api_value[buffer_size];
+        struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+        if (SUCCEED != zbx_json_value_by_name(&jp_data, info, api_value, buffer_size))
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s] item in the received JSON object", info);
+            SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s] item in the received JSON object", info));
+            return SYSINFO_RET_FAIL;        
+        } else {
+            zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s] item in the received JSON object: %s", info, api_value);
+            SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
+            return SYSINFO_RET_OK;        
+        }
 }

@@ -22,13 +22,13 @@ Note: fci - full container ID
 | **docker.cpu[fci,cmetric]** | CPU metrics | **cmetric** - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Jiffy CPU counter is recalculated to % value by Zabbix. | 
 | **docker.dev[fci,cfile,cmetric]** | IO metrics | **cfile** - container blkio pseudo-file, e.g.:*blkio.io_merged, blkio.io_queued, blkio.io_service_bytes, blkio.io_serviced, blkio.io_service_time, blkio.io_wait_time, blkio.sectors, blkio.time, blkio.avg_queue_size, blkio.idle_time, blkio.dequeue, ...*<br>**cmetric** - any available blkio metric in selected pseudo-file, e.g.: *Total*. Option for selected block device only is also available e.g. *'8:0 Sync'* (quotes must be used in key parameter in this case)<br>\*Note: Some pseudo blkio files are available only if kernel config *CONFIG_DEBUG_BLK_CGROUP=y*, see recommended docs. |
 | **docker.inspect[fci,param1,\<param2\>]** | Docker inspection | Requested value from Docker inspect structure is returned.<br>**param1** - name of first level JSON property<br>**param2** - optional name of second level JSON property<br>For example: *[fci,NetworkSettings,IPAddress], [fci,State,StartedAt], [fci,Name]*<br>Note 1: requested value must be plain text/numeric value. JSON objects/arrays are not supported.<br>Note 2: Additional Docker permissions are needed. |
+| **docker.info[info]** | Docker information | Requested value from Docker information structure is returned.<br>**info** - name of requested information, e.g. *Containers, Images, NCPU, ...*<br>Note: Additional Docker permissions are needed. |
 | **docker.up[fci]** | Running state check | 1 if container is running, otherwise 0 |
  
 Not available at the moment, probably in the (near) future:
 
 * docker.net - tricky metrics
-* docker.stat - stat about number of available images, running/crashed/stopped containers
-* Docker API metrics/details queries (when zabbix-agent has root or docker permissions)
+* docker.info - running/crashed/stopped containers
 
 Recommended docs:
 
