@@ -37,6 +37,7 @@ static int buffer_size = 1024, cid_length = 65;
 char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL;
 static int socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -47,6 +48,7 @@ static ZBX_METRIC keys[] =
 /*      KEY                     FLAG            FUNCTION                TEST PARAMETERS */
 {
         {"docker.discovery", 0, zbx_module_docker_discovery,    NULL},
+        {"docker.inspect", CF_HAVEPARAMS, zbx_module_docker_inspect, "full container id, parameter 1,<parameter 2>"},
         {"docker.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full container id"},
         {"docker.mem",  CF_HAVEPARAMS,  zbx_module_docker_mem,  "full container id, memory metric name"},
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
@@ -504,6 +506,14 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
+                // TODO normalize with number of online CPU
+                /*
+                #include <unistd.h>                
+                if (0 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN)))
+                {
+                	value /= cpu_num;
+                }
+                */
                 zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
@@ -789,7 +799,7 @@ int     zbx_module_init()
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_module_docker_discovery_basic                                      *
+ * Function: zbx_module_docker_discovery                                      *
  *                                                                            *
  * Purpose: container discovery                                               *
  *                                                                            *
@@ -998,5 +1008,99 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
         zbx_json_free(&j);
 
+        return SYSINFO_RET_OK;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_inspect                             *
+ *                                                                            *
+ * Purpose: container inspection                                               *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_inspect()");
+        
+        if (socket_api != 1) 
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
+            SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
+            return SYSINFO_RET_FAIL;        
+        }
+
+        if (1 >= request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                return SYSINFO_RET_FAIL;
+        }           
+
+        char    *container, *query;
+        container = get_rparam(request, 0);       
+        
+        size_t s_size = strlen("GET /containers/FID/json HTTP/1.0\r\n\n") + strlen(container);
+        query = malloc(s_size);                
+        zbx_strlcpy(query, "GET /containers/", s_size);
+        zbx_strlcat(query, container, s_size);
+        zbx_strlcat(query, "/json HTTP/1.0\r\n\n", s_size);
+        
+        const char *answer = zbx_module_docker_socket_query(query);
+        if(strcmp(answer, "") == 0) 
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "docker.inspect is not available at the moment - some problem with Docker's socket API");
+            SET_MSG_RESULT(result, strdup("docker.inspect is not available at the moment - some problem with Docker's socket API"));
+            return SYSINFO_RET_FAIL;
+        }
+
+	    struct zbx_json_parse jp_data2, jp_row;
+        char api_value[buffer_size];
+
+        struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+        
+        if (request->nparam > 1) {
+            char *param1;
+            param1 = get_rparam(request, 1);
+            // 1st level - plain value search
+            if (SUCCEED != zbx_json_value_by_name(&jp_data, param1, api_value, buffer_size))
+            {
+                 // 1st level - json object search
+                if (SUCCEED != zbx_json_brackets_by_name(&jp_data, param1, &jp_data2))
+                {
+                    zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s] item in the received JSON object", param1);
+                    SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s] item in the received JSON object", param1));
+                    return SYSINFO_RET_FAIL;
+                } else {
+                    // 2nd level
+                    if (request->nparam > 2) 
+                    {
+                        char *param2, api_value2[buffer_size];
+                        param2 = get_rparam(request, 2);
+                        if (SUCCEED != zbx_json_value_by_name(&jp_data2, param2, api_value2, buffer_size))
+                        {
+                            zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s] item in the received JSON object", param1, param2);
+                            SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s][%s] item in the received JSON object", param1, param2));
+                            return SYSINFO_RET_FAIL;
+                        } else {
+                            zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object: %s", param1, param2, api_value2);
+                            SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
+                            return SYSINFO_RET_OK;
+                        }                    
+                    } else {
+                        zabbix_log(LOG_LEVEL_WARNING, "Finded the [%s] item in the received JSON object, but it's not plain value object", param1);
+                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Can find the [%s] item in the received JSON object, but it's not plain value object", param1));
+                        return SYSINFO_RET_FAIL;                  
+                    }                  
+                }             
+            } else {
+                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s] item in the received JSON object: %s", param1, api_value);
+                    SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
+                    return SYSINFO_RET_OK;
+            }        
+        }            
         return SYSINFO_RET_OK;
 }
