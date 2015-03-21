@@ -164,7 +164,7 @@ const char*  zbx_module_docker_socket_query(char *query)
         } else {
             response = "[{}]"; 
         }
-        zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket response: %s", response);
+        zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket response: %s", string_replace(string_replace(response, "\n", ""), "\r", ""));
         return response;
 }
 
@@ -773,7 +773,6 @@ int     zbx_module_init()
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are availaible");
             socket_api = 0;
-            //zbx_docker_dir_detect();
         } else {
             // test Docker's socket connection 
             if (strcmp(zbx_module_docker_socket_query("GET /_ping HTTP/1.0\r\n\n"), "OK") == 0) 
@@ -783,7 +782,6 @@ int     zbx_module_init()
             } else {
                 zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket doesn't work - only basic docker metrics are availaible");
                 socket_api = 0;
-                //zbx_docker_dir_detect();
             }
         }
         return ZBX_MODULE_OK;
@@ -857,7 +855,6 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
         }
 
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-
         zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
         
         while (NULL != (d = readdir(dir)))
@@ -944,9 +941,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         size_t  s_size;
 
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-
         zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
-
         // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
     	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
     	/*         ^-------------------------------------------^  */
@@ -987,6 +982,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 if (SUCCEED != zbx_json_value_by_name(&jp_row, "Id", cid, cid_length))
                 {
                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Id\" array in the received JSON object");
+                    // zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Id\" array in the received JSON object, jp_row: %s", jp_row);
                     continue;
                 }
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsed container id: %s", cid);
@@ -999,9 +995,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         }
         
         zbx_json_close(&j);
-
         SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-
         zbx_json_free(&j);
 
         return SYSINFO_RET_OK;
