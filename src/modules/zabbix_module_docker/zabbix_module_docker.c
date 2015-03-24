@@ -205,33 +205,14 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         }        
 
         container = get_rparam(request, 0);
-        char    *stat_file = "/memory.stat";
-        char    *cgroup = "memory/";
+        char    *stat_file = "/cpuacct.stat";
+        char    *cgroup = "cpuacct/";
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (c_prefix != NULL)
-        {
-            filename_size += strlen(c_prefix);
-            filename_size += strlen("docker-.scope");
-        }
-        if (c_suffix != NULL)
-        {
-            filename_size += strlen(c_suffix);
-        }
         char    *filename = malloc(filename_size);
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
-        if (c_prefix != NULL)
-        {        
-            zbx_strlcat(filename, c_prefix, filename_size);
-            zbx_strlcat(filename, "docker-", filename_size);
-        }
         zbx_strlcat(filename, container, filename_size);
-        if (c_suffix != NULL)
-        {
-            zbx_strlcat(filename, ".scope", filename_size);        
-            zbx_strlcat(filename, c_suffix, filename_size);
-        }
         zbx_strlcat(filename, stat_file, filename_size);
         zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
         FILE    *file;
@@ -290,7 +271,6 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {
             filename_size += strlen(c_prefix);
-            filename_size += strlen("docker-.scope");
         }
         if (c_suffix != NULL)
         {
@@ -303,12 +283,10 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {        
             zbx_strlcat(filename, c_prefix, filename_size);
-            zbx_strlcat(filename, "docker-", filename_size);
         }        
         zbx_strlcat(filename, container, filename_size);
         if (c_suffix != NULL)
-        {
-            zbx_strlcat(filename, ".scope", filename_size);        
+        {        
             zbx_strlcat(filename, c_suffix, filename_size);
         }
         zbx_strlcat(filename, stat_file, filename_size);
@@ -393,7 +371,6 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {
             filename_size += strlen(c_prefix);
-            filename_size += strlen("docker-.scope");
         }
         if (c_suffix != NULL)
         {
@@ -406,12 +383,10 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {        
             zbx_strlcat(filename, c_prefix, filename_size);
-            zbx_strlcat(filename, "docker-", filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
         if (c_suffix != NULL)
-        {
-            zbx_strlcat(filename, ".scope", filename_size);        
+        {        
             zbx_strlcat(filename, c_suffix, filename_size);
         }
         zbx_strlcat(filename, stat_file, filename_size);
@@ -493,7 +468,6 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {
             filename_size += strlen(c_prefix);
-            filename_size += strlen("docker-.scope");
         }
         if (c_suffix != NULL)
         {
@@ -506,12 +480,10 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {        
             zbx_strlcat(filename, c_prefix, filename_size);
-            zbx_strlcat(filename, "docker-", filename_size);
         }        
         zbx_strlcat(filename, container, filename_size);
         if (c_suffix != NULL)
-        {   
-            zbx_strlcat(filename, ".scope", filename_size);     
+        {        
             zbx_strlcat(filename, c_suffix, filename_size);
         }
         zbx_strlcat(filename, stat_file, filename_size);
