@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.1
+** Zabbix module for Docker container monitoring - v 0.1.2
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -32,13 +32,14 @@
 #include "comms.h"
 
 /* the variable keeps timeout setting for item processing */
-static int      item_timeout = 0;
+static int      item_timeout = 1;
 static int buffer_size = 1024, cid_length = 65;
 char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL;
 static int socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -49,8 +50,9 @@ static ZBX_METRIC keys[] =
 /*      KEY                     FLAG            FUNCTION                TEST PARAMETERS */
 {
         {"docker.discovery", 0, zbx_module_docker_discovery,    NULL},
-        {"docker.inspect", CF_HAVEPARAMS, zbx_module_docker_inspect, "full container id, parameter 1,<parameter 2>"},
+        {"docker.inspect", CF_HAVEPARAMS, zbx_module_docker_inspect, "full container id, parameter 1, <parameter 2>"},
         {"docker.info", CF_HAVEPARAMS,  zbx_module_docker_info, "full container id, info"},
+        {"docker.stats",CF_HAVEPARAMS,  zbx_module_docker_stats,"full container id, parameter 1, <parameter 2>, <parameter 3>"},
         {"docker.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full container id"},
         {"docker.mem",  CF_HAVEPARAMS,  zbx_module_docker_mem,  "full container id, memory metric name"},
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
@@ -151,6 +153,7 @@ const char*  zbx_module_docker_socket_query(char *query)
         strcat(message, "");
         while ((nbytes = read(sock, buffer, buffer_size)) > 0 ) 
         {
+            // TODO stats is stream - wait only for first chunk
             buffer[nbytes] = 0;
             message = realloc(message, (strlen(message) + nbytes + 1));
             if (message == NULL) 
@@ -202,14 +205,33 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         }        
 
         container = get_rparam(request, 0);
-        char    *stat_file = "/cpuacct.stat";
-        char    *cgroup = "cpuacct/";
+        char    *stat_file = "/memory.stat";
+        char    *cgroup = "memory/";
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+        if (c_prefix != NULL)
+        {
+            filename_size += strlen(c_prefix);
+            filename_size += strlen("docker-.scope");
+        }
+        if (c_suffix != NULL)
+        {
+            filename_size += strlen(c_suffix);
+        }
         char    *filename = malloc(filename_size);
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
+        if (c_prefix != NULL)
+        {        
+            zbx_strlcat(filename, c_prefix, filename_size);
+            zbx_strlcat(filename, "docker-", filename_size);
+        }
         zbx_strlcat(filename, container, filename_size);
+        if (c_suffix != NULL)
+        {
+            zbx_strlcat(filename, ".scope", filename_size);        
+            zbx_strlcat(filename, c_suffix, filename_size);
+        }
         zbx_strlcat(filename, stat_file, filename_size);
         zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
         FILE    *file;
@@ -268,6 +290,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {
             filename_size += strlen(c_prefix);
+            filename_size += strlen("docker-.scope");
         }
         if (c_suffix != NULL)
         {
@@ -280,10 +303,12 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {        
             zbx_strlcat(filename, c_prefix, filename_size);
+            zbx_strlcat(filename, "docker-", filename_size);
         }        
         zbx_strlcat(filename, container, filename_size);
         if (c_suffix != NULL)
-        {        
+        {
+            zbx_strlcat(filename, ".scope", filename_size);        
             zbx_strlcat(filename, c_suffix, filename_size);
         }
         zbx_strlcat(filename, stat_file, filename_size);
@@ -368,6 +393,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {
             filename_size += strlen(c_prefix);
+            filename_size += strlen("docker-.scope");
         }
         if (c_suffix != NULL)
         {
@@ -380,10 +406,12 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {        
             zbx_strlcat(filename, c_prefix, filename_size);
+            zbx_strlcat(filename, "docker-", filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
         if (c_suffix != NULL)
-        {        
+        {
+            zbx_strlcat(filename, ".scope", filename_size);        
             zbx_strlcat(filename, c_suffix, filename_size);
         }
         zbx_strlcat(filename, stat_file, filename_size);
@@ -465,6 +493,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {
             filename_size += strlen(c_prefix);
+            filename_size += strlen("docker-.scope");
         }
         if (c_suffix != NULL)
         {
@@ -477,10 +506,12 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (c_prefix != NULL)
         {        
             zbx_strlcat(filename, c_prefix, filename_size);
+            zbx_strlcat(filename, "docker-", filename_size);
         }        
         zbx_strlcat(filename, container, filename_size);
         if (c_suffix != NULL)
-        {        
+        {   
+            zbx_strlcat(filename, ".scope", filename_size);     
             zbx_strlcat(filename, c_suffix, filename_size);
         }
         zbx_strlcat(filename, stat_file, filename_size);
@@ -1158,4 +1189,124 @@ int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result)
             SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
             return SYSINFO_RET_OK;        
         }
+}
+
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_stats                                          *
+ *                                                                            *
+ * Purpose: container statistics                                              *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_stats()");
+        
+        if (socket_api != 1) 
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
+            SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
+            return SYSINFO_RET_FAIL;        
+        }
+
+        if (1 >= request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                return SYSINFO_RET_FAIL;
+        }           
+
+        char    *container, *query;
+        container = get_rparam(request, 0);       
+        
+        size_t s_size = strlen("GET /containers//stats HTTP/1.0\r\n\n") + strlen(container);
+        query = malloc(s_size);                
+        zbx_strlcpy(query, "GET /containers/", s_size);
+        zbx_strlcat(query, container, s_size);
+        zbx_strlcat(query, "/stats HTTP/1.0\r\n\n", s_size);
+        // :156 TODO stats are stream
+        const char *answer = zbx_module_docker_socket_query(query);
+        if(strcmp(answer, "") == 0) 
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "docker.stats is not available at the moment - some problem with Docker's socket API");
+            SET_MSG_RESULT(result, strdup("docker.stats is not available at the moment - some problem with Docker's socket API"));
+            return SYSINFO_RET_FAIL;
+        }
+
+	    struct zbx_json_parse jp_data2, jp_data3, jp_row;
+        char api_value[buffer_size];
+
+        struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+        
+        if (request->nparam > 1) {
+            char *param1;
+            param1 = get_rparam(request, 1);
+            // 1st level - plain value search
+            if (SUCCEED != zbx_json_value_by_name(&jp_data, param1, api_value, buffer_size))
+            {
+                 // 1st level - json object search
+                if (SUCCEED != zbx_json_brackets_by_name(&jp_data, param1, &jp_data2))
+                {
+                    zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s] item in the received JSON object", param1);
+                    SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s] item in the received JSON object", param1));
+                    return SYSINFO_RET_FAIL;
+                } else {
+                    // 2nd level
+                    if (request->nparam > 2) 
+                    {
+                        char *param2, api_value2[buffer_size];
+                        param2 = get_rparam(request, 2);
+                        if (SUCCEED != zbx_json_value_by_name(&jp_data2, param2, api_value2, buffer_size))
+                        {
+                            // 2nd level - json object search
+                            if (SUCCEED != zbx_json_brackets_by_name(&jp_data2, param2, &jp_data3))
+                            {
+                                zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s] item in the received JSON object", param1, param2);
+                                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s][%s] item in the received JSON object", param1, param2));
+                                return SYSINFO_RET_FAIL;
+                            } else {
+                                // 3rd level
+                                if (request->nparam > 3)
+                                {
+                                    char *param3, api_value3[buffer_size];
+                                    param3 = get_rparam(request, 3);
+                                    if (SUCCEED != zbx_json_value_by_name(&jp_data2, param2, api_value2, buffer_size))
+                                    {
+                                        zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3);
+                                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3));
+                                        return SYSINFO_RET_FAIL;                                    
+                                    } else {
+                                        zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s][%s] item in the received JSON object: %s", param1, param2, param3, api_value3);
+                                        SET_STR_RESULT(result, zbx_strdup(NULL, api_value3));
+                                        return SYSINFO_RET_OK;                                    
+                                    }                                
+                                } else {
+                                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object: %s", param1, param2, api_value2);
+                                    SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
+                                    return SYSINFO_RET_OK;
+                                }
+                            }
+                        } else {
+                            zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object: %s", param1, param2, api_value2);
+                            SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
+                            return SYSINFO_RET_OK;
+                        }                    
+                    } else {
+                        zabbix_log(LOG_LEVEL_WARNING, "Finded the [%s] item in the received JSON object, but it's not plain value object", param1);
+                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Finded the [%s] item in the received JSON object, but it's not plain value object", param1));
+                        return SYSINFO_RET_FAIL;                  
+                    }                  
+                }             
+            } else {
+                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s] item in the received JSON object: %s", param1, api_value);
+                    SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
+                    return SYSINFO_RET_OK;
+            }        
+        }            
+        return SYSINFO_RET_OK;
 }
