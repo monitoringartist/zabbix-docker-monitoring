@@ -515,6 +515,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         char    line[MAX_STRING_LEN];
         char    *metric2 = malloc(strlen(metric)+1);
+        zbx_uint64_t cpu_num;
         memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
         zbx_uint64_t    value = 0;
