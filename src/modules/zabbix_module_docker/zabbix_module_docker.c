@@ -528,14 +528,11 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
-                // TODO normalize with number of online CPU
-                /*
-                #include <unistd.h>                
-                if (0 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN)))
+                // normalize CPU usage by using number of online CPUs
+                if (1 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN)))
                 {
                 	value /= cpu_num;
                 }
-                */
                 zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
