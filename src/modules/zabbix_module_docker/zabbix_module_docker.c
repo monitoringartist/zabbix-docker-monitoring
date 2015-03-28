@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.2
+** Zabbix module for Docker container monitoring - v 0.1.3
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -674,16 +674,16 @@ int     zbx_docker_dir_detect()
         }
 
         while (fgets(path, 512, fp) != NULL) 
-        {
-            if ((strstr(path, "memory cgroup")) != NULL) 
+        {            
+            if ((strstr(path, "cpuset cgroup")) != NULL) 
             {
                 // found line e.g. cgroup /cgroup/cpuacct cgroup rw,relatime,cpuacct 0 0
                 temp = string_replace(path, "cgroup ", "");
                 temp = string_replace(temp, strstr(temp, " "), "");
-                stat_dir = string_replace(temp, "memory", "");
+                stat_dir = string_replace(temp, "cpuset", "");
                 zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
                 
-                char *cgroup = "memory/";
+                char *cgroup = "cpuset/";
                 tdriver = drivers;
                 while (*tdriver != "") 
                 {
@@ -870,7 +870,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
         zbx_stat_t      sb;
         char            *file = NULL, scontainerid[13];
         struct dirent   *d;
-        char    *cgroup = "memory/";
+        char    *cgroup = "cpuset/";
         size_t  ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(driver) + 2;
         char    *ddir = malloc(ddir_size);
         zbx_strlcpy(ddir, stat_dir, ddir_size);
@@ -882,7 +882,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
             zabbix_log(LOG_LEVEL_WARNING, "%s: %s", ddir, zbx_strerror(errno));
             return SYSINFO_RET_FAIL;
         }
-
+        
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
         zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
         
