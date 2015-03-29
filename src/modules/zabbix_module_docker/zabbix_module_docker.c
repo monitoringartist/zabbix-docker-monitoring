@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.3
+** Zabbix module for Docker container monitoring - v 0.1.4
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@
 
 /* the variable keeps timeout setting for item processing */
 static int      item_timeout = 1;
-static int buffer_size = 1024, cid_length = 65;
+static int buffer_size = 1024, cid_length = 66;
 char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL;
 static int socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -708,6 +708,7 @@ int     zbx_docker_dir_detect()
                     *tdriver++;
                     free(ddir);
                 }
+                driver = "";
                 zabbix_log(LOG_LEVEL_DEBUG, "Can't detect used docker driver");
                 return SYSINFO_RET_FAIL;
             }
@@ -952,7 +953,6 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 
         struct zbx_json j;
         const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=0 HTTP/1.0\r\n\n");
-        //const char *answer = "[{\"Command\":\"nginx\",\"Created\":1426152751,\"Id\":\"3bae6a35de7f5926162c01498427267ae4523c22914aea8fe97d17337cd0709f\",\"Image\":\"dockerfile/nginx:latest\",\"Names\":[\"/docker_nginx\"],\"Ports\":[{\"IP\":\"0.0.0.0\",\"PrivatePort\":80,\"PublicPort\":80,\"Type\":\"tcp\"},{\"IP\":\"0.0.0.0\",\"PrivatePort\":8001,\"PublicPort\":8001,\"Type\":\"tcp\"},{\"PrivatePort\":443,\"Type\":\"tcp\"}],\"Status\":\"Up About an hour\"}]";
         if(strcmp(answer, "") == 0) 
         {
             zabbix_log(LOG_LEVEL_DEBUG, "docker.discovery is not available at the moment - some problem with Docker's socket API");
@@ -1011,7 +1011,6 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 if (SUCCEED != zbx_json_value_by_name(&jp_row, "Id", cid, cid_length))
                 {
                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Id\" array in the received JSON object");
-                    // zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Id\" array in the received JSON object, jp_row: %s", jp_row);
                     continue;
                 }
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsed container id: %s", cid);
