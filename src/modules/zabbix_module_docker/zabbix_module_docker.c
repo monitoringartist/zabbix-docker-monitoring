@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.4
+** Zabbix module for Docker container monitoring - v 0.1.5
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@
 /* the variable keeps timeout setting for item processing */
 static int      item_timeout = 1;
 static int buffer_size = 1024, cid_length = 66;
-char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL;
+char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -480,7 +480,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         container = get_rparam(request, 0);
         metric = get_rparam(request, 1);
         char    *stat_file = "/cpuacct.stat";
-        char    *cgroup = "cpuacct/";
+        char    *cgroup = cpu_cgroup;
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
         if (c_prefix != NULL)
         {
@@ -509,7 +509,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (NULL == (file = fopen(filename, "r")))
         {
                 zabbix_log(LOG_LEVEL_ERR, "Can't open docker container metric file: '%s'", filename);
-                SET_MSG_RESULT(result, strdup("Can't open docker container memory.stat file"));
+                SET_MSG_RESULT(result, strdup("Can't open docker container cpuacct.stat file"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -519,7 +519,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
         zbx_uint64_t    value = 0;
-        zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in memory.stat file", metric);
+        zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in cpuacct.stat file", metric);
         while (NULL != fgets(line, sizeof(line), file))
         {
                 if (0 != strncmp(line, metric2, strlen(metric2)))
@@ -685,10 +685,12 @@ int     zbx_docker_dir_detect()
                 
                 char *cgroup = "cpuset/";
                 tdriver = drivers;
+                size_t  ddir_size;
+                char    *ddir;
                 while (*tdriver != "") 
                 {
-                    size_t  ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(*tdriver) + 1;
-                    char    *ddir = malloc(ddir_size);
+                    ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(*tdriver) + 1;
+                    ddir = malloc(ddir_size);
                     zbx_strlcpy(ddir, stat_dir, ddir_size);
                     zbx_strlcat(ddir, cgroup, ddir_size);
                     zbx_strlcat(ddir, *tdriver, ddir_size);
@@ -701,7 +703,20 @@ int     zbx_docker_dir_detect()
                         {
                             zabbix_log(LOG_LEVEL_DEBUG, "Detected systemd docker - prefix/suffix will be used");
                             c_prefix = "docker-";
-                            c_suffix = ".scope";                        
+                            c_suffix = ".scope";
+                        }
+                        // detect cpu_cgroup - JoinController cpu,cpuacct
+                        cgroup = "cpu,cpuacct/";
+                        ddir_size = strlen(cgroup) + strlen(stat_dir) + 1;
+                        ddir = malloc(ddir_size);
+                        zbx_strlcpy(ddir, stat_dir, ddir_size);
+                        zbx_strlcat(ddir, cgroup, ddir_size);
+                        if (NULL != (dir = opendir(ddir)))
+                        {
+                            cpu_cgroup = "cpu,cpuacct/";
+                            zabbix_log(LOG_LEVEL_DEBUG, "Detected JoinController cpu,cpuacct");
+                        } else {
+                            cpu_cgroup = "cpuacct/";
                         }
                         return SYSINFO_RET_OK; 
                     }
