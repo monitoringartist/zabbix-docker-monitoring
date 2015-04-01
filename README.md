@@ -1,6 +1,8 @@
 Zabbix Docker Monitoring - beta version
 ========================================
 
+If you like or use this project, please provide feedback to author - Star it ★. 
+
 This is beta version. Project is developed with Zabbix 2.4 and Docker 1.3/1.5. It should works also with another Zabbix/Docker versions.
 Please feel free to test and provide feedback. Systemd and LXC execution driver is also supported.
 

@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.5
+** Zabbix module for Docker container monitoring - v 0.1.6
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -212,8 +212,8 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         container = get_rparam(request, 0);
         metric = get_rparam(request, 1);
-        char    *stat_file = "/memory.stat";
-        char    *cgroup = "memory/";
+        char    *stat_file = "/cpuacct.stat";
+        char    *cgroup = cpu_cgroup;
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
         if (c_prefix != NULL)
         {
@@ -228,12 +228,12 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
         if (c_prefix != NULL)
-        {        
+        {
             zbx_strlcat(filename, c_prefix, filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
         if (c_suffix != NULL)
-        {        
+        {
             zbx_strlcat(filename, c_suffix, filename_size);
         }
         zbx_strlcat(filename, stat_file, filename_size);
