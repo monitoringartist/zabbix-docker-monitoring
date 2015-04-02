@@ -3,8 +3,12 @@ Zabbix Docker Monitoring - beta version
 
 If you like or use this project, please provide feedback to author - Star it ★. 
 
-This is beta version. Project is developed with Zabbix 2.4 and Docker 1.3/1.5. It should works also with another Zabbix/Docker versions.
-Please feel free to test and provide feedback. Systemd and LXC execution driver is also supported.
+Monitoring of Docker container by using Zabbix. 
+Available: CPU, mem, blkio container metrics and some containers config details e.g. IP, name, ...
+Zabbix Docker module has native support for Docker containers (Systemd included) and should support 
+just about a few other container (e.g. LXC) type out of the box. 
+Please feel free to test and provide feedback/open issue. 
+Module is mainly focused on performance, see section *Module vs. UserParameter script*.
 
 Build
 =====
@@ -182,6 +186,113 @@ Results of 20s stress test:
 | 3 | 2420.70 | 261.02 |     
 | 10 | 2612.20 | 332.62 |
 | 20 | 2487.93 | 348.52 |
+
+Discovery test:
+
+Part of config in zabbix_agentd.conf:
+
+    UserParameter=xdocker.discovery,/etc/zabbix/scripts/container_discover.sh
+    LoadModule=zabbix_module_docker.so
+
+container_discover.sh: https://github.com/bsmile/zabbix-docker-lld/blob/master/usr/lib/zabbix/script/container_discover.sh
+    
+Test with 237 running containers:
+
+    [root@dev ~]# docker info
+    Containers: 237
+    Images: 121
+    Storage Driver: btrfs
+    Execution Driver: native-0.2
+    Kernel Version: 3.10.0-229.el7.x86_64
+    Operating System: Red Hat Enterprise Linux Server 7.1 (Maipo)
+    CPUs: 10
+    Total Memory: 62.76 GiB
+    Name: dev.local
+    ID: AOAM:BO3G:5MCE:5FMM:IWKP:NPM4:PRKV:ZZ34:BYFL:XGAV:SRNJ:LKDH
+    Username: username
+    Registry: [https://index.docker.io/v1/]
+    [root@dev ~]# time zabbix_get -s 127.0.0.1 -k docker.discovery > /dev/null
+    
+    real    0m0.112s
+    user    0m0.000s
+    sys     0m0.003s
+    [root@dev ~]# time zabbix_get -s 127.0.0.1 -k xdocker.discovery > /dev/null
+    
+    real    0m5.856s
+    user    0m0.000s
+    sys     0m0.002s
+    [root@dev ~]# ./zabbix-agent-stress-test.py -s 127.0.0.1 -k xdocker.discovery
+    Starting 1 threads, host: 127.0.0.1:10050, key: xdocker.discovery
+    Success: 0      Errors: 0       Avg rate: 0.00 qps      Execution time: 1.00 sec
+    Success: 0      Errors: 0       Avg rate: 0.00 qps      Execution time: 2.00 sec
+    Success: 0      Errors: 0       Avg rate: 0.00 qps      Execution time: 3.02 sec
+    Success: 0      Errors: 0       Avg rate: 0.00 qps      Execution time: 4.02 sec
+    Success: 0      Errors: 0       Avg rate: 0.00 qps      Execution time: 5.02 sec
+    Success: 1      Errors: 0       Avg rate: 0.10 qps      Execution time: 6.02 sec
+    Success: 1      Errors: 0       Avg rate: 0.10 qps      Execution time: 7.02 sec
+    Success: 1      Errors: 0       Avg rate: 0.10 qps      Execution time: 8.02 sec
+    Success: 1      Errors: 0       Avg rate: 0.10 qps      Execution time: 9.02 sec
+    Success: 1      Errors: 0       Avg rate: 0.10 qps      Execution time: 10.02 sec
+    Success: 2      Errors: 0       Avg rate: 0.14 qps      Execution time: 11.02 sec
+    Success: 2      Errors: 0       Avg rate: 0.14 qps      Execution time: 12.03 sec
+    Success: 2      Errors: 0       Avg rate: 0.14 qps      Execution time: 13.03 sec
+    Success: 2      Errors: 0       Avg rate: 0.14 qps      Execution time: 14.03 sec
+    Success: 2      Errors: 0       Avg rate: 0.14 qps      Execution time: 15.03 sec
+    Success: 3      Errors: 0       Avg rate: 0.16 qps      Execution time: 16.03 sec
+    Success: 3      Errors: 0       Avg rate: 0.16 qps      Execution time: 17.03 sec
+    Success: 3      Errors: 0       Avg rate: 0.16 qps      Execution time: 18.03 sec
+    Success: 3      Errors: 0       Avg rate: 0.16 qps      Execution time: 19.03 sec
+    Success: 3      Errors: 0       Avg rate: 0.16 qps      Execution time: 20.03 sec
+    Success: 3      Errors: 0       Avg rate: 0.16 qps      Execution time: 21.04 sec
+    Success: 4      Errors: 0       Avg rate: 0.17 qps      Execution time: 22.04 sec
+    Success: 4      Errors: 0       Avg rate: 0.17 qps      Execution time: 23.04 sec
+    Success: 4      Errors: 0       Avg rate: 0.17 qps      Execution time: 24.04 sec
+    Success: 4      Errors: 0       Avg rate: 0.17 qps      Execution time: 25.05 sec
+    Success: 5      Errors: 0       Avg rate: 0.20 qps      Execution time: 26.05 sec
+    Success: 5      Errors: 0       Avg rate: 0.20 qps      Execution time: 27.05 sec
+    Success: 5      Errors: 0       Avg rate: 0.20 qps      Execution time: 28.05 sec
+    Success: 5      Errors: 0       Avg rate: 0.20 qps      Execution time: 29.05 sec
+    Success: 5      Errors: 0       Avg rate: 0.20 qps      Execution time: 30.05 sec
+    Success: 5      Errors: 0       Avg rate: 0.20 qps      Execution time: 31.05 sec
+    ^C
+    Success: 5      Errors: 0       Avg rate: 0.20 qps      Execution time: 31.35 sec
+    Avg rate based on total execution time and success connections: 0.16 qps
+    [root@dev ~]# ./zabbix-agent-stress-test.py -s 127.0.0.1 -k docker.discovery
+    Starting 1 threads, host: 127.0.0.1:10050, key: docker.discovery
+    Success: 5      Errors: 0       Avg rate: 6.26 qps      Execution time: 1.00 sec
+    Success: 5      Errors: 0       Avg rate: 6.26 qps      Execution time: 2.00 sec
+    Success: 12     Errors: 0       Avg rate: 7.45 qps      Execution time: 3.00 sec
+    Success: 20     Errors: 0       Avg rate: 6.77 qps      Execution time: 4.00 sec
+    Success: 28     Errors: 0       Avg rate: 7.82 qps      Execution time: 5.00 sec
+    Success: 36     Errors: 0       Avg rate: 7.21 qps      Execution time: 6.01 sec
+    Success: 43     Errors: 0       Avg rate: 10.22 qps     Execution time: 7.01 sec
+    Success: 43     Errors: 0       Avg rate: 10.22 qps     Execution time: 8.01 sec
+    Success: 50     Errors: 0       Avg rate: 6.79 qps      Execution time: 9.01 sec
+    Success: 57     Errors: 0       Avg rate: 6.11 qps      Execution time: 10.01 sec
+    Success: 66     Errors: 0       Avg rate: 8.50 qps      Execution time: 11.01 sec
+    Success: 73     Errors: 0       Avg rate: 6.51 qps      Execution time: 12.01 sec
+    Success: 81     Errors: 0       Avg rate: 7.18 qps      Execution time: 13.01 sec
+    Success: 82     Errors: 0       Avg rate: 7.85 qps      Execution time: 14.01 sec
+    Success: 87     Errors: 0       Avg rate: 6.54 qps      Execution time: 15.02 sec
+    Success: 95     Errors: 0       Avg rate: 7.84 qps      Execution time: 16.02 sec
+    Success: 103    Errors: 0       Avg rate: 9.24 qps      Execution time: 17.02 sec
+    Success: 111    Errors: 0       Avg rate: 9.94 qps      Execution time: 18.02 sec
+    Success: 119    Errors: 0       Avg rate: 7.63 qps      Execution time: 19.02 sec
+    Success: 120    Errors: 0       Avg rate: 6.70 qps      Execution time: 20.12 sec
+    Success: 121    Errors: 0       Avg rate: 3.61 qps      Execution time: 21.12 sec
+    Success: 128    Errors: 0       Avg rate: 8.46 qps      Execution time: 22.12 sec
+    Success: 136    Errors: 0       Avg rate: 7.63 qps      Execution time: 23.12 sec
+    Success: 144    Errors: 0       Avg rate: 6.21 qps      Execution time: 24.12 sec
+    Success: 150    Errors: 0       Avg rate: 6.89 qps      Execution time: 25.12 sec
+    Success: 157    Errors: 0       Avg rate: 10.87 qps     Execution time: 26.18 sec
+    Success: 160    Errors: 0       Avg rate: 7.52 qps      Execution time: 27.18 sec
+    Success: 168    Errors: 0       Avg rate: 9.81 qps      Execution time: 28.18 sec
+    Success: 174    Errors: 0       Avg rate: 6.69 qps      Execution time: 29.18 sec
+    Success: 181    Errors: 0       Avg rate: 6.35 qps      Execution time: 30.18 sec
+    Success: 188    Errors: 0       Avg rate: 7.64 qps      Execution time: 31.19 sec
+    ^C
+    Success: 193    Errors: 0       Avg rate: 8.83 qps      Execution time: 31.79 sec
+    Avg rate based on total execution time and success connections: 6.07 qps
        
 Troubleshooting
 ===============
