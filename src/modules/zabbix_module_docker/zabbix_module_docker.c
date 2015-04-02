@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.6
+** Zabbix module for Docker container monitoring - v 0.1.7
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -130,7 +130,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         char *response, *empty="", *message = NULL;
         if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) 
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Can't create socket for docker's communication");
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot create socket for docker's communication");
             return empty;
         }
         address.sun_family = AF_UNIX;
@@ -138,7 +138,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         addr_length = sizeof(address.sun_family) + strlen(address.sun_path);
         if (connect(sock, (struct sockaddr *) &address, addr_length)) 
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Can't connect to standard docker's socket /var/run/docker.sock");
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot connect to standard docker's socket /var/run/docker.sock");
             return empty;
         }
         zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket query: %s", string_replace(string_replace(query, "\n", ""), "\r", ""));
@@ -207,7 +207,7 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no stat directory.");
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory."));
-                return SYSINFO_RET_OK;
+                return SYSINFO_RET_FAIL;
         }        
 
         container = get_rparam(request, 0);
@@ -241,7 +241,7 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "Can't open Docker container metric file: '%s', container doesn't run", filename);
+                zabbix_log(LOG_LEVEL_DEBUG, "Cannot open Docker container metric file: '%s', container doesn't run", filename);
                 SET_DBL_RESULT(result, 0);
                 return SYSINFO_RET_OK;
         }
@@ -280,7 +280,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 zabbix_log(LOG_LEVEL_DEBUG, "docker.dev metrics are not available at the moment - no stat directory.");
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev metrics are not available at the moment - no stat directory."));
-                return SYSINFO_RET_OK;
+                return SYSINFO_RET_FAIL;
         }
 
         container = get_rparam(request, 0);
@@ -317,8 +317,8 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_ERR, "Can't open Docker container metric file: '%s'", filename);
-                SET_MSG_RESULT(result, strdup("Can't open Docker container stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled."));
+                zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                SET_MSG_RESULT(result, strdup("Cannot open Docker container stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled."));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -383,7 +383,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 zabbix_log(LOG_LEVEL_DEBUG, "docker.mem metrics are not available at the moment - no stat directory.");
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem metrics are not available at the moment - no stat directory."));
-                return SYSINFO_RET_OK;
+                return SYSINFO_RET_FAIL;
         }
 
         container = get_rparam(request, 0);
@@ -417,8 +417,8 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_ERR, "Can't open Docker container metric file: '%s'", filename);
-                SET_MSG_RESULT(result, strdup("Can't open Docker container memory.stat file"));
+                zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                SET_MSG_RESULT(result, strdup("Cannot open Docker container memory.stat file"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -480,7 +480,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory.");
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory."));
-                return SYSINFO_RET_OK;
+                return SYSINFO_RET_FAIL;
         }        
 
         container = get_rparam(request, 0);
@@ -514,8 +514,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_ERR, "Can't open Docker container metric file: '%s'", filename);
-                SET_MSG_RESULT(result, strdup("Can't open Docker container cpuacct.stat file"));
+                zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                SET_MSG_RESULT(result, strdup("Cannot open Docker container cpuacct.stat file"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -570,7 +570,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
         // TODO
         zabbix_log(LOG_LEVEL_ERR,  "docker.net metrics are not implemented.");
         SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.net metrics are not implemented."));
-        return SYSINFO_RET_OK;
+        return SYSINFO_RET_FAIL;
         /*        
         if(socket_api == 1) 
         {
@@ -730,11 +730,11 @@ int     zbx_docker_dir_detect()
                     free(ddir);
                 }
                 driver = "";
-                zabbix_log(LOG_LEVEL_DEBUG, "Can't detect used docker driver");
+                zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect used docker driver");
                 return SYSINFO_RET_FAIL;
             }
         }
-        zabbix_log(LOG_LEVEL_DEBUG, "Can't detect docker stat directory");
+        zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect docker stat directory");
         return SYSINFO_RET_FAIL;
 }
 
@@ -768,7 +768,7 @@ int     zbx_module_uninit()
 int     zbx_docker_perm()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_perm()");
-        // I hope that zabbix user can't be member of more than 10 groups
+        // I hope that zabbix user cannot be member of more than 10 groups
         int j, ngroups = 10;
         gid_t *groups;
         struct passwd *pw;
@@ -883,7 +883,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
             zbx_json_close(&j);
             SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
             zbx_json_free(&j);
-            return SYSINFO_RET_OK;
+            return SYSINFO_RET_FAIL;
         }
 
         char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container, *containerid;
@@ -927,7 +927,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
                 }
                 
                 // systemd docker: remove preffix (docker-)
-                if (c_suffix != NULL)
+                if (c_prefix != NULL)
                 {
                     containerid = strtok(containerid, "-");
                     containerid = strtok(NULL, "-");
@@ -982,7 +982,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             zbx_json_close(&j);
             SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
             zbx_json_free(&j);
-            return SYSINFO_RET_OK;
+            return SYSINFO_RET_FAIL;
         }
 
 	    struct zbx_json_parse	jp_data2, jp_row;
