@@ -4,9 +4,9 @@ Zabbix Docker Monitoring - beta version
 If you like or use this project, please provide feedback to author - Star it ★. 
 
 Monitoring of Docker container by using Zabbix. 
-Available: CPU, mem, blkio container metrics and some containers config details e.g. IP, name, ...
+Available CPU, mem, blkio container metrics and some containers config details e.g. IP, name, ...
 Zabbix Docker module has native support for Docker containers (Systemd included) and should support 
-just about a few other container (e.g. LXC) type out of the box. 
+also a few other container (e.g. LXC) type out of the box. 
 Please feel free to test and provide feedback/open issue. 
 Module is mainly focused on performance, see section *Module vs. UserParameter script*.
 
