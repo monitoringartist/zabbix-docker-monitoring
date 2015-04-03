@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.7
+** Zabbix module for Docker container monitoring - v 0.1.8
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
