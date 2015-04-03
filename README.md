@@ -14,7 +14,9 @@ Build
 =====
 
 [Download latest build](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
-[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>Please see section Compilation, if provided build doesn't work on your system.
+[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
+Please see section Compilation, if provided build doesn't work on your system.<br>
+You can check also [dockerfile folder] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where are prepared Dockerfiles for various OS/Zabbix versions.
 
 Available keys
 ==============
