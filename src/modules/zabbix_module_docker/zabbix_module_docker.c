@@ -1133,8 +1133,6 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
                             {
                                char *param3, api_value3[buffer_size];
                                param3 = get_rparam(request, 3);
-                               //jp_data3.start = &api_value2[0];
-                               //jp_data3.end = &api_value2[strlen(api_value2)];
                                struct zbx_json_parse jp_data3 = {&api_value2[0], &api_value2[strlen(api_value2)]}; 
                                if (SUCCEED != zbx_json_value_by_name(&jp_data3, param3, api_value3, buffer_size))
                                {
@@ -1306,7 +1304,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
                                 {
                                     char *param3, api_value3[buffer_size];
                                     param3 = get_rparam(request, 3);
-                                    if (SUCCEED != zbx_json_value_by_name(&jp_data2, param2, api_value2, buffer_size))
+                                    if (SUCCEED != zbx_json_value_by_name(&jp_data3, param3, api_value3, buffer_size))
                                     {
                                         zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3);
                                         SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3));
