@@ -61,23 +61,23 @@ Additional Docker permissions
 
 You have two options, how to get additional Docker permissions:
 
-- Edit your zabbix_agentd.conf and set AllowRoot:
-
-```
-AllowRoot=1
-```    
-
-- Or add zabbix user to docker group:
+- Add zabbix user to docker group (recommended option):
 
 ```
 usermod -aG docker zabbix
 ```
 
+- Or edit zabbix_agentd.conf and set AllowRoot:
+
+```
+AllowRoot=1
+```  
+
 Installation
 ============
 
 * Import provided template Zabbix-Template-App-Docker.xml.
-* Configure your Zabbix agent(s) - load zabbix-module-docker.so
+* Configure your Zabbix agent(s) - load zabbix-module-docker.so<br>
 https://www.zabbix.com/documentation/2.4/manual/config/items/loadablemodules
 
 
