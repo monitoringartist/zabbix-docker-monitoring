@@ -13,9 +13,9 @@ Module is mainly focused on performance, see section *Module vs. UserParameter s
 Build
 =====
 
-[Download latest build](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
+[Download latest build (RHEL 7, CentOS 7, Debian 7, Ubuntu 12, ...)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
 [![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
-Please see section *Compilation*, if provided build doesn't work on your system. Or you can check [folder dockerfiles] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where Dockerfiles for various OS/Zabbix versions are prepared.
+If provided build doesn't work on your system, please see section *Compilation*. Or you can check [folder dockerfiles] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where Dockerfiles for various OS/Zabbix versions are prepared.
 
 Available keys
 ==============
@@ -307,7 +307,7 @@ Debug messages from this module will be available in standard zabbix_agentd.log.
 Issues and feature requests
 ===========================
 
-Please use Github functionality.       
+Please use Github issue tracker.       
 
 Author
 ======
