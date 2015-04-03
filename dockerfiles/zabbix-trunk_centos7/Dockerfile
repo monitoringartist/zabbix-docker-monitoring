@@ -5,7 +5,7 @@ MAINTAINER "Jan Garaj" <jan.garaj@gmail.com>
 RUN yum -y install git subversion automake autoconf gcc make
 RUN git clone https://github.com/jangaraj/Zabbix-Docker-Monitoring
 RUN mkdir ~/zabbix/
-RUN svn co svn://svn.zabbix.com/branches/2.4 ~/zabbix/
+RUN svn co svn://svn.zabbix.com/trunk ~/zabbix/
 RUN cd ~/zabbix/; ./bootstrap.sh
 RUN cd ~/zabbix/; ./configure --enable-agent
 RUN cp -R Zabbix-Docker-Monitoring/src/modules/zabbix_module_docker/ ~/zabbix/src/modules/
