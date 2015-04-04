@@ -17,8 +17,8 @@ Build
 [![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
 If provided build doesn't work on your system, please see section [Compilation](#compilation). Or you can check [folder dockerfiles] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where Dockerfiles for various OS/Zabbix versions are prepared.
 
-Available keys
-==============
+Available metrics
+=================
 
 Note: fci - full container ID
 
