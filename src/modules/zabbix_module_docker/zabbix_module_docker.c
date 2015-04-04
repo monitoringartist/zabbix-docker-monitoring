@@ -37,6 +37,7 @@ char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -45,18 +46,20 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result);
 
+
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG            FUNCTION                TEST PARAMETERS */
 {
         {"docker.discovery", 0, zbx_module_docker_discovery,    NULL},
         {"docker.inspect", CF_HAVEPARAMS, zbx_module_docker_inspect, "full container id, parameter 1, <parameter 2>"},
+        {"docker.cstatus", CF_HAVEPARAMS, zbx_module_docker_cstatus, "status"},
         {"docker.info", CF_HAVEPARAMS,  zbx_module_docker_info, "full container id, info"},
         {"docker.stats",CF_HAVEPARAMS,  zbx_module_docker_stats,"full container id, parameter 1, <parameter 2>, <parameter 3>"},
         {"docker.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full container id"},
         {"docker.mem",  CF_HAVEPARAMS,  zbx_module_docker_mem,  "full container id, memory metric name"},
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
         {"docker.net",  CF_HAVEPARAMS,  zbx_module_docker_net,  "full container id, network metric name"},
-        {"docker.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full container id, blkio file, blkio metric name"},
+        {"docker.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full container id, blkio file, blkio metric name"},        
         {NULL}
 };
 
@@ -1338,4 +1341,217 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
         }
         return SYSINFO_RET_OK;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_cstate                                         *
+ *                                                                            *
+ * Purpose: count of containers in defined state                              *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_cstatus()");
+        
+        if (socket_api != 1)
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
+            SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
+            return SYSINFO_RET_FAIL;
+        }
+
+        if (1 > request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                return SYSINFO_RET_FAIL;
+        }           
+
+        char    *state, *query;
+        state = get_rparam(request, 0);
+
+        if (strcmp(state, "Up") == 0)
+        {
+            // Up
+            const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=0 HTTP/1.0\r\n\n", 0);
+            if(strcmp(answer, "") == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.cstatus is not available at the moment - some problem with Docker's socket API");
+                SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
+                return SYSINFO_RET_FAIL;
+            }
+            struct zbx_json_parse	jp_data;
+            jp_data.start = &answer[0];
+            jp_data.end = &answer[strlen(answer)];
+            int count = zbx_json_count(&jp_data);
+            zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
+            SET_UI64_RESULT(result, count);
+            return SYSINFO_RET_OK;
+        } else {
+            if (strcmp(state, "Exited") == 0)
+            {
+                // Exited = All - Up
+                // # All
+                const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=1 HTTP/1.0\r\n\n", 0);
+                if(strcmp(answer, "") == 0)
+                {
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.cstatus is not available at the moment - some problem with Docker's socket API");
+                    SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
+                    return SYSINFO_RET_FAIL;
+                }
+                struct zbx_json_parse	jp_data;
+                jp_data.start = &answer[0];
+                jp_data.end = &answer[strlen(answer)];
+                int count = zbx_json_count(&jp_data);
+                
+                // # Up
+                const char *answer2 = zbx_module_docker_socket_query("GET /containers/json?all=0 HTTP/1.0\r\n\n", 0);
+                if(strcmp(answer2, "") == 0)
+                {
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.cstatus is not available at the moment - some problem with Docker's socket API");
+                    SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
+                    return SYSINFO_RET_FAIL;
+                }
+                jp_data.start = &answer2[0];
+                jp_data.end = &answer2[strlen(answer2)];
+                count = count - zbx_json_count(&jp_data);
+                zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
+                SET_UI64_RESULT(result, count);
+                return SYSINFO_RET_OK;
+            } else {
+                if (strcmp(state, "Crashed") == 0)
+                {
+                    // Crashed - parsing Exited (x) x!=0
+                    // # All
+                    const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=1 HTTP/1.0\r\n\n", 0);
+                    if(strcmp(answer, "") == 0)
+                    {
+                        zabbix_log(LOG_LEVEL_DEBUG, "docker.cstatus is not available at the moment - some problem with Docker's socket API");
+                        SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
+                        return SYSINFO_RET_FAIL;
+                    }
+
+                    int count = 0;
+            	    struct zbx_json_parse	jp_data2, jp_row;
+            	    const char		*p = NULL;
+                    char status[cid_length];
+                    size_t  s_size;
+
+                    // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
+                	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                	/*         ^-------------------------------------------^  */
+                    struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+                	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                	/*          ^                                             */
+                	while (NULL != (p = zbx_json_next(&jp_data, p)))
+                	{
+                		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                		/*          ^------------------^                          */
+                		if (FAIL == zbx_json_brackets_open(p, &jp_row))
+                        {
+                            zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failes");
+                            continue;
+                        }
+                        
+                        if (SUCCEED != zbx_json_value_by_name(&jp_row, "Status", status, cid_length))
+                        {
+                            zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Status\" array in the received JSON object");
+                            continue;
+                        }
+                        if(strncmp(status, "Exited (", strlen("Exited (")) == 0)
+                        {
+                            if(strncmp(status, "Exited (0", strlen("Exited (0")) != 0) {
+                                zabbix_log(LOG_LEVEL_DEBUG, "Parsed container %s status: %s", state, status);
+                                count++;
+                            }
+                        }
+                    }
+                    
+                    zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
+                    SET_UI64_RESULT(result, count);
+                    return SYSINFO_RET_OK;
+                } else {
+                    if (strcmp(state, "All") == 0)
+                    {
+                        // All
+                        const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=1 HTTP/1.0\r\n\n", 0);
+                        if(strcmp(answer, "") == 0)
+                        {
+                            zabbix_log(LOG_LEVEL_DEBUG, "docker.cstatus is not available at the moment - some problem with Docker's socket API");
+                            SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
+                            return SYSINFO_RET_FAIL;
+                        }
+                        struct zbx_json_parse	jp_data;
+                        jp_data.start = &answer[0];
+                        jp_data.end = &answer[strlen(answer)];
+                        int count = zbx_json_count(&jp_data);
+                        zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
+                        SET_UI64_RESULT(result, count);
+                        return SYSINFO_RET_OK;
+                    } else {
+                        if (strcmp(state, "Paused") == 0)
+                        {
+                            // Paused
+                            // # Up
+                            const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=0 HTTP/1.0\r\n\n", 0);
+                            if(strcmp(answer, "") == 0)
+                            {
+                                zabbix_log(LOG_LEVEL_DEBUG, "docker.cstatus is not available at the moment - some problem with Docker's socket API");
+                                SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
+                                return SYSINFO_RET_FAIL;
+                            }
+
+                            int count = 0;
+                    	    struct zbx_json_parse	jp_data2, jp_row;
+                    	    const char		*p = NULL;
+                            char status[cid_length];
+                            size_t  s_size;
+
+                            // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
+                        	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                        	/*         ^-------------------------------------------^  */
+                            struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+                        	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                        	/*          ^                                             */
+                        	while (NULL != (p = zbx_json_next(&jp_data, p)))
+                        	{
+                        		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                        		/*          ^------------------^                          */
+                        		if (FAIL == zbx_json_brackets_open(p, &jp_row))
+                                {
+                                    zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failes");
+                                    continue;
+                                }
+                                
+                                if (SUCCEED != zbx_json_value_by_name(&jp_row, "Status", status, cid_length))
+                                {
+                                    zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Status\" array in the received JSON object");
+                                    continue;
+                                }
+                                if(strstr(status, "(Paused)") != NULL)
+                                {
+                                    zabbix_log(LOG_LEVEL_DEBUG, "Parsed container %s status: %s", state, status);
+                                    count++;
+                                }
+                            }
+                            
+                            zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
+                            SET_UI64_RESULT(result, count);
+                            return SYSINFO_RET_OK;
+                        
+                        } else {
+                            zabbix_log(LOG_LEVEL_WARNING, "Not defined container status: %s",  state);
+                            SET_MSG_RESULT(result, strdup("Not defined container status."));
+                            return SYSINFO_RET_FAIL;
+                        }
+                    }
+                }
+            }
+        }
+        return SYSINFO_RET_FAIL;
 }
