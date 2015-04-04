@@ -8,14 +8,14 @@ Available CPU, mem, blkio container metrics and some containers config details e
 Zabbix Docker module has native support for Docker containers (Systemd included) and should support 
 also a few other container (e.g. LXC) type out of the box. 
 Please feel free to test and provide feedback/open issue. 
-Module is mainly focused on performance, see section *Module vs. UserParameter script*.
+Module is mainly focused on performance, see section [Module vs. UserParameter script](https://github.com/jangaraj/Zabbix-Docker-Monitoring#compilation).
 
 Build
 =====
 
 [Download latest build (RHEL 7, CentOS 7, Debian 7, Ubuntu 12, ...)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
 [![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
-If provided build doesn't work on your system, please see section [Compilation](https://github.com/jangaraj/Zabbix-Docker-Monitoring#module-vs-userparameter-script). Or you can check [folder dockerfiles] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where Dockerfiles for various OS/Zabbix versions are prepared.
+If provided build doesn't work on your system, please see section [Compilation](https://github.com/jangaraj/Zabbix-Docker-Monitoring#compilation). Or you can check [folder dockerfiles] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where Dockerfiles for various OS/Zabbix versions are prepared.
 
 Available keys
 ==============
@@ -86,7 +86,7 @@ Compilation
 ===========
 
 You have to compile module, if provided binary doesn't work on your system.
-Basic steps:
+Basic compilation steps:
 
     cd ~
     mkdir zabbix24
@@ -100,16 +100,16 @@ Basic steps:
     wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
     make
 
-Output will be binary file zabbix_module_docker.so, which can be loaded by zabbix agent.
+Output will be binary file (shared library) zabbix_module_docker.so, which can be loaded by zabbix agent.
 
 How it works
 ============
 
 See https://blog.docker.com/2013/10/gathering-lxc-docker-containers-metrics/
-Metrics for containers are read from cgroup file system. For discovering is used 
-also Docker API https://docs.docker.com/reference/api/docker_remote_api. However
-for communication with Docker via unix socket is required root permission. You 
-can test API also in your command line:
+Metrics for containers are read from cgroup file system. 
+[Docker API](https://docs.docker.com/reference/api/docker_remote_api) is used 
+for discovering and some keys. However root or docker permissions are required 
+for communication with Docker via unix socket. You can test API also in your command line:
 
     echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
     
