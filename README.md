@@ -8,7 +8,7 @@ Available CPU, mem, blkio container metrics and some containers config details e
 Zabbix Docker module has native support for Docker containers (Systemd included) and should support 
 also a few other container (e.g. LXC) type out of the box. 
 Please feel free to test and provide feedback/open issue. 
-Module is mainly focused on performance, see section [Module vs. UserParameter script](https://github.com/jangaraj/Zabbix-Docker-Monitoring#compilation).
+Module is mainly focused on performance, see section [Module vs. UserParameter script](#module-vs-userparameter-script).
 
 Build
 =====
