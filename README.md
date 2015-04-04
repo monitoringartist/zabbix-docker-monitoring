@@ -66,7 +66,7 @@ You have two options, how to get additional Docker permissions:
 usermod -aG docker zabbix
 ```
 
-- Or edit zabbix_agentd.conf and set AllowRoot:
+- Or edit zabbix_agentd.conf and set AllowRoot (Zabbix agent with root permissions):
 
 ```
 AllowRoot=1
