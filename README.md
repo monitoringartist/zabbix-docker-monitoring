@@ -37,7 +37,6 @@ Note: fci - full container ID
 Not available at the moment, probably in the (near) future:
 
 * docker.net - tricky metrics
-* docker.info - running/crashed/stopped containers
 
 Recommended docs:
 
