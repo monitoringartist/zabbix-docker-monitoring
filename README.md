@@ -37,8 +37,6 @@ Not available at the moment, probably in the (near) future:
 
 * docker.net - tricky metrics
 * docker.info - running/crashed/stopped containers
-* docker.inspect - support bool values
-* docker.stats - support 3rd parameter
 
 Recommended docs:
 
