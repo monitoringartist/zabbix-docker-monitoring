@@ -17,23 +17,22 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "sysinc.h"
-#include "module.h"
 #include "log.h"
 #include "common.h"
-#include <stdio.h>
-#include <unistd.h>
-#include <grp.h>
+#include "comms.h"
+#include "module.h"
+#include "sysinc.h"
 #include "zbxjson.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-/* docker unix connections */
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <stdlib.h>
-#include "comms.h"
+#include <grp.h>
 
-char    *m_version = "v0.2.0";
+char    *m_version = "v0.3.0";
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66;
 char    *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
@@ -133,7 +132,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         size_t addr_length;
         char buffer[buffer_size+1];
         char *response, *empty="", *message = NULL;
-        if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) 
+        if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
         {
             zabbix_log(LOG_LEVEL_WARNING, "Cannot create socket for docker's communication");
             return empty;
@@ -149,17 +148,17 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket query: %s", string_replace(string_replace(query, "\n", ""), "\r", ""));
         write(sock, query, strlen(query));
         message = realloc(NULL, 1);
-        if (message == NULL) 
+        if (message == NULL)
         {
             zabbix_log(LOG_LEVEL_WARNING, "Problem with allocating memory for Docker answer");
             return empty;
         }
-        strcat(message, "");        
+        strcat(message, "");
         while ((nbytes = read(sock, buffer, buffer_size)) > 0 ) 
         {        
             buffer[nbytes] = 0;
             message = realloc(message, (strlen(message) + nbytes + 1));
-            if (message == NULL) 
+            if (message == NULL)
             {
                 zabbix_log(LOG_LEVEL_WARNING, "Problem with allocating memory");
                 return empty;
@@ -167,20 +166,20 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
             strcat(message, buffer);
             // wait only for first chunk of (stats) stream
             if (stream == 1)
-            {            
+            {
                 if ((strstr(message, "}\n")) != NULL)
-                {                
+                {
                     break;
                 }
             }
         }
-        close(sock);        
+        close(sock);
         // remove http header
-        if (response = strstr(message, "\r\n\r\n")) 
+        if (response = strstr(message, "\r\n\r\n"))
         {
             response += 4;
         } else {
-            response = "[{}]"; 
+            response = "[{}]";
         }
         zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket response: %s", string_replace(string_replace(response, "\n", ""), "\r", ""));
         return response;
@@ -204,14 +203,14 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (1 != request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
         }
 
-        if (stat_dir == NULL || driver == NULL) 
+        if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no stat directory.");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory."));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }        
 
@@ -277,14 +276,14 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (3 != request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
         }
         
-        if (stat_dir == NULL || driver == NULL) 
+        if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.dev metrics are not available at the moment - no stat directory.");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev metrics are not available at the moment - no stat directory."));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.dev metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -323,7 +322,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (NULL == (file = fopen(filename, "r")))
         {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
-                SET_MSG_RESULT(result, strdup("Cannot open Docker container stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled."));
+                SET_MSG_RESULT(result, strdup("Cannot open Docker container stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -354,7 +353,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_fclose(file);
 
         if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container blkio file."));
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container blkio file"));
 
         return ret;
 }
@@ -369,7 +368,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
  *                                 as not supported by zabbix                 *
  *               SYSINFO_RET_OK - success                                     *
  *                                                                            *
- * Notes: https://www.kernel.org/doc/Documentation/cgroups/memory.txt         * 
+ * Notes: https://www.kernel.org/doc/Documentation/cgroups/memory.txt         *
  ******************************************************************************/
 int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
@@ -380,14 +379,14 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (2 != request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
         }
        
-        if (stat_dir == NULL || driver == NULL) 
+        if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.mem metrics are not available at the moment - no stat directory.");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem metrics are not available at the moment - no stat directory."));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.mem metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -437,7 +436,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 if (0 != strncmp(line, metric2, strlen(metric2)))
                         continue;
-                if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value)) 
+                if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value))
                 {
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
@@ -450,7 +449,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_fclose(file);
 
         if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container memory.stat file."));
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container memory.stat file"));
 
         return ret;
 }
@@ -465,7 +464,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
  *                                 as not supported by zabbix                 *
  *               SYSINFO_RET_OK - success                                     *
  *                                                                            *
- * Notes: https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt        * 
+ * Notes: https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt        *
  ******************************************************************************/
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
@@ -477,14 +476,14 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (2 != request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
         }
-        
-        if (stat_dir == NULL || driver == NULL) 
+
+        if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory.");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory."));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }        
 
@@ -553,7 +552,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_fclose(file);
 
         if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container cpuacct.stat file."));
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container cpuacct.stat file"));
 
         return ret;
 }
@@ -640,28 +639,36 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
             FILE    *file;
             if (NULL == (file = fopen(filename2, "r")))
             {
-                    zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker tasks file: '%s'", filename2);
-                    SET_MSG_RESULT(result, strdup("Cannot open Docker tasks file"));
-                    return SYSINFO_RET_FAIL;
+                zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker tasks file: '%s'", filename2);
+                SET_MSG_RESULT(result, strdup("Cannot open Docker tasks file"));
+                return SYSINFO_RET_FAIL;
             }
     
             char    line[MAX_STRING_LEN];
             char* first_task;
             while (NULL != fgets(line, sizeof(line), file))
             {
-                    first_task = line;
-                    zabbix_log(LOG_LEVEL_DEBUG, "First task for container %s: %s", container, first_task);
-                    break;
+                first_task = string_replace(line, "\n", "");
+                zabbix_log(LOG_LEVEL_DEBUG, "First task for container %s: %s", container, first_task);
+                break;
             }
             zbx_fclose(file);
 
-            // soft link - new netns
-            first_task=string_replace(first_task, "\n", "");
+            // soft link - new netns            
             filename_size = strlen("/proc//ns/net") + strlen(first_task) + 2;
             char* netns_source = malloc(filename_size);
             zbx_strlcpy(netns_source, "/proc/", filename_size);
             zbx_strlcat(netns_source, first_task, filename_size);
             zbx_strlcat(netns_source, "/ns/net", filename_size);
+            
+            // remove broken link - container has been restarted
+            if(access(filename, F_OK ) == -1)
+            {
+                if(unlink(filename) != 0)
+                {
+                    zabbix_log(LOG_LEVEL_WARNING, "%s: %s", filename, zbx_strerror(errno));
+                }
+            }
 
             if(symlink(netns_source, filename) != 0) {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot create netns symlink: %s -> %s", filename, netns_source);
@@ -677,7 +684,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
         char* command = malloc(filename_size);
         zbx_strlcpy(command, "ip netns exec ", filename_size);
         zbx_strlcat(command, netns, filename_size);
-        zbx_strlcat(command, " netstat -i", filename_size);        
+        zbx_strlcat(command, " netstat -i", filename_size);
         zabbix_log(LOG_LEVEL_DEBUG, "netns command: %s", command);
                 
         fp = popen(command, "r");
@@ -700,7 +707,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
         int pos = 0;
         char *pch;
         int value = 0;
-        while(fgets(line, sizeof(line), fp) != NULL) 
+        while(fgets(line, sizeof(line), fp) != NULL)
         {
             // skip first line
             if (0 == strncmp(line, "Kernel Interface table", strlen("Kernel Interface table")))
@@ -714,7 +721,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
             
             // second line find position
-            if(metric_pos == 0) 
+            if(metric_pos == 0)
             {
                 int found = 0;
                 pch = strtok(line," ");
@@ -819,7 +826,7 @@ int     zbx_docker_dir_detect()
         FILE *fp;
         DIR  *dir;
 
-        if ((fp = fopen("/proc/mounts", "r")) == NULL) 
+        if ((fp = fopen("/proc/mounts", "r")) == NULL)
         {
             zabbix_log(LOG_LEVEL_WARNING, "Cannot open /proc/mounts: %s", zbx_strerror(errno));
             return SYSINFO_RET_FAIL;
@@ -827,7 +834,7 @@ int     zbx_docker_dir_detect()
 
         while (fgets(path, 512, fp) != NULL) 
         {            
-            if ((strstr(path, "cpuset cgroup")) != NULL) 
+            if ((strstr(path, "cpuset cgroup")) != NULL)
             {
                 // found line e.g. cgroup /cgroup/cpuacct cgroup rw,relatime,cpuacct 0 0
                 temp = string_replace(path, "cgroup ", "");
@@ -870,7 +877,7 @@ int     zbx_docker_dir_detect()
                         } else {
                             cpu_cgroup = "cpuacct/";
                         }
-                        return SYSINFO_RET_OK; 
+                        return SYSINFO_RET_OK;
                     }
                     *tdriver++;
                     free(ddir);
@@ -898,10 +905,39 @@ int     zbx_docker_dir_detect()
 int     zbx_module_uninit()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_uninit()");
-        /* TODO
-        remove all zabbix netns:
-        rm -rf /var/run/netns/znetns_prefix*
-        */
+        
+        const char* znetns_prefix = "zabbix_module_docker_";
+        FILE            *f;
+        DIR             *dir;
+        struct dirent   *d;
+
+        if (NULL == (dir = opendir("/var/run/netns/")))
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "/var/run/netns/: %s", zbx_strerror(errno));
+            return ZBX_MODULE_FAIL;
+        }
+        char *file = NULL;
+        while (NULL != (d = readdir(dir)))
+        {
+            if(0 == strcmp(d->d_name, ".") || 0 == strcmp(d->d_name, ".."))
+                continue;
+    
+            // delete zabbix netns
+            if ((strstr(d->d_name, znetns_prefix)) != NULL)
+            {
+                file = NULL;
+                file = zbx_dsprintf(file, "/var/run/netns/%s", d->d_name);
+                if(unlink(file) != 0)
+                {
+                    zabbix_log(LOG_LEVEL_WARNING, "%s: %s", d->d_name, zbx_strerror(errno));
+                }
+            }
+        }
+        if(0 != closedir(dir))
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "/var/run/netns/: %s", zbx_strerror(errno));
+        }
+        
         return ZBX_MODULE_OK;
 }
 
@@ -968,7 +1004,7 @@ int     zbx_docker_perm()
 int     zbx_module_init()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_init()");
-        zabbix_log(LOG_LEVEL_DEBUG, "zabbix_module_docker %s", m_version);
+        zabbix_log(LOG_LEVEL_DEBUG, "zabbix_module_docker %s, compilation time: %s %s", m_version, __DATE__, __TIME__);
         zbx_docker_dir_detect();
         // test root or docker permission
         if (geteuid() != 0 && zbx_docker_perm() != 1 ) 
@@ -1094,9 +1130,9 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
 
         }
 
-        if (0 != closedir(dir))
+        if(0 != closedir(dir))
         {
-                zbx_error("%s: %s\n", ddir, zbx_strerror(errno));
+            zabbix_log(LOG_LEVEL_WARNING, "%s: %s\n", ddir, zbx_strerror(errno));
         }
 
         zbx_json_close(&j);
@@ -1226,19 +1262,19 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (1 >= request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
         }
 
         char    *container, *query;
         container = get_rparam(request, 0);
-        
+
         size_t s_size = strlen("GET /containers/ /json HTTP/1.0\r\n\n") + strlen(container);
         query = malloc(s_size);
         zbx_strlcpy(query, "GET /containers/", s_size);
         zbx_strlcat(query, container, s_size);
         zbx_strlcat(query, "/json HTTP/1.0\r\n\n", s_size);
-        
+
         const char *answer = zbx_module_docker_socket_query(query, 0);
         if(strcmp(answer, "") == 0)
         {
@@ -1284,7 +1320,7 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
                             {
                                char *param3, api_value3[buffer_size];
                                param3 = get_rparam(request, 3);
-                               struct zbx_json_parse jp_data3 = {&api_value2[0], &api_value2[strlen(api_value2)]}; 
+                               struct zbx_json_parse jp_data3 = {&api_value2[0], &api_value2[strlen(api_value2)]};
                                if (SUCCEED != zbx_json_value_by_name(&jp_data3, param3, api_value3, buffer_size))
                                {
                                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3);
@@ -1293,14 +1329,14 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
                                 } else {
                                     zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s][%s] item in the received JSON object: %s", param1, param2, param3, api_value3);
                                     SET_STR_RESULT(result, zbx_strdup(NULL, api_value3));
-                                    return SYSINFO_RET_OK;                                 
-                                }                                                            
+                                    return SYSINFO_RET_OK;
+                                }
                             } else {
                                 zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object: %s", param1, param2, api_value2);
                                 SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
                                 return SYSINFO_RET_OK;
                             }
-                        }                    
+                        }
                     } else {
                         zabbix_log(LOG_LEVEL_WARNING, "Finded the [%s] item in the received JSON object, but it's not plain value object", param1);
                         SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Can find the [%s] item in the received JSON object, but it's not plain value object", param1));
@@ -1341,13 +1377,12 @@ int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (1 > request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
         }
 
         char    *info;
         info = get_rparam(request, 0);
-        // TODO info: specific info for running_containers, crashed_containers - Exited (non 0)
         const char *answer = zbx_module_docker_socket_query("GET /info HTTP/1.0\r\n\n", 0);
         if(strcmp(answer, "") == 0)
         {
@@ -1396,7 +1431,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (1 >= request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
         }           
 
@@ -1422,7 +1457,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
         
-        if (request->nparam > 1) 
+        if (request->nparam > 1)
         {
             char *param1;
             param1 = get_rparam(request, 1);
@@ -1516,9 +1551,9 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (1 > request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
                 return SYSINFO_RET_FAIL;
-        }           
+        }
 
         char    *state, *query;
         state = get_rparam(request, 0);
@@ -1642,7 +1677,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         SET_UI64_RESULT(result, count);
                         return SYSINFO_RET_OK;
                     } else {
-                        if (strcmp(state, "Paused") == 0)
+                        if(strcmp(state, "Paused") == 0)
                         {
                             // Paused
                             // # Up
@@ -1694,7 +1729,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         
                         } else {
                             zabbix_log(LOG_LEVEL_WARNING, "Not defined container status: %s",  state);
-                            SET_MSG_RESULT(result, strdup("Not defined container status."));
+                            SET_MSG_RESULT(result, strdup("Not defined container status"));
                             return SYSINFO_RET_FAIL;
                         }
                     }

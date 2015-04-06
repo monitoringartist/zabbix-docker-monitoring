@@ -1,5 +1,5 @@
-Zabbix Docker Monitoring - beta version
-========================================
+Zabbix Docker Monitoring
+========================
 
 If you like or use this project, please provide feedback to author - Star it ★. 
 
@@ -13,7 +13,7 @@ Module is focused on the performance, see section [Module vs. UserParameter scri
 Build
 =====
 
-[Download latest build (RHEL 7, CentOS 7, Debian 7, Ubuntu 12, ...)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
+[Download latest build (RHEL 7, CentOS 7, Ubuntu 14, ...)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
 [![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
 If provided build doesn't work on your system, please see section [Compilation](#compilation). Or you can check [folder dockerfiles] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where Dockerfiles for various OS/Zabbix versions are prepared.
 
@@ -28,9 +28,9 @@ Note: fci - full container ID
 | **docker.mem[fci,mmetric]** | **Memory metrics:**<br>**mmetric** - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable* |
 | **docker.cpu[fci,cmetric]** | **CPU metrics:**<br>**cmetric** - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Jiffy CPU counter is recalculated to % value by Zabbix. | 
 | **docker.dev[fci,bfile,bmetric]** | **IO metrics:**<br>**bfile** - container blkio pseudo-file, e.g.: *blkio.io_merged, blkio.io_queued, blkio.io_service_bytes, blkio.io_serviced, blkio.io_service_time, blkio.io_wait_time, blkio.sectors, blkio.time, blkio.avg_queue_size, blkio.idle_time, blkio.dequeue, ...*<br>**bmetric** - any available blkio metric in selected pseudo-file, e.g.: *Total*. Option for selected block device only is also available e.g. *'8:0 Sync'* (quotes must be used in key parameter in this case)<br>Note: Some pseudo blkio files are available only if kernel config *CONFIG_DEBUG_BLK_CGROUP=y*, see recommended docs. |
-| **docker.inspect[fci,par1,\<par2\>]** | **Docker inspection:**<br>Requested value from Docker inspect structure is returned.<br>**par1** - name of 1st level JSON property<br>**par2** - optional name of 2nd level JSON property<br>For example:<br>*docker.inspect[fci,NetworkSettings,IPAddress], docker.inspect[fci,State,StartedAt], docker.inspect[fci,Name]*<br>Note 1: Requested value must be plain text/numeric value. JSON objects/arrays are not supported.<br>Note 2: [Additional Docker permissions](#additional-docker-permissions) are needed. |
-| **docker.info[info]** | **Docker information:**<br>Requested value from Docker information structure is returned.<br>**info** - name of requested information, e.g. *Containers, Images, NCPU, ...*<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed. |
-| **docker.stats[fci,par1,\<par2\>,\<par3\>]** | **Docker container resource usage statistics:**<br>Docker version 1.5+ is required<br>Requested value from Docker statistic structure is returned.<br>**par1** - name of 1st level JSON property<br>**par2** - optional name of 2nd level JSON property<br>**par3** - optional name of 3rd level JSON property<br>For example:<br>*docker.stats[fci,memory_stats,usage], docker.stats[fci,network,rx_bytes], docker.stats[fci,cpu_stats,cpu_usage,total_usage]*<br>Note 1: Requested value must be plain text/numeric value. JSON objects/arrays are not supported.<br>Note 2: [Additional Docker permissions](#additional-docker-permissions) are needed.<br>Note 3: The most accurate way to get Docker container stats, but it's also the slowest (0.3-0.7s), because data are readed from on demand container stats stream. |
+| **docker.inspect[fci,par1,\<par2\>]** | **Docker inspection:**<br>Requested value from Docker inspect JSON object is returned.<br>**par1** - name of 1st level JSON property<br>**par2** - optional name of 2nd level JSON property<br>For example:<br>*docker.inspect[fci,NetworkSettings,IPAddress], docker.inspect[fci,State,StartedAt], docker.inspect[fci,Name]*<br>Note 1: Requested value must be plain text/numeric value. JSON objects/arrays are not supported.<br>Note 2: [Additional Docker permissions](#additional-docker-permissions) are needed. |
+| **docker.info[info]** | **Docker information:**<br>Requested value from Docker info JSON object is returned.<br>**info** - name of requested information, e.g. *Containers, Images, NCPU, ...*<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed. |
+| **docker.stats[fci,par1,\<par2\>,\<par3\>]** | **Docker container resource usage statistics:**<br>Docker version 1.5+ is required<br>Requested value from Docker stats JSON object is returned.<br>**par1** - name of 1st level JSON property<br>**par2** - optional name of 2nd level JSON property<br>**par3** - optional name of 3rd level JSON property<br>For example:<br>*docker.stats[fci,memory_stats,usage], docker.stats[fci,network,rx_bytes], docker.stats[fci,cpu_stats,cpu_usage,total_usage]*<br>Note 1: Requested value must be plain text/numeric value. JSON objects/arrays are not supported.<br>Note 2: [Additional Docker permissions](#additional-docker-permissions) are needed.<br>Note 3: The most accurate way to get Docker container stats, but it's also the slowest (0.3-0.7s), because data are readed from on demand container stats stream. |
 | **docker.cstatus[status]** | **Count of Docker containers in defined status:**<br>**status** - status of container, available statuses:<br>*All* - count of all containers<br>*Up* - count of running containers (Paused included)<br>*Exited* - count of exited containers<br>*Crashed* - count of crashed containers (exit code != 0)<br>*Paused* - count of paused containers<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed.|
 | **docker.up[fci]** | **Running state check:**<br>1 if container is running, otherwise 0 |
 | | |
@@ -67,7 +67,7 @@ Installation
 ============
 
 * Import provided template Zabbix-Template-App-Docker.xml.
-* Configure your Zabbix agent(s) - load zabbix-module-docker.so<br>
+* Configure your Zabbix agent(s) - load downloaded/compiled zabbix_module_docker.so<br>
 https://www.zabbix.com/documentation/2.4/manual/config/items/loadablemodules
 
 
@@ -89,7 +89,7 @@ Basic compilation steps:
     wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
     make
 
-Output will be binary file (shared library) zabbix_module_docker.so, which can be loaded by zabbix agent.
+Output will be binary file (dynamically linked shared object library) zabbix_module_docker.so, which can be loaded by zabbix agent.
 
 How it works
 ============
