@@ -1,5 +1,5 @@
 /*
-** Zabbix module for Docker container monitoring - v 0.1.8
+** Zabbix module for Docker container monitoring
 ** Copyright (C) 2001-2015 Jan Garaj - www.jangaraj.com
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -25,15 +25,17 @@
 #include <unistd.h>
 #include <grp.h>
 #include "zbxjson.h"
+#include <sys/stat.h>
+#include <sys/types.h>
 /* docker unix connections */
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <stdlib.h>
 #include "comms.h"
 
-/* the variable keeps timeout setting for item processing */
+char    *m_version = "v0.2.0";
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66;
-char      *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
+char    *stat_dir, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -58,7 +60,7 @@ static ZBX_METRIC keys[] =
         {"docker.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full container id"},
         {"docker.mem",  CF_HAVEPARAMS,  zbx_module_docker_mem,  "full container id, memory metric name"},
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
-        {"docker.net",  CF_HAVEPARAMS,  zbx_module_docker_net,  "full container id, network metric name"},
+        {"docker.xnet", CF_HAVEPARAMS,  zbx_module_docker_net,  "full container id, interface, network metric name"},
         {"docker.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full container id, blkio file, blkio metric name"},        
         {NULL}
 };
@@ -113,7 +115,7 @@ ZBX_METRIC      *zbx_module_item_list()
  *                                                                            *
  * Function: zbx_module_docker_socket_query                                   *
  *                                                                            *
- * Purpose: quering details via Docker socket API (root permission is needed) *
+ * Purpose: quering details via Docker socket API (permission is needed)      *
  *                                                                            *
  * Return value: empty string - function failed                               *
  *               string - response from Docker's socket API                   *
@@ -570,81 +572,222 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
 int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_net()");
-        // TODO
-        zabbix_log(LOG_LEVEL_ERR,  "docker.net metrics are not implemented.");
-        SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.net metrics are not implemented."));
-        return SYSINFO_RET_FAIL;
-        /*        
-        if(socket_api == 1) 
+        char    *container, *metric, *interfacec;
+
+        if(geteuid() != 0) 
         {
-            zbx_module_docker_net_extended(request, result);
-        } else {
-            // TODO
-            zabbix_log(LOG_LEVEL_ERR,  "docker.net metrics are not implemented.");
-            SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.net metrics are not implemented."));
-            return SYSINFO_RET_OK;
+            zabbix_log(LOG_LEVEL_ERR, "docker.net metrics requires root permissions");
+            SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.net metrics requires root permissions"));
+            return SYSINFO_RET_FAIL;
         }
-        */
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_module_docker_net_extended                                   *
- *                                                                            *
- * Purpose: container network metrics                                         *
- *                                                                            *
- * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
- *                                 as not supported by zabbix                 *
- *               SYSINFO_RET_OK - success                                     *
- *                                                                            *
- ******************************************************************************/
-int     zbx_module_docker_net_extended(AGENT_REQUEST *request, AGENT_RESULT *result)
-{
-        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_net_extended()");
-
-        char    *container, *metric;
-        int     ret = SYSINFO_RET_FAIL;
-
-        if (2 != request->nparam)
+        struct stat st = {0};
+        
+        if(stat("/var/run/netns", &st) == -1) 
         {
-                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters."));
-                return SYSINFO_RET_FAIL;
+            if(mkdir("/var/run/netns", 0755) != 0)
+            {
+                zabbix_log(LOG_LEVEL_ERR, "Cannot create /var/run/netns");
+                SET_MSG_RESULT(result, strdup("Cannot create /var/run/netns"));
+                return SYSINFO_RET_FAIL;            
+            }
         }
 
         container = get_rparam(request, 0);
-        metric = get_rparam(request, 1);
+        interfacec = get_rparam(request, 1);
+        metric = get_rparam(request, 2);
+        const char* znetns_prefix = "zabbix_module_docker_";
+        
+        size_t  filename_size = strlen("/var/run/netns/") + strlen(znetns_prefix) + strlen(container) + 2;
+        char    *filename = malloc(filename_size);
+        char    *netns = malloc(filename_size - strlen("/var/run/netns/") + 2);
+        zbx_strlcpy(filename, "/var/run/netns/", filename_size);
+        zbx_strlcat(filename, znetns_prefix, filename_size);
+        zbx_strlcpy(netns, znetns_prefix, filename_size);
+        zbx_strlcat(filename, container, filename_size);
+        zbx_strlcat(netns, container, filename_size);
 
-        // api v1.17 note: this functionality currently only works when using the libcontainer exec-driver
-        /*
-        from docker import Client
-        cli = Client(base_url='unix://var/run/docker.sock')
-        stats_obj = cli.stats('zabbix2')
-        for stat in stats_obj:
-            print(stat)
-        404 - exec driver: native
-        GET /info HTTP/1.1
-        "ExecutionDriver":"native-0.1",    
-        */
-        char *query = malloc(104);
-        zbx_strlcpy(query, "GET /containers/", 104);
-        zbx_strlcat(query, container, 104);
-        zbx_strlcat(query, "/stats HTTP/1.0\r\n\n", 104);
-        const char *answer;
-        answer = zbx_module_docker_socket_query(query, 0);
-        if (strcmp(answer, "") == 0) 
+        zabbix_log(LOG_LEVEL_DEBUG, "netns file: %s", filename);
+        if(access(filename, F_OK ) == -1) 
         {
-            zabbix_log(LOG_LEVEL_ERR, "docker.net is not available at the moment - some problem with Docker's socket API");
-            SET_MSG_RESULT(result, strdup("docker.net is not available at the moment - some problem with Docker's socket API"));
+            // create netns
+            // get first task
+            char    *stat_file = "/tasks";
+            char    *cgroup = "devices/";
+            filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+            if (c_prefix != NULL)
+            {
+                filename_size += strlen(c_prefix);
+            }
+            if (c_suffix != NULL)
+            {
+                filename_size += strlen(c_suffix);
+            }
+            char* filename2 = malloc(filename_size);
+            zbx_strlcpy(filename2, stat_dir, filename_size);
+            zbx_strlcat(filename2, cgroup, filename_size);
+            zbx_strlcat(filename2, driver, filename_size);
+            if (c_prefix != NULL)
+            {
+                zbx_strlcat(filename2, c_prefix, filename_size);
+            }
+            zbx_strlcat(filename2, container, filename_size);
+            if (c_suffix != NULL)
+            {
+                zbx_strlcat(filename2, c_suffix, filename_size);
+            }
+            zbx_strlcat(filename2, stat_file, filename_size);
+            zabbix_log(LOG_LEVEL_DEBUG, "Tasks file: %s", filename2);
+            FILE    *file;
+            if (NULL == (file = fopen(filename2, "r")))
+            {
+                    zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker tasks file: '%s'", filename2);
+                    SET_MSG_RESULT(result, strdup("Cannot open Docker tasks file"));
+                    return SYSINFO_RET_FAIL;
+            }
+    
+            char    line[MAX_STRING_LEN];
+            char* first_task;
+            while (NULL != fgets(line, sizeof(line), file))
+            {
+                    first_task = line;
+                    zabbix_log(LOG_LEVEL_DEBUG, "First task for container %s: %s", container, first_task);
+                    break;
+            }
+            zbx_fclose(file);
+
+            // soft link - new netns
+            first_task=string_replace(first_task, "\n", "");
+            filename_size = strlen("/proc//ns/net") + strlen(first_task) + 2;
+            char* netns_source = malloc(filename_size);
+            zbx_strlcpy(netns_source, "/proc/", filename_size);
+            zbx_strlcat(netns_source, first_task, filename_size);
+            zbx_strlcat(netns_source, "/ns/net", filename_size);
+
+            if(symlink(netns_source, filename) != 0) {
+                zabbix_log(LOG_LEVEL_ERR, "Cannot create netns symlink: %s -> %s", filename, netns_source);
+                SET_MSG_RESULT(result, strdup("Cannot create netns symlink"));
+                return SYSINFO_RET_FAIL;
+            }
+        }
+        
+        // execute ip netns exec filename netstat -i
+        FILE *fp;
+        char line[MAX_STRING_LEN];
+        filename_size = strlen("ip netns exec  netstat -i") + strlen(netns) + 2;
+        char* command = malloc(filename_size);
+        zbx_strlcpy(command, "ip netns exec ", filename_size);
+        zbx_strlcat(command, netns, filename_size);
+        zbx_strlcat(command, " netstat -i", filename_size);        
+        zabbix_log(LOG_LEVEL_DEBUG, "netns command: %s", command);
+                
+        fp = popen(command, "r");
+        if (fp == NULL) 
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot execute netns command: %s");
+            SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot execute netns command"));
             return SYSINFO_RET_FAIL;
         }
         
-        // 404 page not found test
+        /*
+        [root@dev ~]# ip netns exec $CID netstat -i
+        Kernel Interface table
+        Iface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg
+        eth0      1500  1238410      0      0 0       1836070      0      0      0 BRU
+        lo       65536  1856189      0      0 0       1856189      0      0      0 LRU
+        */
         
-        zabbix_log(LOG_LEVEL_DEBUG, "docker.net metrics answer: %s", answer);
-        
+        int metric_pos = 0;
+        int pos = 0;
+        char *pch;
+        int value = 0;
+        while(fgets(line, sizeof(line), fp) != NULL) 
+        {
+            // skip first line
+            if (0 == strncmp(line, "Kernel Interface table", strlen("Kernel Interface table")))
+                continue;    
+                        
+            if(metric_pos == INT_MAX)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "Not found metric %s", metric);
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Not found net metric"));
+                return SYSINFO_RET_FAIL;
+            }
+            
+            // second line find position
+            if(metric_pos == 0) 
+            {
+                int found = 0;
+                pch = strtok(line," ");
+                while (pch != NULL)
+                {
+                    if(0 != strncmp(pch, metric, strlen(metric)))
+                    {
+                       pch = strtok(NULL, " ");
+                       metric_pos++;
+                       continue;
+                    } else {
+                       found = 1;
+                       break; 
+                    }
+                }
+                if(found == 0) 
+                {
+                    metric_pos = INT_MAX;
+                    continue;
+                }
+            }
+
+            // find selected interface and metric
+            if(strcmp(interfacec, "all") == 0)
+            {
+                // find value at metric_pos and sum
+                pch = strtok(line," ");
+                pos = 0;
+                while (pch != NULL)
+                {
+                    if(pos < metric_pos)
+                    {
+                       pch = strtok(NULL, " ");
+                       pos++;
+                       continue;
+                    } else {
+                       value += atoi(pch);
+                       break;
+                    }
+                }
+                
+            } else {
+                // skip lines which doesn't match interface
+                if (0 != strncmp(line, interfacec, strlen(interfacec))) 
+                {
+                    continue;
+                }
+                
+                // find value at metric_pos
+                pch = strtok(line," ");
+                pos = 0;
+                while (pch != NULL)
+                {
+                    if(pos != metric_pos)
+                    {
+                       pch = strtok(NULL, " ");
+                       pos++;
+                       continue;
+                    } else {
+                       value = atoi(pch);
+                       zabbix_log(LOG_LEVEL_DEBUG, "found metric %s: %d", metric, value);
+                       SET_UI64_RESULT(result, value);
+                       pclose(fp);
+                       return SYSINFO_RET_OK;
+                    }
+                }
+            }
+        }
+        zabbix_log(LOG_LEVEL_DEBUG, "found metric %s: %d", metric, value);
+        SET_UI64_RESULT(result, value);
+        pclose(fp);
         return SYSINFO_RET_OK;
-}
+}       
 
 /******************************************************************************
  *                                                                            *
@@ -755,6 +898,10 @@ int     zbx_docker_dir_detect()
 int     zbx_module_uninit()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_uninit()");
+        /* TODO
+        remove all zabbix netns:
+        rm -rf /var/run/netns/znetns_prefix*
+        */
         return ZBX_MODULE_OK;
 }
 
@@ -821,6 +968,7 @@ int     zbx_docker_perm()
 int     zbx_module_init()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_init()");
+        zabbix_log(LOG_LEVEL_DEBUG, "zabbix_module_docker %s", m_version);
         zbx_docker_dir_detect();
         // test root or docker permission
         if (geteuid() != 0 && zbx_docker_perm() != 1 ) 
@@ -1345,9 +1493,9 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_module_docker_cstate                                         *
+ * Function: zbx_module_docker_cstatus                                        *
  *                                                                            *
- * Purpose: count of containers in defined state                              *
+ * Purpose: count of containers in defined status                             *
  *                                                                            *
  * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
  *                                 as not supported by zabbix                 *

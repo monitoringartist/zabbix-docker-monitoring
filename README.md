@@ -33,17 +33,8 @@ Note: fci - full container ID
 | **docker.stats[fci,par1,\<par2\>,\<par3\>]** | **Docker container resource usage statistics:**<br>Docker version 1.5+ is required<br>Requested value from Docker statistic structure is returned.<br>**par1** - name of 1st level JSON property<br>**par2** - optional name of 2nd level JSON property<br>**par3** - optional name of 3rd level JSON property<br>For example:<br>*docker.stats[fci,memory_stats,usage], docker.stats[fci,network,rx_bytes], docker.stats[fci,cpu_stats,cpu_usage,total_usage]*<br>Note 1: Requested value must be plain text/numeric value. JSON objects/arrays are not supported.<br>Note 2: [Additional Docker permissions](#additional-docker-permissions) are needed.<br>Note 3: The most accurate way to get Docker container stats, but it's also the slowest (0.3-0.7s), because data are readed from on demand container stats stream. |
 | **docker.cstatus[status]** | **Count of Docker containers in defined status:**<br>**status** - status of container, available statuses:<br>*All* - count of all containers<br>*Up* - count of running containers (Paused included)<br>*Exited* - count of exited containers<br>*Crashed* - count of crashed containers (exit code != 0)<br>*Paused* - count of paused containers<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed.|
 | **docker.up[fci]** | **Running state check:**<br>1 if container is running, otherwise 0 |
- 
-Not available at the moment, probably in the (near) future:
-
-* docker.net - tricky metrics
-
-Recommended docs:
-
-- https://docs.docker.com/articles/runmetrics/
-- https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
-- https://www.kernel.org/doc/Documentation/cgroups/memory.txt
-- https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
+| | |
+| **docker.xnet[fci,interface,nmetric]** | **Network metrics (experimental):**<br>**interface** - name of interface, e.g. eth0, if name is *all* sum of selected metric accross all interfaces is returned (lo included)<br>**nmetric** - network metric, names from *netstat -i* are used<br>For example:<br>*docker.xnet[fci,eth0,TX-OK]<br>docker.xnet[fci,all,RX-ERR]*<br>Note: [root permissions (AllowRoot=1)](#additional-docker-permissions) are required, because net namespaces (/var/run/netns/) are created/used|
 
 Images
 ======
@@ -305,7 +296,16 @@ Debug messages from this module will be available in standard zabbix_agentd.log.
 Issues and feature requests
 ===========================
 
-Please use Github issue tracker.       
+Please use Github issue tracker.
+
+Recommended docs
+================
+
+- https://docs.docker.com/articles/runmetrics/
+- https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
+- https://www.kernel.org/doc/Documentation/cgroups/memory.txt
+- https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
+- https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/index.html       
 
 Author
 ======
