@@ -34,7 +34,7 @@ Note: fci - full container ID
 | **docker.cstatus[status]** | **Count of Docker containers in defined status:**<br>**status** - status of container, available statuses:<br>*All* - count of all containers<br>*Up* - count of running containers (Paused included)<br>*Exited* - count of exited containers<br>*Crashed* - count of crashed containers (exit code != 0)<br>*Paused* - count of paused containers<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed.|
 | **docker.up[fci]** | **Running state check:**<br>1 if container is running, otherwise 0 |
 | | |
-| **docker.xnet[fci,interface,nmetric]** | **Network metrics (experimental):**<br>**interface** - name of interface, e.g. eth0, if name is *all* sum of selected metric accross all interfaces is returned (lo included)<br>**nmetric** - network metric, names from *netstat -i* are used<br>For example:<br>*docker.xnet[fci,eth0,TX-OK]<br>docker.xnet[fci,all,RX-ERR]*<br>Note: [root permissions (AllowRoot=1)](#additional-docker-permissions) are required, because net namespaces (/var/run/netns/) are created/used|
+| **docker.xnet[fci,interface,nmetric]** | **Network metrics (experimental):**<br>**interface** - name of interface, e.g. eth0, if name is *all*, then sum of selected metric across all interfaces is returned (lo included)<br>**nmetric** - any available network metric name from output of command netstat -i:<br>*MTU, Met, RX-OK, RX-ERR, RX-DRP, RX-OVR, TX-OK, TX-ERR, TX-DRP, TX-OVR*<br>For example:<br>*docker.xnet[fci,eth0,TX-OK]<br>docker.xnet[fci,all,RX-ERR]*<br>Note: [root permissions (AllowRoot=1)](#additional-docker-permissions) are required, because net namespaces (/var/run/netns/) are created/used|
 
 Images
 ======
