@@ -886,6 +886,8 @@ int     zbx_docker_dir_detect()
                 free(temp2);
                 zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
 
+                pclose(fp);
+
                 char *cgroup = "cpuset/";
                 tdriver = drivers;
                 size_t  ddir_size;
@@ -899,6 +901,7 @@ int     zbx_docker_dir_detect()
                     zbx_strlcat(ddir, *tdriver, ddir_size);
                     if (NULL != (dir = opendir(ddir)))
                     {
+                        closedir(dir);
                         free(ddir);
                         driver = *tdriver;
                         zabbix_log(LOG_LEVEL_DEBUG, "Detected used docker driver dir: %s", driver);
@@ -917,6 +920,7 @@ int     zbx_docker_dir_detect()
                         zbx_strlcat(ddir, cgroup, ddir_size);
                         if (NULL != (dir = opendir(ddir)))
                         {
+                            closedir(dir);
                             cpu_cgroup = "cpu,cpuacct/";
                             zabbix_log(LOG_LEVEL_DEBUG, "Detected JoinController cpu,cpuacct");
                         } else {
@@ -933,6 +937,7 @@ int     zbx_docker_dir_detect()
                 return SYSINFO_RET_FAIL;
             }
         }
+        pclose(fp);
         zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect docker stat directory");
         return SYSINFO_RET_FAIL;
 }
