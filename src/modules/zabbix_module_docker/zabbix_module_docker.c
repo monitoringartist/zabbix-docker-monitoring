@@ -1252,7 +1252,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
     		/*          ^------------------^                          */
     		if (FAIL == zbx_json_brackets_open(p, &jp_row))
             {
-                zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failes");
+                zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
                 continue;
             }
 
@@ -1368,7 +1368,7 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
                     return SYSINFO_RET_FAIL;
                 } else {
                     // 2nd level
-                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s] item in the received JSON object", param1);
+                    zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object", param1);
                     if (request->nparam > 2)
                     {
                         char *param2, api_value2[buffer_size];
@@ -1381,7 +1381,7 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
                             return SYSINFO_RET_FAIL;
                         } else {
                             // 3rd level
-                            zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object", param1, param2);
+                            zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object", param1, param2);
                             if (request->nparam > 3)
                             {
                                char *param3, api_value3[buffer_size];
@@ -1394,27 +1394,27 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
                                     free((void*) answer);
                                     return SYSINFO_RET_FAIL;
                                 } else {
-                                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s][%s] item in the received JSON object: %s", param1, param2, param3, api_value3);
+                                    zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, param3, api_value3);
                                     SET_STR_RESULT(result, zbx_strdup(NULL, api_value3));
                                     free((void*) answer);
                                     return SYSINFO_RET_OK;
                                 }
                             } else {
-                                zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object: %s", param1, param2, api_value2);
+                                zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object: %s", param1, param2, api_value2);
                                 SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
                                 free((void*) answer);
                                 return SYSINFO_RET_OK;
                             }
                         }
                     } else {
-                        zabbix_log(LOG_LEVEL_WARNING, "Finded the [%s] item in the received JSON object, but it's not plain value object", param1);
+                        zabbix_log(LOG_LEVEL_WARNING, "Item [%s] found in the received JSON object, but it's not plain value object", param1);
                         SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Can find the [%s] item in the received JSON object, but it's not plain value object", param1));
                         free((void*) answer);
                         return SYSINFO_RET_FAIL;
                     }
                 }
             } else {
-                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s] item in the received JSON object: %s", param1, api_value);
+                    zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object: %s", param1, api_value);
                     SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
                     free((void*) answer);
                     return SYSINFO_RET_OK;
@@ -1472,7 +1472,7 @@ int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result)
             free((void*) answer);
             return SYSINFO_RET_FAIL;
         } else {
-            zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s] item in the received JSON object: %s", info, api_value);
+            zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object: %s", info, api_value);
             SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
             free((void*) answer);
             return SYSINFO_RET_OK;
@@ -1574,33 +1574,33 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
                                         free((void*) answer);
                                         return SYSINFO_RET_FAIL;
                                     } else {
-                                        zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s][%s] item in the received JSON object: %s", param1, param2, param3, api_value3);
+                                        zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, param3, api_value3);
                                         SET_STR_RESULT(result, zbx_strdup(NULL, api_value3));
                                         free((void*) answer);
                                         return SYSINFO_RET_OK;
                                     }
                                 } else {
-                                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object: %s", param1, param2, api_value2);
+                                    zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found the received JSON object: %s", param1, param2, api_value2);
                                     SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
                                     free((void*) answer);
                                     return SYSINFO_RET_OK;
                                 }
                             }
                         } else {
-                            zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s][%s] item in the received JSON object: %s", param1, param2, api_value2);
+                            zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object: %s", param1, param2, api_value2);
                             SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
                             free((void*) answer);
                             return SYSINFO_RET_OK;
                         }
                     } else {
-                        zabbix_log(LOG_LEVEL_WARNING, "Finded the [%s] item in the received JSON object, but it's not plain value object", param1);
-                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Finded the [%s] item in the received JSON object, but it's not plain value object", param1));
+                        zabbix_log(LOG_LEVEL_WARNING, "Item [%s] found in the received JSON object, but it's not plain value object", param1);
+                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Item [%s] found in the received JSON object, but it's not plain value object", param1));
                         free((void*) answer);
                         return SYSINFO_RET_FAIL;
                     }
                 }
             } else {
-                    zabbix_log(LOG_LEVEL_DEBUG, "Finded the [%s] item in the received JSON object: %s", param1, api_value);
+                    zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object: %s", param1, api_value);
                     SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
                     free((void*) answer);
                     return SYSINFO_RET_OK;
@@ -1724,7 +1724,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 		/*          ^------------------^                          */
                 		if (FAIL == zbx_json_brackets_open(p, &jp_row))
                         {
-                            zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failes");
+                            zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
                             continue;
                         }
                         
@@ -1796,7 +1796,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         		/*          ^------------------^                          */
                         		if (FAIL == zbx_json_brackets_open(p, &jp_row))
                                 {
-                                    zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failes");
+                                    zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
                                     continue;
                                 }
                                 
