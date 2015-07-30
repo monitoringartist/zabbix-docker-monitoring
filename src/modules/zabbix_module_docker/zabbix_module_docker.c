@@ -1004,7 +1004,7 @@ int     zbx_docker_perm()
                gr = getgrgid(groups[j]);
                if (gr != NULL)
                {
-                   if (strcmp(gr->gr_name, "docker") == 0)
+                   if((strcmp(gr->gr_name, "docker") == 0) || (strcmp(gr->gr_name, "dockerroot") == 0))
                    {
                        zabbix_log(LOG_LEVEL_DEBUG, "zabbix agent user has docker perm");
                        return 1;
