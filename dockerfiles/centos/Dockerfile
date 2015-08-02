@@ -1,0 +1,27 @@
+# https://github.com/jangaraj/Zabbix-Docker-Monitoring
+
+# Define required CentOS version by using FROM tag. Avalaible: centos:centos7, centos:centos6, centos:centos5
+FROM centos:centos7
+
+MAINTAINER "Jan Garaj" <jan.garaj@gmail.com>
+
+# Define required Zabbix version (tag/<version>) or branch (branches/<version>), e.g. tags/2.4.5, or branches/2.4  
+ENV ZABBIX_VERSION=branches/2.4
+
+RUN \
+   yum -y install git subversion automake autoconf gcc make && \
+   git clone https://github.com/jangaraj/Zabbix-Docker-Monitoring && \
+   mkdir ~/zabbix/ && \
+   svn co svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
+   cd ~/zabbix/ && \
+   ./bootstrap.sh && \
+   ./configure --enable-agent && \
+   cp -R ~/Zabbix-Docker-Monitoring/src/modules/zabbix_module_docker/ ~/zabbix/src/modules/ && \
+   cd ~/zabbix/src/modules/zabbix_module_docker && \
+   make
+
+## Docker compilation:
+# docker build --rm=true -t local/zabbix-docker-module-compilation .
+# docker run -v /tmp:/tmp local/zabbix-docker-module-compilation cp ~/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+# docker rmi -f local/zabbix-docker-module-compilation
+## use/copy /tmp/zabbix_module_docker.so in your Zabbix
