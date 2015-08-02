@@ -1075,17 +1075,17 @@
              // test root or docker permission
              if (geteuid() != 0 && zbx_docker_perm() != 1 )
              {
-                 zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are availaible");
+                 zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are available");
                  socket_api = 0;
              } else {
                  // test Docker's socket connection
                  const char *echo = zbx_module_docker_socket_query("GET /_ping HTTP/1.0\r\n\n", 0);
                  if (strcmp(echo, "OK") == 0)
                  {
-                     zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket works - extended docker metrics are availaible");
+                     zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket works - extended docker metrics are available");
                      socket_api = 1;
                  } else {
-                     zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket doesn't work - only basic docker metrics are availaible");
+                     zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket doesn't work - only basic docker metrics are available");
                      socket_api = 0;
                  }
                  free((void*) echo);

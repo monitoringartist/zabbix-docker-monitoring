@@ -71,7 +71,9 @@ usermod -aG docker zabbix
 
 ```
 AllowRoot=1
-```  
+``` 
+
+Note: If you use Docker from RHEL/Centos repositories, then you have to use *AllowRoot=1* option.
 
 Installation
 ============
