@@ -32,7 +32,7 @@
 #include <sys/un.h>
 #include <grp.h>
 
-char    *m_version = "v0.3.0";
+char    *m_version = "v0.4.0";
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66;
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
@@ -228,7 +228,7 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
         
-        if(cpu_group == NULL) 
+        if(cpu_cgroup == NULL) 
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
@@ -523,7 +523,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
 
-        if(cpu_group == NULL) 
+        if(cpu_cgroup == NULL) 
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
