@@ -473,6 +473,16 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
+        
+        if(cpu_cgroup == NULL) 
+        {
+                if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
+                {
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no cpu_cgroup directory");
+                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no cpu_cgroup directory"));
+                    return SYSINFO_RET_FAIL;
+                }
+        }        
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
         metric = get_rparam(request, 1);
@@ -758,6 +768,16 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
+        
+        if(cpu_cgroup == NULL) 
+        {
+                if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
+                {
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu check is not available at the moment - no cpu_cgroup directory");
+                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu check is not available at the moment - no cpu_cgroup directory"));
+                    return SYSINFO_RET_FAIL;
+                }
+        }        
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
         metric = get_rparam(request, 1);
