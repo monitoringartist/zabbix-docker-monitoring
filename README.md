@@ -3,19 +3,30 @@ Zabbix Docker Monitoring
 
 If you like or use this project, please provide feedback to author - Star it ★. 
 
-Monitoring of Docker container by using Zabbix. 
-Available CPU, mem, blkio container metrics and some containers config details e.g. IP, name, ...
-Zabbix Docker module has native support for Docker containers (Systemd included) and should support 
-also a few other container type (e.g. LXC) out of the box. 
-Please feel free to test and provide feedback/open issue. 
-Module is focused on the performance, see section [Module vs. UserParameter script](#module-vs-userparameter-script).
+Monitoring of Docker container by using Zabbix. Available CPU, mem, blkio 
+container metrics and some containers config details e.g. IP, name, ... Zabbix 
+Docker module has native support for Docker containers (Systemd included) and 
+it should support also a few other container type (e.g. LXC) out of the box. 
+Please feel free to test and provide feedback/open issue. Module is focused on 
+the performance, see section [Module vs. UserParameter script](#module-vs-userparameter-script).
+
+Please donate to author, so he can continue to publish other awesome projects 
+for free:
+
+[![Paypal donate button](http://jangaraj.com/img/github-donate-button02.png)]
+(https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8LB6J222WRUZ4)
 
 Build
 =====
 
-[Download latest build (RHEL 7, CentOS 7, Ubuntu 14, ...)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
-[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
-If provided build doesn't work on your system, please see section [Compilation](#compilation). Or you can check [folder dockerfiles] (https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), where Dockerfiles for various OS/Zabbix versions are prepared.
+[Download latest build (RHEL 7, CentOS 7, Ubuntu 14, ...)]
+(https://drone.io/github.com/monitoringartist/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
+[![Build Status](https://drone.io/github.com/monitoringartist/Zabbix-Docker-Monitoring/status.png)]
+(https://drone.io/github.com/monitoringartist/Zabbix-Docker-Monitoring/latest)<br>
+If provided build doesn't work on your system, please see section 
+[Compilation](#compilation). Or you can check [folder dockerfiles]
+(https://github.com/monitoringartist/Zabbix-Docker-Monitoring/tree/master/dockerfiles), 
+where Dockerfiles for various OS/Zabbix versions are prepared.
 
 Available metrics
 =================
@@ -50,11 +61,11 @@ Images
 ======
 
 Docker container CPU graph in Zabbix:
-![Docker container CPU graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-cpu-graph.png)
+![Docker container CPU graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-cpu-graph.png)
 Docker container memory graph in Zabbix:
-![Docker container memory graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-memory-graph.png)
+![Docker container memory graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-memory-graph.png)
 Docker container state graph in Zabbix:
-![Docker container state graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-state-graph.png)
+![Docker container state graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-state-graph.png)
 
 Additional Docker permissions
 =============================
@@ -73,15 +84,16 @@ usermod -aG docker zabbix
 AllowRoot=1
 ```
 
-Note: If you use Docker from RHEL/Centos repositories, then you have to use *AllowRoot=1* option.  
+Note: If you use Docker from RHEL/Centos repositories, then you have to use 
+*AllowRoot=1* option.  
 
 Installation
 ============
 
 * Import provided template Zabbix-Template-App-Docker.xml.
-* Configure your Zabbix agent(s) - load downloaded/compiled zabbix_module_docker.so<br>
+* Configure your Zabbix agent(s) - load downloaded/compiled 
+* zabbix_module_docker.so<br>
 https://www.zabbix.com/documentation/2.4/manual/config/items/loadablemodules
-
 
 Compilation
 ===========
@@ -97,11 +109,12 @@ Basic compilation steps:
     ./configure --enable-agent
     mkdir src/modules/zabbix_module_docker
     cd src/modules/zabbix_module_docker
-    wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/zabbix_module_docker.c
-    wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
+    wget https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/zabbix_module_docker.c
+    wget https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
     make
 
-Output will be binary file (dynamically linked shared object library) zabbix_module_docker.so, which can be loaded by zabbix agent.
+Output will be binary file (dynamically linked shared object library) 
+zabbix_module_docker.so, which can be loaded by zabbix agent.
 
 How it works
 ============
@@ -110,7 +123,8 @@ See https://blog.docker.com/2013/10/gathering-lxc-docker-containers-metrics/
 Metrics for containers are read from cgroup file system. 
 [Docker API](https://docs.docker.com/reference/api/docker_remote_api) is used 
 for discovering and some keys. However root or docker permissions are required 
-for communication with Docker via unix socket. You can test API also in your command line:
+for communication with Docker via unix socket. You can test API also in your 
+command line:
 
     echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
     
@@ -118,7 +132,8 @@ Module vs. UserParameter script
 ===============================
 
 Module is ~10x quicker, because it's compiled binary code.
-I've used my project https://github.com/jangaraj/zabbix-agent-stress-test for performance tests.
+I've used my project https://github.com/monitoringartist/zabbix-agent-stress-test for 
+performance tests.
 
 Part of config in zabbix_agentd.conf:
 
@@ -196,7 +211,8 @@ Part of config in zabbix_agentd.conf:
     UserParameter=xdocker.discovery,/etc/zabbix/scripts/container_discover.sh
     LoadModule=zabbix_module_docker.so
 
-container_discover.sh: https://github.com/bsmile/zabbix-docker-lld/blob/master/usr/lib/zabbix/script/container_discover.sh
+[container_discover.sh]
+(https://github.com/bsmile/zabbix-docker-lld/blob/master/usr/lib/zabbix/script/container_discover.sh):
     
 Test with 237 running containers:
 
@@ -322,4 +338,10 @@ Recommended docs
 Author
 ======
 
-[Devops Monitoring zExpert](http://www.jangaraj.com), who loves monitoring systems, which start with letter Z. Those are Zabbix and Zenoss. [LinkedIn] (http://uk.linkedin.com/in/jangaraj/).
+[Devops Monitoring zExpert](http://www.jangaraj.com), who loves monitoring 
+systems, which start with letter Z. Those are Zabbix and Zenoss.
+
+Professional monitoring services:
+
+[![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)]
+(http://www.monitoringartist.com)
