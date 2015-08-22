@@ -101,6 +101,8 @@ Compilation
 You have to compile module, if provided binary doesn't work on your system.
 Basic compilation steps:
 
+    # RHEL/CentOS tools: yum -y wget install git subversion automake autoconf gcc make
+    # Debian tools: apt-get -y wget install git subversion automake autoconf gcc make pkg-config
     cd ~
     mkdir zabbix24
     cd zabbix24
