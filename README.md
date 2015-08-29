@@ -20,11 +20,13 @@ for free:
 Build
 =====
 
-[Download latest build (RHEL 7, CentOS 7, Ubuntu 14, ...)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
-[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
+[Download latest build (RHEL 7, CentOS 7, Ubuntu 14, ...)]
+(https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
+[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)]
+(https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
 If provided build doesn't work on your system, please see section [Compilation]
 (#compilation). Or you can check [folder dockerfiles]
-(https://github.com/jangaraj/Zabbix-Docker-Monitoring/tree/master/dockerfiles), 
+(https://github.com/monitorinartist/Zabbix-Docker-Monitoring/tree/master/dockerfiles), 
 where Dockerfiles for different OS/Zabbix versions are prepared.
 
 Available metrics
@@ -67,7 +69,14 @@ Container log monitoring
 (https://www.zabbix.com/documentation/2.4/manual/config/items/itemtypes/log_items) 
 can be used. Keep in mind, that Zabbix agent must support active mode for log 
 monitoring. Stdout/stderr Docker container console output is logged by Docker  
-into file */var/lib/docker/containers/<fid>/<fid>-json.log*.
+into file */var/lib/docker/containers/<fid>/<fid>-json.log*. If the aplication 
+in container is not able to log to stdout/stderr, link log file to  
+stdout/stderr. For example: 
+
+```
+ln -sf /dev/stdout /var/log/nginx/access.log
+ln -sf /dev/stderr /var/log/nginx/error.log
+```
 
 Example of *<fid>-json* log file:
 
@@ -90,11 +99,11 @@ Images
 ======
 
 Docker container CPU graph in Zabbix:
-![Docker container CPU graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-cpu-graph.png)
+![Docker container CPU graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-cpu-graph.png)
 Docker container memory graph in Zabbix:
-![Docker container memory graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-memory-graph.png)
+![Docker container memory graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-memory-graph.png)
 Docker container state graph in Zabbix:
-![Docker container state graph in Zabbix](https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-state-graph.png)
+![Docker container state graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-state-graph.png)
 
 Additional Docker permissions
 =============================
@@ -133,8 +142,8 @@ You have to compile module, if provided binary doesn't work on your system.
 Basic compilation steps:
 
 ```
-# Required CentOS/RHEL tools: yum install -y svn autoconf automake gcc
-# Required Debian tools: apt-get install -y subversion autoconf automake gcc make pkg-config
+# Required CentOS/RHEL tools: yum install -y wget autoconf automake gcc svn
+# Required Debian tools: apt-get install -y wget autoconf automake gcc subversion make pkg-config
 cd ~
 mkdir zabbix24
 cd zabbix24
@@ -143,8 +152,8 @@ svn co svn://svn.zabbix.com/branches/2.4 .
 ./configure --enable-agent
 mkdir src/modules/zabbix_module_docker
 cd src/modules/zabbix_module_docker
-wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/zabbix_module_docker.c
-wget https://raw.githubusercontent.com/jangaraj/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
+wget https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/zabbix_module_docker.c
+wget https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
 make
 ```
 
@@ -157,7 +166,8 @@ See https://blog.docker.com/2013/10/gathering-lxc-docker-containers-metrics/
 Metrics for containers are read from cgroup file system. 
 [Docker API](https://docs.docker.com/reference/api/docker_remote_api) is used 
 for discovering and some keys. However root or docker permissions are required 
-for communication with Docker via unix socket. You can test API also in your command line:
+for communication with Docker via unix socket. You can test API also in your 
+command line:
 
 ```
 echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
@@ -168,7 +178,8 @@ Module vs. UserParameter script
 
 Module is ~10x quicker, because it's compiled binary code.
 I've used my project [Zabbix agent stress test]
-(https://github.com/jangaraj/zabbix-agent-stress-test) for performance tests.
+(https://github.com/monitoringartist/zabbix-agent-stress-test) for performance 
+tests.
 
 Part of config in zabbix_agentd.conf:
 
@@ -378,5 +389,6 @@ systems, which start with letter Z. Those are Zabbix and Zenoss.
 
 Professional monitoring services:
 
-[![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)]
+[![Monitoring Artist]
+(http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)]
 (http://www.monitoringartist.com)

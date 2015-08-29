@@ -418,9 +418,8 @@ char*  zbx_module_docker_get_fci(char *fci)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_get_fci()");
 
-        // no regexp validation because performance
-        // known limitation/feature - it can be problem, when length of container name will be 64
-        if(strlen(fci) == 64)
+        // if first character is '/', then detect fci
+        if (fci[0] != '/')
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Original full container id will be used");
             return fci;
@@ -430,6 +429,7 @@ char*  zbx_module_docker_get_fci(char *fci)
         zabbix_log(LOG_LEVEL_DEBUG, "Translating container name to fci by using docker.inspect");
         AGENT_REQUEST	request;
         init_request(&request);
+        fci++;
         add_request_param(&request, zbx_strdup(NULL, fci));
         add_request_param(&request, zbx_strdup(NULL, "Id"));
         // TODO dynamic iresult
