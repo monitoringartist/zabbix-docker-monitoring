@@ -1,9 +1,9 @@
-# https://github.com/jangaraj/Zabbix-Docker-Monitoring
+# https://github.com/monitoringartist/Zabbix-Docker-Monitoring
 
-# Define required Debian version by using FROM tag. Avalaible: debian:wheezy
+# Define required Debian version by using FROM tag. Avalaible: wheezy/jessie/...
 FROM debian:wheezy
 
-MAINTAINER "Jan Garaj" <jan.garaj@gmail.com>
+MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
 # Define required Zabbix version (tag/<version>) or branch (branches/<version>), e.g. tags/2.4.5, or branches/2.4  
 ENV ZABBIX_VERSION=branches/2.4
@@ -11,7 +11,7 @@ ENV ZABBIX_VERSION=branches/2.4
 RUN \
    apt-get update && \
    apt-get --assume-yes install git subversion automake autoconf gcc make pkg-config && \
-   git clone https://github.com/jangaraj/Zabbix-Docker-Monitoring && \
+   git clone https://github.com/monitoringartist/Zabbix-Docker-Monitoring && \
    mkdir ~/zabbix/ && \
    svn co svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \

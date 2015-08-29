@@ -1,16 +1,16 @@
-# https://github.com/jangaraj/Zabbix-Docker-Monitoring
+# https://github.com/monitoringartist/Zabbix-Docker-Monitoring
 
-# Define required CentOS version by using FROM tag. Avalaible: centos:centos7, centos:centos6, centos:centos5
+# Define required CentOS version by using FROM tag. Avalaible: centos7/centos6/...
 FROM centos:centos7
 
-MAINTAINER "Jan Garaj" <jan.garaj@gmail.com>
+MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
 # Define required Zabbix version (tag/<version>) or branch (branches/<version>), e.g. tags/2.4.5, or branches/2.4  
 ENV ZABBIX_VERSION=branches/2.4
 
 RUN \
    yum -y install git subversion automake autoconf gcc make && \
-   git clone https://github.com/jangaraj/Zabbix-Docker-Monitoring && \
+   git clone https://github.com/monitoringartist/Zabbix-Docker-Monitoring && \
    mkdir ~/zabbix/ && \
    svn co svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
