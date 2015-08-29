@@ -3,8 +3,7 @@ Zabbix Docker Monitoring
 
 If you like or use this project, please provide feedback to author - Star it ★. 
 
-Monitoring of Docker container by using Zabbix. Available CPU, mem, 
-blkio container metrics and some containers config details e.g. IP, name, ...
+Monitoring of Docker container by using Zabbix. Available CPU, mem, blkio container metrics and some containers config details e.g. IP, name, ...
 Zabbix Docker module has native support for Docker containers (Systemd included) 
 and should support also a few other container type (e.g. LXC) out of the box. 
 Please feel free to test and provide feedback/open issue. 
@@ -68,7 +67,7 @@ Container log monitoring
 [Standard Zabbix log monitoring]
 (https://www.zabbix.com/documentation/2.4/manual/config/items/itemtypes/log_items) 
 can be used. Keep in mind, that Zabbix agent must support active mode for log 
-monitoring. Stdout/stderr Docker container console output is logged by Docker  
+monitoring. Stdout/stderr Docker container console output is logged by Docker 
 into file */var/lib/docker/containers/<fid>/<fid>-json.log*. If the aplication 
 in container is not able to log to stdout/stderr, link log file to  
 stdout/stderr. For example: 
