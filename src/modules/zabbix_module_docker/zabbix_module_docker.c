@@ -225,8 +225,8 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
 
         if (socket_api != 1)
         {
-            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
-            iresult.value = "Docker's socket API is not avalaible";
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not available");
+            iresult.value = zbx_strdup(NULL, "Docker's socket API is not available");
             iresult.return_code = SYSINFO_RET_FAIL;
             return iresult;
         }
@@ -234,7 +234,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
         if (1 >= request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                iresult.value = "Invalid number of parameters";
+                iresult.value = zbx_strdup(NULL, "Invalid number of parameters");
                 iresult.return_code = SYSINFO_RET_FAIL;
                 return iresult;
         }
@@ -259,7 +259,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
         {
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "docker.inspect is not available at the moment - some problem with Docker's socket API");
-            iresult.value = "docker.inspect is not available at the moment - some problem with Docker's socket API";
+            iresult.value = zbx_strdup(NULL, "docker.inspect is not available at the moment - some problem with Docker's socket API");
             iresult.return_code = SYSINFO_RET_FAIL;
             return iresult;
         }
@@ -405,7 +405,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
             }
         }
         free((void*) answer);
-        iresult.value = "";
+        iresult.value = zbx_strdup(NULL, "");
         iresult.return_code = SYSINFO_RET_OK;
         return iresult;
 }
@@ -427,7 +427,7 @@ char*  zbx_module_docker_get_fci(char *fci)
         if (fci[0] != '/')
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Original full container id will be used");
-            return fci;
+            return zbx_strdup(NULL, fci);
         }
 
         // Docker API query - docker.inspect[fci,Id]
@@ -445,7 +445,7 @@ char*  zbx_module_docker_get_fci(char *fci)
             return iresult.value;
         } else {
             zabbix_log(LOG_LEVEL_DEBUG, "Default fci will be used, because zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
-            return fci;
+            return zbx_strdup(NULL, fci);
         }
 }
 
@@ -510,6 +510,7 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
             zbx_strlcat(filename, c_prefix, filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
+        free(container);
         if (c_suffix != NULL)
         {
             zbx_strlcat(filename, c_suffix, filename_size);
@@ -598,6 +599,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (NULL == (file = fopen(filename, "r")))
         {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                free(container);
                 free(stat_file);
                 free(filename);
                 SET_MSG_RESULT(result, strdup("Cannot open Docker container stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled"));
@@ -630,6 +632,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
         zbx_fclose(file);
 
+        free(container);
         free(stat_file);
         free(filename);
         free(metric2);
@@ -704,6 +707,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (NULL == (file = fopen(filename, "r")))
         {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                free(container);
                 free(filename);
                 SET_MSG_RESULT(result, strdup("Cannot open Docker container memory.stat file"));
                 return SYSINFO_RET_FAIL;
@@ -731,6 +735,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
         zbx_fclose(file);
 
+        free(container);
         free(filename);
         free(metric2);
 
@@ -816,6 +821,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
                 free(filename);
+                free(container);
                 SET_MSG_RESULT(result, strdup("Cannot open Docker container cpuacct.stat file"));
                 return SYSINFO_RET_FAIL;
         }
@@ -848,6 +854,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
         zbx_fclose(file);
 
+        free(container);
         free(filename);
         free(metric2);
 
@@ -940,6 +947,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
             if (NULL == (file = fopen(filename2, "r")))
             {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker tasks file: '%s'", filename2);
+                free(container);
                 free(filename);
                 free(netns);
                 free(filename2);
@@ -956,6 +964,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
                 break;
             }
             zbx_fclose(file);
+            free(container);
             free(filename2);
 
             // soft link - new netns
@@ -1371,11 +1380,11 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
         iresult = zbx_module_docker_inspect_exec(request);
         if (iresult.return_code == SYSINFO_RET_OK) {
             zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
-            SET_STR_RESULT(result, strdup(iresult.value));
+            SET_STR_RESULT(result, iresult.value);
             return iresult.return_code;
         } else {
             zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
-            SET_MSG_RESULT(result, strdup(iresult.value));
+            SET_MSG_RESULT(result, iresult.value);
             return iresult.return_code;
         }
 }
@@ -1600,8 +1609,6 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                     if (iresult.return_code == SYSINFO_RET_OK) {
                         zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
                         free(names);
-                        names = malloc(strlen(iresult.value));
-                        zbx_strlcpy(names, jp_data2.start, s_size-3);
                         names = iresult.value;
                         zbx_json_addstring(&j, "{#HCONTAINERID}", names, ZBX_JSON_TYPE_STRING);
                     } else {
