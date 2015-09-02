@@ -241,6 +241,11 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
 
         char    *container, *query;
         container = get_rparam(request, 0);
+        // skip leading '/' in case of human name or short container id
+        if (container[0] == '/')
+        {
+            container++;
+        }
 
         size_t s_size = strlen("GET /containers/ /json HTTP/1.0\r\n\n") + strlen(container);
         query = malloc(s_size);
@@ -429,7 +434,6 @@ char*  zbx_module_docker_get_fci(char *fci)
         zabbix_log(LOG_LEVEL_DEBUG, "Translating container name to fci by using docker.inspect");
         AGENT_REQUEST	request;
         init_request(&request);
-        fci++;
         add_request_param(&request, zbx_strdup(NULL, fci));
         add_request_param(&request, zbx_strdup(NULL, "Id"));
         // TODO dynamic iresult
@@ -1707,6 +1711,11 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         char    *container, *query;
         container = get_rparam(request, 0);
+        // skip leading '/' in case of human name or short container id
+        if (container[0] == '/')
+        {
+            container++;
+        }
 
         size_t s_size = strlen("GET /containers/ /stats HTTP/1.0\r\n\n") + strlen(container);
         query = malloc(s_size);
