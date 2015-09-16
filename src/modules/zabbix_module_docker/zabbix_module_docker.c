@@ -35,7 +35,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.5.0";
+static char    *m_version = "v0.5.0";
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66;
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
@@ -131,10 +131,10 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_socket_query()");
 
         struct sockaddr_un address;
-        int sock, nbytes, tbytes = 0;
+        int sock, nbytes;
         size_t addr_length;
         char buffer[buffer_size+1];
-        char *response_substr, *response, *empty="", *message = NULL, *temp1, *temp2;
+        char *response_substr, *response, *empty="", *message;
         if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
         {
             zabbix_log(LOG_LEVEL_WARNING, "Cannot create socket for docker's communication");
@@ -148,11 +148,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
             zabbix_log(LOG_LEVEL_WARNING, "Cannot connect to standard docker's socket /var/run/docker.sock");
             return empty;
         }
-        temp1 = string_replace(query, "\n", "");
-        temp2 = string_replace(temp1, "\r", "");
-        free(temp1);
-        zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket query: %s", temp2);
-        free(temp2);
+        zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket query: %s", zbx_rtrim(query, " \r\n"));
         write(sock, query, strlen(query));
         message = realloc(NULL, 1);
         if (message == NULL)
@@ -194,11 +190,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         }
         free(message);
 
-        temp1 = string_replace(response, "\n", "");
-        temp2 = string_replace(temp1, "\r", "");
-        free(temp1);
-        zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket response: %s", temp2);
-        free(temp2);
+        zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket response: %s", zbx_rtrim(response, " \r\n"));
         return response;
 }
 
@@ -227,12 +219,13 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
         if (1 >= request->nparam)
         {       
                 iresult.value = zbx_dsprintf(NULL, "Invalid number of parameters: %d",  request->nparam);
-                zabbix_log(LOG_LEVEL_ERR, iresult.value)
+                zabbix_log(LOG_LEVEL_ERR, iresult.value);
                 iresult.return_code = SYSINFO_RET_FAIL;
                 return iresult;
         }
 
         char    *container, *query;
+        size_t s_size;
         container = get_rparam(request, 0);
         // skip leading '/' in case of human name or short container id
         if (container[0] == '/')
@@ -240,11 +233,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
             container++;
         }
 
-        size_t s_size = strlen("GET /containers/ /json HTTP/1.0\r\n\n") + strlen(container);
-        query = malloc(s_size);
-        zbx_strlcpy(query, "GET /containers/", s_size);
-        zbx_strlcat(query, container, s_size);
-        zbx_strlcat(query, "/json HTTP/1.0\r\n\n", s_size);
+        query = zbx_dsprintf(NULL, "GET /containers/%s/json HTTP/1.0\r\n\r\n", container);
 
         const char *answer = zbx_module_docker_socket_query(query, 0);
         free(query);
@@ -252,7 +241,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
         {
             free((void*) answer);
             iresult.value = zbx_strdup(NULL, "docker.inspect is not available at the moment - some problem with Docker's socket API");
-            zabbix_log(LOG_LEVEL_DEBUG, result.value);
+            zabbix_log(LOG_LEVEL_DEBUG, iresult.value);
             iresult.return_code = SYSINFO_RET_FAIL;
             return iresult;
         }
