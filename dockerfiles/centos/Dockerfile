@@ -8,6 +8,8 @@ MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 # Define required Zabbix version (tag/<version>) or branch (branches/<version>), e.g. tags/2.4.5, or branches/2.4  
 ENV ZABBIX_VERSION=branches/2.4
 
+WORKDIR /root
+
 RUN \
    yum -y install git subversion automake autoconf gcc make && \
    git clone https://github.com/monitoringartist/Zabbix-Docker-Monitoring && \
