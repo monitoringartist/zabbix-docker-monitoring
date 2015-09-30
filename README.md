@@ -69,7 +69,7 @@ Container log monitoring
 (https://www.zabbix.com/documentation/2.4/manual/config/items/itemtypes/log_items) 
 can be used. Keep in mind, that Zabbix agent must support active mode for log 
 monitoring. Stdout/stderr Docker container console output is logged by Docker 
-into file */var/lib/docker/containers/<fid>/<fid>-json.log*. If the aplication 
+into file */var/lib/docker/containers/<fid>/<fid>-json.log*. If the application 
 in container is not able to log to stdout/stderr, link log file to  
 stdout/stderr. For example: 
 
