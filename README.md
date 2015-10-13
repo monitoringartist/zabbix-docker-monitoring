@@ -143,7 +143,7 @@ Basic compilation steps:
 
 ```
 # Required CentOS/RHEL tools: yum install -y wget autoconf automake gcc svn
-# Required Debian tools: apt-get install -y wget autoconf automake gcc subversion make pkg-config
+# Required Debian/Ubuntu tools: apt-get install -y wget autoconf automake gcc subversion make pkg-config
 cd ~
 mkdir zabbix24
 cd zabbix24
