@@ -55,6 +55,7 @@ Note: cid - container ID, two options are available:
 
 Maybe in the future:
 
+- cgroup CPU throttling metrics
 - systemd.service.discovery - discovering of systemd services
 - systemd.service.cpu - cpu metrics of systemd service
 - systemd.service.mem - mem metrics of systemd service
