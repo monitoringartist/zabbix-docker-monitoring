@@ -138,7 +138,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_socket_query()");
 
         struct sockaddr_un address;
-        int sock, nbytes, tbytes = 0;
+        int sock, nbytes;
         size_t addr_length;
         char buffer[buffer_size+1];
         char *response_substr, *response, *empty="", *message = NULL, *temp1, *temp2;
@@ -189,7 +189,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         }
         close(sock);
         // remove http header
-        if (response_substr = strstr(message, "\r\n\r\n"))
+        if ( (response_substr = strstr(message, "\r\n\r\n")) != NULL)
         {
             response_substr += 4;
             size_t response_size = strlen(response_substr) + 1;
@@ -264,7 +264,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
             return iresult;
         }
 
-	      struct zbx_json_parse jp_data2, jp_data3, jp_row;
+	      struct zbx_json_parse jp_data2;
         char api_value[buffer_size];
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
@@ -462,7 +462,6 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_up()");
         char    *container, *metric;
-        int     ret = SYSINFO_RET_FAIL;
 
         if (1 != request->nparam)
         {
@@ -1171,7 +1170,7 @@ int     zbx_docker_dir_detect()
                 tdriver = drivers;
                 size_t  ddir_size;
                 char    *ddir;
-                while (*tdriver != "")
+                while ( strcmp(*tdriver, "") != 0)
                 {
                     ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(*tdriver) + 1;
                     ddir = malloc(ddir_size);
@@ -1237,7 +1236,6 @@ int     zbx_module_uninit()
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_uninit()");
 
         const char* znetns_prefix = "zabbix_module_docker_";
-        FILE            *f;
         DIR             *dir;
         struct dirent   *d;
 
@@ -1289,7 +1287,6 @@ int     zbx_docker_perm()
         // I hope that zabbix user cannot be member of more than 10 groups
         int j, ngroups = 10;
         gid_t *groups;
-        struct passwd *pw;
         struct group *gr;
         groups = malloc(ngroups * sizeof (gid_t));
         if (groups == NULL)
@@ -1391,27 +1388,6 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_module_docker_discovery                                      *
- *                                                                            *
- * Purpose: container discovery                                               *
- *                                                                            *
- * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
- *                                 as not supported by zabbix                 *
- *               SYSINFO_RET_OK - success                                     *
- *                                                                            *
- ******************************************************************************/
-int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
-{
-        if (socket_api == 1)
-        {
-            zbx_module_docker_discovery_extended(request, result);
-        } else {
-            zbx_module_docker_discovery_basic(request, result);
-        }
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_module_docker_discovery_basic                                *
  *                                                                            *
  * Purpose: container discovery                                               *
@@ -1437,8 +1413,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
             return SYSINFO_RET_FAIL;
         }
 
-        char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container, *containerid;
-        FILE            *f;
+        char            *containerid;
         DIR             *dir;
         zbx_stat_t      sb;
         char            *file = NULL, scontainerid[13];
@@ -1541,7 +1516,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 
 	    struct zbx_json_parse	jp_data2, jp_row;
 	    const char		*p = NULL;
-        char cid[cid_length], scontainerid[13];
+        char cid[cid_length];
         size_t  s_size;
 
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
@@ -1629,6 +1604,27 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         free((void*) answer);
 
         return SYSINFO_RET_OK;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_discovery                                      *
+ *                                                                            *
+ * Purpose: container discovery                                               *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        if (socket_api == 1)
+        {
+            return zbx_module_docker_discovery_extended(request, result);
+        } else {
+            return zbx_module_docker_discovery_basic(request, result);
+        }
 }
 
 /******************************************************************************
@@ -1739,7 +1735,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
             return SYSINFO_RET_FAIL;
         }
 
-	    struct zbx_json_parse jp_data2, jp_data3, jp_row;
+	    struct zbx_json_parse jp_data2, jp_data3;
         char api_value[buffer_size];
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
@@ -1851,7 +1847,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
 
-        char    *state, *query;
+        char    *state;
         state = get_rparam(request, 0);
 
         if (strcmp(state, "Up") == 0)
@@ -1919,10 +1915,9 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                     }
 
                     int count = 0;
-            	    struct zbx_json_parse	jp_data2, jp_row;
+            	    struct zbx_json_parse	jp_row;
             	    const char		*p = NULL;
                     char status[cid_length];
-                    size_t  s_size;
 
                     // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                 	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
@@ -1991,10 +1986,9 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                             }
 
                             int count = 0;
-                    	    struct zbx_json_parse	jp_data2, jp_row;
+                    	    struct zbx_json_parse	jp_row;
                     	    const char		*p = NULL;
                             char status[cid_length];
-                            size_t  s_size;
 
                             // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                         	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
