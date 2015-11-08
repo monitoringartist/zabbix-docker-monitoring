@@ -1235,6 +1235,10 @@ int     zbx_module_uninit()
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_uninit()");
 
+        if (0 != access("/var/run/netns/", F_OK)) {
+            return ZBX_MODULE_OK;
+        }
+
         const char* znetns_prefix = "zabbix_module_docker_";
         DIR             *dir;
         struct dirent   *d;
