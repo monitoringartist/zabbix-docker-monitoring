@@ -56,6 +56,7 @@ int zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
 int zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
 int zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result);
 int zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result);
+int zbx_module_docker_ping(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 static ZBX_METRIC keys[] =
         /*       KEY                 FLAG           FUNCTION                     TEST PARAMETERS */
@@ -70,6 +71,7 @@ static ZBX_METRIC keys[] =
                 {"docker.cpu",       CF_HAVEPARAMS, zbx_module_docker_cpu,       "full container id, cpu metric name"},
                 {"docker.xnet",      CF_HAVEPARAMS, zbx_module_docker_net,       "full container id, interface, network metric name"},
                 {"docker.dev",       CF_HAVEPARAMS, zbx_module_docker_dev,       "full container id, blkio file, blkio metric name"},
+                {"docker.ping",      0,             zbx_module_docker_ping,      ""},
                 {NULL}
         };
 
@@ -857,7 +859,13 @@ int zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result) {
             return SYSINFO_RET_FAIL;
         }
     }
-
+    // TODO CPU throttling
+    /*
+    cat /cgroup/cpu/docker/0bcf828c217dd0f1b0c2f319eac30171c02237fb52abc304793aa6ca09f71b3e/cpu.stat
+    nr_periods 0
+    nr_throttled 0
+    throttled_time 0
+    */
     container = zbx_module_docker_get_fci(get_rparam(request, 0));
     metric = get_rparam(request, 1);
     char *stat_file = "/cpuacct.stat";
@@ -1591,6 +1599,36 @@ int zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result) {
     }
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_ping                                           *
+ *                                                                            *
+ * Purpose: ping the docker server                                            *
+ *                                                                            *
+ * Return value: 1 - OK, otherwise 0                                          *
+ *                                                                            *
+ ******************************************************************************/
+int zbx_module_docker_ping(AGENT_REQUEST *request, AGENT_RESULT *result) {
+    zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_ping()");
+
+    if (socket_api != 1) {
+        zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
+        SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
+        return SYSINFO_RET_FAIL;
+    }
+
+    // 1 - OK, otherwise 0
+    const char *answer = zbx_module_docker_socket_query("GET /_ping HTTP/1.0\r\n\n", 0);
+    if (strcmp(answer, "OK") == 0) {
+        zabbix_log(LOG_LEVEL_DEBUG, "Docker's ping responded OK");
+        SET_UI64_RESULT(result, 1);
+    } else {
+        zabbix_log(LOG_LEVEL_DEBUG, "Docker's ping does not responded OK");
+        SET_UI64_RESULT(result, 0);
+    }
+    free((void *) echo);
+    return SYSINFO_RET_OK;
+}
 
 /******************************************************************************
  *                                                                            *
