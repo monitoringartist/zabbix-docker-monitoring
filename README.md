@@ -127,6 +127,46 @@ AllowRoot=1
 Note: If you use Docker from RHEL/Centos repositories, then you have to 
 use *AllowRoot=1* option.
 
+SELinux
+-------
+If you are on a system that have `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots.
+
+*zabbix-docker.te*
+```
+module zabbix-docker 1.0;
+
+require {
+        type docker_var_run_t;
+        type unreserved_port_t;
+        type zabbix_agent_t;
+        type docker_t;
+        type cgroup_t;
+        class sock_file write;
+        class unix_stream_socket connectto;
+        class capability dac_override;
+        class tcp_socket name_connect;
+        class file { ioctl read getattr lock open };
+        class dir { ioctl read getattr lock add_name reparent search open };
+}
+
+#============= zabbix_agent_t ==============
+
+allow zabbix_agent_t docker_t:unix_stream_socket connectto;
+allow zabbix_agent_t docker_var_run_t:sock_file write;
+allow zabbix_agent_t self:capability dac_override;
+allow zabbix_agent_t unreserved_port_t:tcp_socket name_connect;
+allow zabbix_agent_t cgroup_t:file { ioctl read getattr lock open };
+allow zabbix_agent_t cgroup_t:dir { ioctl read getattr lock search open };
+```
+
+Save it, the run:
+
+```
+checkmodule -M -m -o zabbix-docker.mod zabbix-docker.te
+semodule_package -o zabbix-docker.pp -m zabbix-docker.mod
+semodule -i zabbix-docker.pp
+```
+
 Installation
 ============
 
