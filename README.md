@@ -62,6 +62,7 @@ Maybe in the future:
 - systemd.service.dev - blk io metrics of systemd service
 - systemd.service.net - net metrics of systemd service
 - systemd.service.log - log monitoring of systemd service
+- docker.cpu - collector implementation
 
 Container log monitoring
 ========================
