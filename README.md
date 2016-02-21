@@ -11,6 +11,20 @@ Please feel free to test and provide feedback/open issue.
 Module is focused on the performance, see section 
 [Module vs. UserParameter script](#module-vs-userparameter-script).
 
+Module is available as a Docker image as well. Quick start:
+
+```
+docker run \
+  --name=zabbix-agent-xxl \
+  -h `hostname` \
+  -p 10050:10050 \
+  -v /:/rootfs \
+  -e "ZA_Server=<ZABBIX SERVER IP/DNS NAME>" \
+  -d monitoringartist/zabbix-agent-xxl-limited:latest
+```
+
+Visit [Zabbix agent 3.0 XXL with Docker monitoring support](https://github.com/monitoringartist/zabbix-agent-xxl) for more informations.
+
 Please donate to author, so he can continue to publish other awesome projects 
 for free:
 
