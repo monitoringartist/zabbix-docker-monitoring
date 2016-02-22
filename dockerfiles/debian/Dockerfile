@@ -1,7 +1,7 @@
 # https://github.com/monitoringartist/Zabbix-Docker-Monitoring
 
 # Define required Debian version by using FROM tag. Avalaible: wheezy/jessie/...
-FROM debian:wheezy
+FROM debian:jessie
 
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
