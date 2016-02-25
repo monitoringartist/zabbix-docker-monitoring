@@ -9,8 +9,8 @@
     </groups>
     <templates>
         <template>
-            <template>Template App Docker</template>
-            <name>Template App Docker</name>
+            <template>Template App Docker - www.monitoringartist.com</template>
+            <name>Template App Docker - www.monitoringartist.com</name>
             <groups>
                 <group>
                     <name>Templates</name>
@@ -343,7 +343,7 @@
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
                                     <item>
-                                        <host>Template App Docker</host>
+                                        <host>Template App Docker - www.monitoringartist.com</host>
                                         <key>docker.cpu[/{#HCONTAINERID},system]</key>
                                     </item>
                                 </graph_item>
@@ -355,7 +355,7 @@
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
                                     <item>
-                                        <host>Template App Docker</host>
+                                        <host>Template App Docker - www.monitoringartist.com</host>
                                         <key>docker.cpu[/{#HCONTAINERID},user]</key>
                                     </item>
                                 </graph_item>
@@ -387,7 +387,7 @@
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
                                     <item>
-                                        <host>Template App Docker</host>
+                                        <host>Template App Docker - www.monitoringartist.com</host>
                                         <key>docker.mem[/{#HCONTAINERID},total_cache]</key>
                                     </item>
                                 </graph_item>
@@ -399,7 +399,7 @@
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
                                     <item>
-                                        <host>Template App Docker</host>
+                                        <host>Template App Docker - www.monitoringartist.com</host>
                                         <key>docker.mem[/{#HCONTAINERID},total_rss]</key>
                                     </item>
                                 </graph_item>
@@ -411,7 +411,7 @@
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
                                     <item>
-                                        <host>Template App Docker</host>
+                                        <host>Template App Docker - www.monitoringartist.com</host>
                                         <key>docker.mem[/{#HCONTAINERID},total_swap]</key>
                                     </item>
                                 </graph_item>
@@ -443,7 +443,7 @@
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
                                     <item>
-                                        <host>Template App Docker</host>
+                                        <host>Template App Docker - www.monitoringartist.com</host>
                                         <key>docker.up[/{#HCONTAINERID}]</key>
                                     </item>
                                 </graph_item>
