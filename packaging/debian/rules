@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+PACKAGE = $(shell dh_listpackages)
+TMP     = $(CURDIR)/debian/$(PACKAGE)
+
+DH_VERBOSE = 1
+
+%:
+		dh $@
+
+override_dh_auto_install:
+		dh_auto_install
+		mkdir -p $(TMP)/usr/lib/modules
+		mv -v $(TMP)/usr/lib/$(DEB_BUILD_GNU_TYPE)/$(PACKAGE).so $(TMP)/usr/lib/modules/$(PACKAGE).so
+		rm -rfv $(TMP)/usr/lib/$(DEB_BUILD_GNU_TYPE)
