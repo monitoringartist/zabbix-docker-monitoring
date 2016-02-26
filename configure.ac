@@ -5,7 +5,6 @@ AM_PROG_AR
 AC_PROG_LIBTOOL # seem to need this on CentOS 5 (libtool v1.5)
 LT_INIT
 AC_PROG_CC
-AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 
 # check for stdlib header files
