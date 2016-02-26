@@ -5,7 +5,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	include \
-	README.md \
+	README.md
 
 # RPM package build target
 RPMBASE = ~/rpmbuild
