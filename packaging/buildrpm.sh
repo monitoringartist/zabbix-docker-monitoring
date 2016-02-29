@@ -35,10 +35,12 @@ ls -lah
 pwd
 
 cd /tmp/zabbix30git
-sed -i 's/^Version\s*:.*/Version     : $PACKAGE_VERSION/' packaging/rpmbuild/$PACKAGE.spec
+sed -i "s/^Version\s*:.*/Version     : $PACKAGE_VERSION/" packaging/rpmbuild/$PACKAGE.spec
 mkdir -p $RPMBASE/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 cp /tmp/zabbix30/src/modules/zabbix_module_docker/$PACKAGE-$PACKAGE_VERSION.tar.gz $RPMBASE/SOURCES/$PACKAGE-$PACKAGE_VERSION.tar.gz
 cp packaging/rpmbuild/$PACKAGE.spec $RPMBASE/SPECS/$PACKAGE.spec
+mkdir $PACKAGE-$PACKAGE_VERSION
+cp /tmp/zabbix30/src/modules/zabbix_module_docker/$PACKAGE-$PACKAGE_VERSION.so PACKAGE-$PACKAGE_VERSION
 echo 'rpmbuild:'
 pwd
 echo "$RPMBUILD $RPMBUILD_FLAGS packaging/rpmbuild/$PACKAGE.spec"
