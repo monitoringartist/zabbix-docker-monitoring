@@ -23,6 +23,8 @@ docker run \
   -d monitoringartist/zabbix-agent-xxl-limited:latest
 ```
 
+**Ubuntu users need also** `-v /var/run:/var/run`.
+
 Visit [Zabbix agent 3.0 XXL with Docker monitoring support](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
 
 Please donate to author, so he can continue to publish other awesome projects 
