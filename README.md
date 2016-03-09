@@ -150,7 +150,7 @@ If you are on a system that have `SELinux` in enforcing-mode (check with `getenf
 
 *zabbix-docker.te*
 ```
-module zabbix-docker 1.0;
+module zabbix-docker 1.1;
 
 require {
         type docker_var_run_t;
@@ -158,11 +158,12 @@ require {
         type zabbix_agent_t;
         type docker_t;
         type cgroup_t;
+        type modules_object_t;
         class sock_file write;
         class unix_stream_socket connectto;
         class capability dac_override;
         class tcp_socket name_connect;
-        class file { ioctl read getattr lock open };
+        class file { ioctl read getattr lock open execute };
         class dir { ioctl read getattr lock add_name reparent search open };
 }
 
@@ -174,6 +175,7 @@ allow zabbix_agent_t self:capability dac_override;
 allow zabbix_agent_t unreserved_port_t:tcp_socket name_connect;
 allow zabbix_agent_t cgroup_t:file { ioctl read getattr lock open };
 allow zabbix_agent_t cgroup_t:dir { ioctl read getattr lock search open };
+allow zabbix_agent_t modules_object_t:file { read open execute };
 ```
 
 Save it, the run:
