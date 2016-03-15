@@ -16,7 +16,7 @@ Module is available as a Docker image as well. Quick start:
 ```
 docker run \
   --name=zabbix-agent-xxl \
-  -h `hostname` \
+  -h $(hostname) \
   -p 10050:10050 \
   -v /:/rootfs \
   -e "ZA_Server=<ZABBIX SERVER IP/DNS NAME>" \
