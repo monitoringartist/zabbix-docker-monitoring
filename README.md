@@ -213,15 +213,15 @@ Compilation
 ===========
 
 You have to compile module, if provided binary doesn't work on your system.
-Basic compilation steps:
+Basic compilation steps (please use right Zabbix branch version):
 
 ```
 # Required CentOS/RHEL tools: yum install -y wget autoconf automake gcc svn
 # Required Debian/Ubuntu tools: apt-get install -y wget autoconf automake gcc subversion make pkg-config
 cd ~
-mkdir zabbix24
-cd zabbix24
-svn co svn://svn.zabbix.com/branches/2.4 .
+mkdir zabbix30
+cd zabbix30
+svn co svn://svn.zabbix.com/branches/3.0 .
 ./bootstrap.sh
 ./configure --enable-agent
 mkdir src/modules/zabbix_module_docker
