@@ -30,6 +30,7 @@ before_script:
   - "mkdir src/modules/zabbix_module_docker"
 script:
   - "pwd"
+  - "ls ~"  
   - "cd src/modules/zabbix_module_docker"
   - "pwd"
   - "ls /home/travis/monitoringartist/zabbix-docker-monitoring"  
