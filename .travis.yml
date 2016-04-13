@@ -29,9 +29,11 @@ before_script:
   - "./configure --enable-agent"  
   - "mkdir src/modules/zabbix_module_docker"
 script:
-  - "cd ~/zabbix30/src/modules/zabbix_module_docker"
-  - "cp ~/monitoringartist/zabbix-docker-monitoring/src/modules/zabbix_module_docker/* ."
-  - "make"     
+  - "pwd"
+  - "cd src/modules/zabbix_module_docker"
+  - "pwd"
+  - "cp ../../../../src/modules/zabbix_module_docker/* ."
+  - "make"
   
 after_success:
   - "mkdir -p ~/monitoringartist/zabbix-docker-monitoring/artifacts/centos7/"
