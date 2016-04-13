@@ -20,39 +20,34 @@ branches:
    only:
      - master
      
-before_script:
-  - "pwd"
-  - "ls"  
-  - "mkdir zabbix30"
-  - "cd zabbix30"
+before_script:  
+  - "mkdir ~/zabbix30"
+  - "cd ~/zabbix30"
   - "svn co svn://svn.zabbix.com/branches/3.0 ."
   - "./bootstrap.sh"
   - "./configure --enable-agent"  
   - "mkdir src/modules/zabbix_module_docker"
-script:
-  - "pwd"
-  - "ls ~"  
-  - "cd src/modules/zabbix_module_docker"
-  - "pwd"
-  - "ls /home/travis/monitoringartist/zabbix-docker-monitoring"  
-  - "cp /home/travis/monitoringartist/zabbix-docker-monitoring/src/modules/zabbix_module_docker/* ."
+script:  
+  - "cd src/modules/zabbix_module_docker"  
+  - "cp /home/travis/build/monitoringartist/zabbix-docker-monitoring/src/modules/zabbix_module_docker/* ."
   - "make"
   
 after_success:
-  - "mkdir -p ~/monitoringartist/zabbix-docker-monitoring/artifacts/centos7/"
-  - "cd ~/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
+  - "mkdir -p /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/centos7/"
+  - "cd /home/travis/build/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
   - "docker build --rm=true -t local/zabbix-docker-module-compilation -f centos/Dockerfile ."
   - "docker run -v /tmp:/tmp local/zabbix-docker-module-compilation cp ~/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so"
   - "docker rmi -f local/zabbix-docker-module-compilation"
-  - "cp /tmp/zabbix_module_docker.so ~/monitoringartist/zabbix-docker-monitoring/artifacts/centos7/"
+  - "cp /tmp/zabbix_module_docker.so /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/centos7/"
   - "rm -f /tmp/zabbix_module_docker.so"
-  - "mkdir -p~/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
-  - "cd ~/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
+  - "mkdir -p /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
+  - "cd /home/travis/build/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
   - "docker build --rm=true -t local/zabbix-docker-module-compilation -f debian/Dockerfile ."
   - "docker run -v /tmp:/tmp local/zabbix-docker-module-compilation cp ~/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so"
   - "docker rmi -f local/zabbix-docker-module-compilation"
-  - "cp /tmp/zabbix_module_docker.so ~/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
+  - "cp /tmp/zabbix_module_docker.so /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
   - "rm -f /tmp/zabbix_module_docker.so"
+  - "ls -lah /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/"  
   - "echo 'git push artifacts'"    
 
 deploy:
