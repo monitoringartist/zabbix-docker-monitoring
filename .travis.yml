@@ -5,7 +5,9 @@ notifications:
     on_success: never
     on_failure: change
 
-install: wget autoconf automake gcc subversion make pkg-config
+install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y wget autoconf automake gcc subversion make pkg-config
 
 services:
   - docker
