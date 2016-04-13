@@ -1,0 +1,60 @@
+sudo: required
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
+
+install: wget autoconf automake gcc subversion make pkg-config
+
+services:
+  - docker
+
+language: c
+
+compiler: c
+
+branches:
+   only:
+     - master
+     
+before_script:
+  - "cd ~"
+  - "mkdir zabbix30"
+  - "cd zabbix30"
+  - "svn co svn://svn.zabbix.com/branches/3.0 ."
+  - "./bootstrap.sh"
+  - "./configure --enable-agent"  
+  - "mkdir src/modules/zabbix_module_docker"
+script:
+  - "cd ~/zabbix30/src/modules/zabbix_module_docker"
+  - "cp ~/monitoringartist/zabbix-docker-monitoring/src/modules/zabbix_module_docker/* ."
+  - "make"     
+  
+after_success:
+  - "mkdir -p ~/monitoringartist/zabbix-docker-monitoring/artifacts/centos7/"
+  - "cd ~/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
+  - "docker build --rm=true -t local/zabbix-docker-module-compilation -f centos/Dockerfile ."
+  - "docker run -v /tmp:/tmp local/zabbix-docker-module-compilation cp ~/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so"
+  - "docker rmi -f local/zabbix-docker-module-compilation"
+  - "cp /tmp/zabbix_module_docker.so ~/monitoringartist/zabbix-docker-monitoring/artifacts/centos7/"
+  - "rm -f /tmp/zabbix_module_docker.so"
+  - "mkdir -p~/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
+  - "cd ~/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
+  - "docker build --rm=true -t local/zabbix-docker-module-compilation -f debian/Dockerfile ."
+  - "docker run -v /tmp:/tmp local/zabbix-docker-module-compilation cp ~/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so"
+  - "docker rmi -f local/zabbix-docker-module-compilation"
+  - "cp /tmp/zabbix_module_docker.so ~/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
+  - "rm -f /tmp/zabbix_module_docker.so"
+  - "echo 'git push artifacts'"    
+
+deploy:
+  provider: releases
+  api-key: "$GITHUBOAUTHTOKEN"
+  file:
+    - "monitoringartist/zabbix-docker-monitoring/artifacts/centos7/zabbix_module_docker.so"
+    - "monitoringartist/zabbix-docker-monitoring/artifacts/debian8/zabbix_module_docker.so"
+  skip_cleanup: true
+  on:
+    tags: true     
+  
