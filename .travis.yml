@@ -32,7 +32,8 @@ script:
   - "pwd"
   - "cd src/modules/zabbix_module_docker"
   - "pwd"
-  - "cp ../../../../src/modules/zabbix_module_docker/* ."
+  - "ls /home/travis/monitoringartist/zabbix-docker-monitoring"  
+  - "cp /home/travis/monitoringartist/zabbix-docker-monitoring/src/modules/zabbix_module_docker/* ."
   - "make"
   
 after_success:
