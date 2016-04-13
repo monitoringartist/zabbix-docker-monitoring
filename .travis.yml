@@ -7,14 +7,14 @@ notifications:
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y wget autoconf automake gcc subversion make pkg-config libc6-dev
+  - sudo apt-get install -y wget autoconf automake gcc subversion make pkg-config
 
 services:
   - docker
 
 language: c
 
-compiler: c
+compiler: gcc
 
 branches:
    only:
