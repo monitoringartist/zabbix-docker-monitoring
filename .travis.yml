@@ -21,7 +21,8 @@ branches:
      - master
      
 before_script:
-  - "cd ~"
+  - "pwd"
+  - "ls"  
   - "mkdir zabbix30"
   - "cd zabbix30"
   - "svn co svn://svn.zabbix.com/branches/3.0 ."
