@@ -7,7 +7,7 @@ notifications:
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y wget autoconf automake gcc subversion make pkg-config
+  - sudo apt-get install -y wget autoconf automake gcc subversion make pkg-config libc6-dev
 
 services:
   - docker
