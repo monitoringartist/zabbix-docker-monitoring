@@ -1,7 +1,7 @@
 # https://github.com/monitoringartist/Zabbix-Docker-Monitoring
 
 # Define required Debian version by using FROM tag. Avalaible: wheezy/jessie/...
-FROM debian:jessie
+FROM ubuntu:14.04
 
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
@@ -25,6 +25,6 @@ RUN \
 
 ## Docker compilation:
 # docker build --rm=true -t local/zabbix-docker-module-compilation .
-# docker run  --rm -v /tmp:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+# docker run --rm -v /tmp:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 # docker rmi -f local/zabbix-docker-module-compilation
 ## use/copy /tmp/zabbix_module_docker.so in your Zabbix
