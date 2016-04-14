@@ -43,11 +43,18 @@ after_success:
   - "mkdir -p /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
   - "cd /home/travis/build/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
   - "docker build --rm=true -t local/zabbix-docker-module-compilation -f debian/Dockerfile ."
-  - "docker run --rm -v /tmp:/tmp local/zabbix-docker-module-compilation cp ~/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so"
+  - "docker run --rm -v /tmp:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so"
   - "docker rmi -f local/zabbix-docker-module-compilation"
   - "cp /tmp/zabbix_module_docker.so /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/debian8/"
-  - "rm -f /tmp/zabbix_module_docker.so"
-  - "ls -lah /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/"  
+  - "rm -f /tmp/zabbix_module_docker.so"  
+  - "mkdir -p /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/ubuntu14/"
+  - "cd /home/travis/build/monitoringartist/zabbix-docker-monitoring/dockerfiles/"
+  - "docker build --rm=true -t local/zabbix-docker-module-compilation -f ubuntu/Dockerfile ."
+  - "docker run --rm -v /tmp:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so"
+  - "docker rmi -f local/zabbix-docker-module-compilation"
+  - "cp /tmp/zabbix_module_docker.so /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/ubuntu14/"
+  - "rm -f /tmp/zabbix_module_docker.so"    
+  - "find /home/travis/build/monitoringartist/zabbix-docker-monitoring/artifacts/ -type f"  
   - "echo 'git push artifacts'"    
 
 deploy:
@@ -56,6 +63,7 @@ deploy:
   file:
     - "monitoringartist/zabbix-docker-monitoring/artifacts/centos7/zabbix_module_docker.so"
     - "monitoringartist/zabbix-docker-monitoring/artifacts/debian8/zabbix_module_docker.so"
+    - "monitoringartist/zabbix-docker-monitoring/artifacts/ubuntu14/zabbix_module_docker.so"
   skip_cleanup: true
   on:
     tags: true     
