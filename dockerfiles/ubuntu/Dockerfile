@@ -19,7 +19,7 @@ RUN \
    cd ~/zabbix/ && \
    ./bootstrap.sh  && \
    ./configure --enable-agent  && \
-   cp -R ~/Zabbix-Docker-Monitoring/src/modules/zabbix_module_docker/ ~/zabbix/src/modules/  && \
+   cp -R ~/zabbix-docker-monitoring/src/modules/zabbix_module_docker/ ~/zabbix/src/modules/  && \
    cd ~/zabbix/src/modules/zabbix_module_docker && \
    make
 
