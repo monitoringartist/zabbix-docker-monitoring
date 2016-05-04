@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.5.0";
+char    *m_version = "v0.5.1";
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66;
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
@@ -1491,6 +1491,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
                 zbx_json_addstring(&j, "{#FCONTAINERID}", containerid, ZBX_JSON_TYPE_STRING);
                 zbx_strlcpy(scontainerid, containerid, 13);
                 zbx_json_addstring(&j, "{#HCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
+                zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
                 zbx_json_close(&j);
 
         }
@@ -1591,7 +1592,9 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsed container id: %s", cid);
 
                 zbx_json_addobject(&j, NULL);
-                zbx_json_addstring(&j, "{#FCONTAINERID}", cid, ZBX_JSON_TYPE_STRING);
+                zbx_json_addstring(&j, "{#FCONTAINERID}", cid, ZBX_JSON_TYPE_STRING);                 
+                zbx_strlcpy(scontainerid, cid, 13);
+                zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);                
 
                 if (request->nparam > 1) {
                     // custom item for HCONTAINERID
