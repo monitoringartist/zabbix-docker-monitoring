@@ -1,6 +1,6 @@
 /*
 ** Zabbix module for Docker container monitoring
-** Copyright (C) 2014-2015 Jan Garaj - www.monitoringartist.com
+** Copyright (C) 2014-2016 Jan Garaj - www.monitoringartist.com
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.5.1";
+char    *m_version = "v0.5.3";
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66;
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
 static int socket_api;
@@ -451,6 +451,110 @@ char*  zbx_module_docker_get_fci(char *fci)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_docker_dir_detect                                            *
+ *                                                                            *
+ * Purpose: it should find metric folder - it depends on docker version       *
+ *            or execution environment                                        *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - stat folder was not found                 *
+ *               SYSINFO_RET_OK - stat folder was found                       *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_docker_dir_detect()
+{
+        // TODO logic should be changed for all lxc/docker/systemd container support
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_dir_detect()");
+
+        char *drivers[] = {
+            "docker/",        // Non-systemd Docker: docker -d -e native
+            "system.slice/",  // Systemd Docker
+            "lxc/",           // Non-systemd LXC: docker -d -e lxc
+            "libvirt/lxc/",   // Legacy libvirt-lxc
+            // TODO pos = cgroup.find("-lxc\\x2");     // Systemd libvirt-lxc
+            // TODO pos = cgroup.find(".libvirt-lxc"); // Non-systemd libvirt-lxc
+            ""
+        }, **tdriver;
+        char path[512];
+        char *temp1, *temp2;
+        FILE *fp;
+        DIR  *dir;
+
+        if ((fp = fopen("/proc/mounts", "r")) == NULL)
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot open /proc/mounts: %s", zbx_strerror(errno));
+            return SYSINFO_RET_FAIL;
+        }
+
+        while (fgets(path, 512, fp) != NULL)
+        {
+            if ((strstr(path, "cpuset cgroup")) != NULL)
+            {
+                temp1 = string_replace(path, "cgroup ", "");
+                temp2 = string_replace(temp1, strstr(temp1, " "), "");
+                free(temp1);
+                if (stat_dir != NULL) free(stat_dir);
+                stat_dir = string_replace(temp2, "cpuset", "");
+                free(temp2);
+                zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
+
+                pclose(fp);
+
+                char *cgroup = "cpuset/";
+                tdriver = drivers;
+                size_t  ddir_size;
+                char    *ddir;
+                while (*tdriver != "")
+                {
+                    ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(*tdriver) + 1;
+                    ddir = malloc(ddir_size);
+                    zbx_strlcpy(ddir, stat_dir, ddir_size);
+                    zbx_strlcat(ddir, cgroup, ddir_size);
+                    zbx_strlcat(ddir, *tdriver, ddir_size);
+                    if (NULL != (dir = opendir(ddir)))
+                    {
+                        closedir(dir);
+                        free(ddir);
+                        driver = *tdriver;
+                        zabbix_log(LOG_LEVEL_DEBUG, "Detected used docker driver dir: %s", driver);
+                        // systemd docker
+                        if (strcmp(driver, "system.slice/") == 0)
+                        {
+                            zabbix_log(LOG_LEVEL_DEBUG, "Detected systemd docker - prefix/suffix will be used");
+                            c_prefix = "docker-";
+                            c_suffix = ".scope";
+                        }
+                        // detect cpu_cgroup - JoinController cpu,cpuacct
+                        cgroup = "cpu,cpuacct/";
+                        ddir_size = strlen(cgroup) + strlen(stat_dir) + 1;
+                        ddir = malloc(ddir_size);
+                        zbx_strlcpy(ddir, stat_dir, ddir_size);
+                        zbx_strlcat(ddir, cgroup, ddir_size);
+                        if (NULL != (dir = opendir(ddir)))
+                        {
+                            closedir(dir);
+                            cpu_cgroup = "cpu,cpuacct/";
+                            zabbix_log(LOG_LEVEL_DEBUG, "Detected JoinController cpu,cpuacct");
+                        } else {
+                            cpu_cgroup = "cpuacct/";
+                        }
+                        free(ddir);
+                        return SYSINFO_RET_OK;
+                    }
+                    *tdriver++;
+                    free(ddir);
+                }
+                driver = "";
+                zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect used docker driver");
+                return SYSINFO_RET_FAIL;
+            }
+        }
+        pclose(fp);
+        zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect docker stat directory");
+        return SYSINFO_RET_FAIL;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_module_docker_up                                             *
  *                                                                            *
  * Purpose: check if container is running                                     *
@@ -477,8 +581,8 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
-        
-        if(cpu_cgroup == NULL) 
+
+        if(cpu_cgroup == NULL)
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
@@ -486,7 +590,7 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
                     SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no cpu_cgroup directory"));
                     return SYSINFO_RET_FAIL;
                 }
-        }        
+        }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
         metric = get_rparam(request, 1);
@@ -777,8 +881,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
-        
-        if(cpu_cgroup == NULL) 
+
+        if(cpu_cgroup == NULL)
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
@@ -786,7 +890,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                     SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu check is not available at the moment - no cpu_cgroup directory"));
                     return SYSINFO_RET_FAIL;
                 }
-        }        
+        }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
         metric = get_rparam(request, 1);
@@ -1119,110 +1223,6 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_docker_dir_detect                                            *
- *                                                                            *
- * Purpose: it should find metric folder - it depends on docker version       *
- *            or execution environment                                        *
- *                                                                            *
- * Return value: SYSINFO_RET_FAIL - stat folder was not found                 *
- *               SYSINFO_RET_OK - stat folder was found                       *
- *                                                                            *
- ******************************************************************************/
-int     zbx_docker_dir_detect()
-{
-        // TODO logic should be changed for all lxc/docker/systemd container support
-        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_dir_detect()");
-
-        char *drivers[] = {
-            "docker/",        // Non-systemd Docker: docker -d -e native
-            "system.slice/",  // Systemd Docker
-            "lxc/",           // Non-systemd LXC: docker -d -e lxc
-            "libvirt/lxc/",   // Legacy libvirt-lxc
-            // TODO pos = cgroup.find("-lxc\\x2");     // Systemd libvirt-lxc
-            // TODO pos = cgroup.find(".libvirt-lxc"); // Non-systemd libvirt-lxc
-            ""
-        }, **tdriver;
-        char path[512];
-        char *temp1, *temp2;
-        FILE *fp;
-        DIR  *dir;
-
-        if ((fp = fopen("/proc/mounts", "r")) == NULL)
-        {
-            zabbix_log(LOG_LEVEL_WARNING, "Cannot open /proc/mounts: %s", zbx_strerror(errno));
-            return SYSINFO_RET_FAIL;
-        }
-
-        while (fgets(path, 512, fp) != NULL)
-        {
-            if ((strstr(path, "cpuset cgroup")) != NULL)
-            {
-                temp1 = string_replace(path, "cgroup ", "");
-                temp2 = string_replace(temp1, strstr(temp1, " "), "");
-                free(temp1);
-                if (stat_dir != NULL) free(stat_dir);
-                stat_dir = string_replace(temp2, "cpuset", "");
-                free(temp2);
-                zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
-
-                pclose(fp);
-
-                char *cgroup = "cpuset/";
-                tdriver = drivers;
-                size_t  ddir_size;
-                char    *ddir;
-                while (*tdriver != "")
-                {
-                    ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(*tdriver) + 1;
-                    ddir = malloc(ddir_size);
-                    zbx_strlcpy(ddir, stat_dir, ddir_size);
-                    zbx_strlcat(ddir, cgroup, ddir_size);
-                    zbx_strlcat(ddir, *tdriver, ddir_size);
-                    if (NULL != (dir = opendir(ddir)))
-                    {
-                        closedir(dir);
-                        free(ddir);
-                        driver = *tdriver;
-                        zabbix_log(LOG_LEVEL_DEBUG, "Detected used docker driver dir: %s", driver);
-                        // systemd docker
-                        if (strcmp(driver, "system.slice/") == 0)
-                        {
-                            zabbix_log(LOG_LEVEL_DEBUG, "Detected systemd docker - prefix/suffix will be used");
-                            c_prefix = "docker-";
-                            c_suffix = ".scope";
-                        }
-                        // detect cpu_cgroup - JoinController cpu,cpuacct
-                        cgroup = "cpu,cpuacct/";
-                        ddir_size = strlen(cgroup) + strlen(stat_dir) + 1;
-                        ddir = malloc(ddir_size);
-                        zbx_strlcpy(ddir, stat_dir, ddir_size);
-                        zbx_strlcat(ddir, cgroup, ddir_size);
-                        if (NULL != (dir = opendir(ddir)))
-                        {
-                            closedir(dir);
-                            cpu_cgroup = "cpu,cpuacct/";
-                            zabbix_log(LOG_LEVEL_DEBUG, "Detected JoinController cpu,cpuacct");
-                        } else {
-                            cpu_cgroup = "cpuacct/";
-                        }
-                        free(ddir);
-                        return SYSINFO_RET_OK;
-                    }
-                    *tdriver++;
-                    free(ddir);
-                }
-                driver = "";
-                zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect used docker driver");
-                return SYSINFO_RET_FAIL;
-            }
-        }
-        pclose(fp);
-        zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect docker stat directory");
-        return SYSINFO_RET_FAIL;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_module_uninit                                                *
  *                                                                            *
  * Purpose: the function is called on agent shutdown                          *
@@ -1386,27 +1386,6 @@ int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
             zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
             SET_MSG_RESULT(result, iresult.value);
             return iresult.return_code;
-        }
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_module_docker_discovery                                      *
- *                                                                            *
- * Purpose: container discovery                                               *
- *                                                                            *
- * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
- *                                 as not supported by zabbix                 *
- *               SYSINFO_RET_OK - success                                     *
- *                                                                            *
- ******************************************************************************/
-int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
-{
-        if (socket_api == 1)
-        {
-            zbx_module_docker_discovery_extended(request, result);
-        } else {
-            zbx_module_docker_discovery_basic(request, result);
         }
 }
 
@@ -1592,9 +1571,9 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsed container id: %s", cid);
 
                 zbx_json_addobject(&j, NULL);
-                zbx_json_addstring(&j, "{#FCONTAINERID}", cid, ZBX_JSON_TYPE_STRING);                 
+                zbx_json_addstring(&j, "{#FCONTAINERID}", cid, ZBX_JSON_TYPE_STRING);
                 zbx_strlcpy(scontainerid, cid, 13);
-                zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);                
+                zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
 
                 if (request->nparam > 1) {
                     // custom item for HCONTAINERID
@@ -1632,6 +1611,27 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         free((void*) answer);
 
         return SYSINFO_RET_OK;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_discovery                                      *
+ *                                                                            *
+ * Purpose: container discovery                                               *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        if (socket_api == 1)
+        {
+            zbx_module_docker_discovery_extended(request, result);
+        } else {
+            zbx_module_docker_discovery_basic(request, result);
+        }
 }
 
 /******************************************************************************

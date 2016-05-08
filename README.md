@@ -23,7 +23,7 @@ docker run \
   -d monitoringartist/zabbix-agent-xxl-limited:latest
 ```
 
-**Ubuntu users need also** `-v /var/run:/var/run`.
+**Ubuntu/Debian users need also** `-v /var/run:/var/run`.
 
 Visit [Zabbix agent 3.0 XXL with Docker monitoring support](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
 
@@ -84,7 +84,7 @@ Container log monitoring
 ========================
 
 [Standard Zabbix log monitoring]
-(https://www.zabbix.com/documentation/2.4/manual/config/items/itemtypes/log_items) 
+(https://www.zabbix.com/documentation/3.0/manual/config/items/itemtypes/log_items) 
 can be used. Keep in mind, that Zabbix agent must support active mode for log 
 monitoring. Stdout/stderr Docker container console output is logged by Docker 
 into file */var/lib/docker/containers/<fid>/<fid>-json.log*. If the application 
@@ -203,11 +203,10 @@ Remember to run `systemctl daemon-reload` when you are done editing it. The zabb
 Installation
 ============
 
-* Import provided template Zabbix-Template-App-Docker.xml.
+* Import provided template [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml).
 * Configure your Zabbix agent(s) - load downloaded/compiled 
 zabbix_module_docker.so<br>
-https://www.zabbix.com/documentation/2.4/manual/config/items/loadablemodules
-
+https://www.zabbix.com/documentation/3.0/manual/config/items/loadablemodules
 
 Compilation
 ===========
