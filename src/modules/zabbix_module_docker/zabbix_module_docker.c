@@ -1548,6 +1548,8 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 continue;
             } else {
                 // HCONTAINERID - human name - first name in array
+                // TODO issue #32
+                // "Names": ["/redisclient1/redis", "/redis1"],
                 jp_data2.start += 3;
                 char *result, *names;
                 if ((result = strchr(jp_data2.start, '"')) != NULL)
