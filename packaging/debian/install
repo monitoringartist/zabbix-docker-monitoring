@@ -1,0 +1,1 @@
+debian/libzbxdocker.conf /etc/zabbix/zabbix_agentd.d

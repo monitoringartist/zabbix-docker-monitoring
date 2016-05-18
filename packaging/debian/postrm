@@ -1,0 +1,7 @@
+if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
+    dpkg-maintscript-helper rm_conffile /etc/zabbix/zabbix_agentd.d/libzbxdocker.conf -- "$@"
+else
+	rm -f /etc/zabbix/zabbix_agentd.d/libzbxdocker.conf
+fi
+
+#DEBHELPER#

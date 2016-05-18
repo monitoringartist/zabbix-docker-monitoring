@@ -11,6 +11,20 @@ Please feel free to test and provide feedback/open issue.
 Module is focused on the performance, see section 
 [Module vs. UserParameter script](#module-vs-userparameter-script).
 
+Module is available as a Docker image as well. Quick start:
+
+```
+docker run \
+  --name=zabbix-agent-xxl \
+  -h `hostname` \
+  -p 10050:10050 \
+  -v /:/rootfs \
+  -e "ZA_Server=<ZABBIX SERVER IP/DNS NAME>" \
+  -d monitoringartist/zabbix-agent-xxl-limited:latest
+```
+
+Visit [Zabbix agent 3.0 XXL with Docker monitoring support](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
+
 Please donate to author, so he can continue to publish other awesome projects 
 for free:
 
@@ -62,6 +76,7 @@ Maybe in the future:
 - systemd.service.dev - blk io metrics of systemd service
 - systemd.service.net - net metrics of systemd service
 - systemd.service.log - log monitoring of systemd service
+- docker.cpu - collector implementation
 
 Container log monitoring
 ========================
@@ -126,6 +141,60 @@ AllowRoot=1
 
 Note: If you use Docker from RHEL/Centos repositories, then you have to 
 use *AllowRoot=1* option.
+
+SELinux
+-------
+If you are on a system that have `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots.
+
+*zabbix-docker.te*
+```
+module zabbix-docker 1.0;
+
+require {
+        type docker_var_run_t;
+        type unreserved_port_t;
+        type zabbix_agent_t;
+        type docker_t;
+        type cgroup_t;
+        class sock_file write;
+        class unix_stream_socket connectto;
+        class capability dac_override;
+        class tcp_socket name_connect;
+        class file { ioctl read getattr lock open };
+        class dir { ioctl read getattr lock add_name reparent search open };
+}
+
+#============= zabbix_agent_t ==============
+
+allow zabbix_agent_t docker_t:unix_stream_socket connectto;
+allow zabbix_agent_t docker_var_run_t:sock_file write;
+allow zabbix_agent_t self:capability dac_override;
+allow zabbix_agent_t unreserved_port_t:tcp_socket name_connect;
+allow zabbix_agent_t cgroup_t:file { ioctl read getattr lock open };
+allow zabbix_agent_t cgroup_t:dir { ioctl read getattr lock search open };
+```
+
+Save it, the run:
+
+```
+checkmodule -M -m -o zabbix-docker.mod zabbix-docker.te
+semodule_package -o zabbix-docker.pp -m zabbix-docker.mod
+semodule -i zabbix-docker.pp
+```
+
+systemd
+=======
+
+If you are using your systems `zabbix-agent` package, it might have sat rules that makes the `zabbix-agent` start just after the network is up and running. This might cause problems, since we are not yet ready to start ourself, as we are now depending on `Docker`.
+
+If you have problems that `zabbix-agent` wont start up completly when running systemd. You can add an additional file to `/etc/systemd/system/zabbix-agent.service.d/zabbix.conf` (you need to create the folder as well), with the content;
+
+```
+[Unit]
+After=docker.service
+```
+
+Remember to run `systemctl daemon-reload` when you are done editing it. The zabbix-agent should start correctly after this little change.
 
 Installation
 ============
@@ -385,11 +454,11 @@ Recommended docs
 Author
 ======
 
-[Devops Monitoring zExpert](http://www.jangaraj.com), who loves monitoring 
-systems, which start with letter Z. Those are Zabbix and Zenoss.
+[Devops Monitoring zExpert](http://www.jangaraj.com 'DevOps / Docker / Kubernetes / Zabbix / Zenoss / Monitoring'), 
+who loves monitoring systems, which start with letter Z. 
+Those are Zabbix and Zenoss.
 
 Professional monitoring services:
 
-[![Monitoring Artist]
-(http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)]
-(http://www.monitoringartist.com)
+[![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)]
+(http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / Zabbix / Zenoss / Monitoring')

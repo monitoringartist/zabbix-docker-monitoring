@@ -1,0 +1,14 @@
+Source: libzbxdocker
+Maintainer: Jan Garaj <info@monitoringartist.com>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 9)
+
+Package: libzbxdocker
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, zabbix-agent (>= 2.2.0)
+Description: Docker monitoring module for Zabbix
+ This package provides comprehensive monitoring of Docker using a
+ natively compiled Zabbix agent module, written in C, with highly configurable
+ item keys and a complimentary Template.
