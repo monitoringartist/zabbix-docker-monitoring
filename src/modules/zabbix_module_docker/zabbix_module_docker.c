@@ -42,10 +42,9 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.5.3";
-static int item_timeout = 1, buffer_size = 1024, cid_length = 66;
-char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup;
-static int socket_api;
+char    *m_version = "v0.5.4devel";
+char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
+static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -1359,6 +1358,24 @@ int     zbx_module_init()
             }
             free((void*) echo);
         }
+        
+        size_t hostname_len = 128;
+        while (1) {
+            char* realloc_hostname = realloc(hostname, hostname_len);
+            if (realloc_hostname == 0) {
+                free(hostname);
+            }
+            hostname = realloc_hostname;
+            hostname[hostname_len-1] = 0;        
+            if (gethostname(hostname, hostname_len-1) == 0) {
+                size_t count = strlen(hostname);
+                if (count < hostname_len-2) {
+                    break;
+                }
+            }        
+            hostname_len *= 2;
+        }
+         
         return ZBX_MODULE_OK;
 }
 
@@ -1471,6 +1488,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
                 zbx_strlcpy(scontainerid, containerid, 13);
                 zbx_json_addstring(&j, "{#HCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
                 zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
+                zbx_json_addstring(&j, "{#SYSTEM.HOSTNAME}", hostname, ZBX_JSON_TYPE_STRING);
                 zbx_json_close(&j);
 
         }
@@ -1576,6 +1594,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 zbx_json_addstring(&j, "{#FCONTAINERID}", cid, ZBX_JSON_TYPE_STRING);
                 zbx_strlcpy(scontainerid, cid, 13);
                 zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
+                zbx_json_addstring(&j, "{#SYSTEM.HOSTNAME}", hostname, ZBX_JSON_TYPE_STRING);
 
                 if (request->nparam > 1) {
                     // custom item for HCONTAINERID
