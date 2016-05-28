@@ -263,7 +263,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
             return iresult;
         }
 
-	      struct zbx_json_parse jp_data2, jp_data3, jp_row;
+	    struct zbx_json_parse jp_data2, jp_data3, jp_row;
         char api_value[buffer_size];
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
@@ -315,7 +315,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                     return iresult;
                                 } else {
                                     // find item in array - selector is param3
-    	                              const char	*p_array = NULL;
+    	                            const char	*p_array = NULL;
                                     char *result_array, *value;
                                     while (NULL != (p_array = zbx_json_next(&jp_data_array, p_array)))
    	                              {
@@ -1583,8 +1583,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Names\" array in the received JSON object");
                 continue;
             } else {
-                // HCONTAINERID - human name - first name in array
-                // TODO issue #32
+                // HCONTAINERID
                 // "Names": ["/redisclient1/redis", "/redis1"],
                 jp_data2.start += 3;
                 char *result, *names;
@@ -1593,6 +1592,19 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                     s_size = strlen(jp_data2.start) - strlen(result) + 1;
                     names = malloc(s_size);
                     zbx_strlcpy(names, jp_data2.start, s_size);
+                    while (strchr(names, '/') != NULL) {
+                         // linked name - search another one
+                         jp_data2.start = jp_data2.start + s_size + 3;
+                         if ((result = strchr(jp_data2.start, '"')) != NULL)
+                         {
+                            s_size = strlen(jp_data2.start) - strlen(result) + 1;
+                            names = realloc(names, s_size);
+                            zbx_strlcpy(names, jp_data2.start, s_size);
+                         } else {
+                            zabbix_log(LOG_LEVEL_DEBUG, "This should never happen - \" not found in non-first Names values");
+                            break;
+                         }
+                    }
                 } else {
                     s_size = jp_data2.end - jp_data2.start;
                     names = malloc(s_size);
