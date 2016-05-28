@@ -235,6 +235,8 @@ make
 
 Output will be binary file (dynamically linked shared object library) zabbix_module_docker.so, which can be loaded by zabbix agent.
 
+You can use also Docker for compilation. Example of Dockerfiles, which has been prepared for module compilation - https://github.com/monitoringartist/zabbix-docker-monitoring/tree/master/dockerfiles
+
 How it works
 ============
 

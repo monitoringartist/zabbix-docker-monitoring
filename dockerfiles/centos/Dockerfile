@@ -1,4 +1,4 @@
-# https://github.com/monitoringartist/Zabbix-Docker-Monitoring
+# https://github.com/monitoringartist/zabbix-docker-monitoring
 
 # Define required CentOS version by using FROM tag. Avalaible: centos7/centos6/...
 FROM centos:centos7
@@ -22,7 +22,8 @@ RUN \
    cd ~/zabbix/src/modules/zabbix_module_docker && \
    make
 
-## Docker compilation:
+## Dockerized compilation (build from remote URL or local PATH):
+# docker build --rm=true -t local/zabbix-docker-module-compilation https://github.com/monitoringartist/zabbix-docker-monitoring.git#master:dockerfiles/centos/
 # docker build --rm=true -t local/zabbix-docker-module-compilation .
 # docker run --rm -v /tmp:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 # docker rmi -f local/zabbix-docker-module-compilation
