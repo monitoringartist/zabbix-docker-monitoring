@@ -49,14 +49,14 @@ Available metrics
 
 Note: cid - container ID, two options are available:
 
-- full container ID (64 character string - macro *{#HCONTAINERID}*), e.g.
+- full container ID (macro *{#FCONTAINERID}*), e.g.
 *2599a1d88f75ea2de7283cbf469ea00f0e5d42aaace95f90ffff615c16e8fade*
 - human name or short container ID (macros *{#HCONTAINERID}* or *{#SCONTAINERID}*) - prefix "/" must be used, e.g.
 */zabbix-server* or */2599a1d88f75*
 
 | Key | Description |
 | --- | ----------- |
-| **docker.discovery[\<par1\>,\<par2\>,\<par3\>]** | **LLD discovering:**<br>Only running containers are discovered.<br>[Additional Docker permissions](#additional-docker-permissions) are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID. Optional parameters are used for definition of HCONTAINERID - docker.inspect function will be used in this case.<br>For example:<br>*docker.discovery[Config,Env,MESOS_TASK_ID=]* is recommended for Mesos monitoring<br>Note 1: *docker.discovery* is faster version of *docker.discovery[Name]*<br>Note 2: Available macros:<br>*{#FCONTAINERID}* - full container ID<br>*{#SCONTAINERID}* - short container ID<br>*{#HCONTAINERID}* - human name of container<br>*{#SYSTEM.HOSTNAME}* - system hostname |
+| **docker.discovery[\<par1\>,\<par2\>,\<par3\>]** | **LLD discovering:**<br>Only running containers are discovered.<br>[Additional Docker permissions](#additional-docker-permissions) are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID. Optional parameters are used for definition of HCONTAINERID - docker.inspect function will be used in this case.<br>For example:<br>*docker.discovery[Config,Env,MESOS_TASK_ID=]* is recommended for Mesos monitoring<br>Note 1: *docker.discovery* is faster version of *docker.discovery[Name]*<br>Note 2: Available macros:<br>*{#FCONTAINERID}* - full container ID (64 character string)<br>*{#SCONTAINERID}* - short container ID (12 character string)<br>*{#HCONTAINERID}* - human name of container<br>*{#SYSTEM.HOSTNAME}* - system hostname |
 | **docker.mem[cid,mmetric]** | **Memory metrics:**<br>**mmetric** - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable*, Note: if you have problem with memory metrics, be sure that memory cgroup subsystem is enabled - kernel parameter: *cgroup_enable=memory* |
 | **docker.cpu[cid,cmetric]** | **CPU metrics:**<br>**cmetric** - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Jiffy CPU counter is recalculated to % value by Zabbix. |
 | **docker.dev[cid,bfile,bmetric]** | **Blk IO metrics:**<br>**bfile** - container blkio pseudo-file, e.g.: *blkio.io_merged, blkio.io_queued, blkio.io_service_bytes, blkio.io_serviced, blkio.io_service_time, blkio.io_wait_time, blkio.sectors, blkio.time, blkio.avg_queue_size, blkio.idle_time, blkio.dequeue, ...*<br>**bmetric** - any available blkio metric in selected pseudo-file, e.g.: *Total*. Option for selected block device only is also available e.g. *'8:0 Sync'* (quotes must be used in key parameter in this case)<br>Note: Some pseudo blkio files are available only if kernel config *CONFIG_DEBUG_BLK_CGROUP=y*, see recommended docs. |
@@ -110,7 +110,7 @@ Recommended Zabbix log key for this case:
 log[/var/lib/docker/containers/<fid>/<fid>-json.log,"\"log\":\"(.*)\",\"stream",,,skip,\1]
 ```
 
-You can utilize Zabbix LLD for automatic Docker container log monitoring. In that case it'll be:
+You can utilize Zabbix LLD for automatic Docker container log monitoring. In this case it'll be:
 
 ```
 log[/var/lib/docker/containers/{#FCONTAINERID}/{#FCONTAINERID}-json.log,"\"log\":\"(.*)\",\"stream",,,skip,\1]
