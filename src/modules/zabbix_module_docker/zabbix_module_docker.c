@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.5.7";
+char    *m_version = "v0.5.8";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -893,8 +893,18 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
         metric = get_rparam(request, 1);
-        char    *stat_file = "/cpuacct.stat";
-        char    *cgroup = cpu_cgroup;
+        char    *cgroup = NULL, *stat_file = NULL;
+        if(strcmp(metric, "user") == 0 || strcmp(metric, "system") == 0) {
+            stat_file = "/cpuacct.stat";
+            cgroup = cpu_cgroup;
+        } else {
+            stat_file = "/cpu.stat";
+            if (strchr(cpu_cgroup, ',') != NULL) {
+                cgroup = cpu_cgroup;
+            } else {
+                cgroup = "cpu/";
+            }
+        }
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
         if (c_prefix != NULL)
         {
@@ -925,7 +935,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
                 free(filename);
                 free(container);
-                SET_MSG_RESULT(result, strdup("Cannot open Docker container cpuacct.stat file"));
+                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open Docker container %s file", ++stat_file));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -1656,21 +1666,21 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             }
 
             // TODO expose labels in discovery
-            
+
             if (SUCCEED == zbx_json_brackets_by_name(&jp_row, "Labels", &jp_data2))
             {
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsing \"Labels\" array in the received JSON object");
                 // {"label":"description", "label2":"description2"}
                 if (SUCCEED == zbx_json_brackets_open(p, &jp_data2))
-                {                
+                {
 zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
-/*                
+/*
     char			buf[1024];
-    p = NULL            
+    p = NULL
 	while (NULL != (p = zbx_json_pair_next(jp_row, p, buf, sizeof(buf))) && SUCCEED == ret)
 	{
-    }                
-/*                
+    }
+/*
                     p = NULL
                     while (NULL != (p = zbx_json_next_value_dyn(&jp_row, p, &buf, &buf_alloc, NULL)))
                 	{
@@ -1680,7 +1690,7 @@ zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
                 			goto out;
                 		}
                 	}
-                    
+
 
                     /*
                     while (strchr(&jp_row, ':') != NULL) {
@@ -1697,12 +1707,12 @@ zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
                             zabbix_log(LOG_LEVEL_DEBUG, "This should never happen - \" not found in non-first Names values");
                             break;
                          }
-                         
+
                     }
                     */
                 }
             }
-            
+
         }
 
         zbx_json_close(&j);
