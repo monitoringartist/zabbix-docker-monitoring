@@ -1358,24 +1358,7 @@ int     zbx_module_init()
             }
             free((void*) echo);
         }
-        
-        size_t hostname_len = 128;
-        while (1) {
-            char* realloc_hostname = realloc(hostname, hostname_len);
-            if (realloc_hostname == 0) {
-                free(hostname);
-            }
-            hostname = realloc_hostname;
-            hostname[hostname_len-1] = 0;        
-            if (gethostname(hostname, hostname_len-1) == 0) {
-                size_t count = strlen(hostname);
-                if (count < hostname_len-2) {
-                    break;
-                }
-            }        
-            hostname_len *= 2;
-        }
-         
+
         return ZBX_MODULE_OK;
 }
 
@@ -1455,6 +1438,23 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
 
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
         zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+
+        size_t hostname_len = 128;
+        while (1) {
+            char* realloc_hostname = realloc(hostname, hostname_len);
+            if (realloc_hostname == 0) {
+                free(hostname);
+            }
+            hostname = realloc_hostname;
+            hostname[hostname_len-1] = 0;
+            if (gethostname(hostname, hostname_len-1) == 0) {
+                size_t count = strlen(hostname);
+                if (count < hostname_len-2) {
+                    break;
+                }
+            }
+            hostname_len *= 2;
+        }
 
         while (NULL != (d = readdir(dir)))
         {
@@ -1544,6 +1544,24 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
         zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+
+        size_t hostname_len = 128;
+        while (1) {
+            char* realloc_hostname = realloc(hostname, hostname_len);
+            if (realloc_hostname == 0) {
+                free(hostname);
+            }
+            hostname = realloc_hostname;
+            hostname[hostname_len-1] = 0;
+            if (gethostname(hostname, hostname_len-1) == 0) {
+                size_t count = strlen(hostname);
+                if (count < hostname_len-2) {
+                    break;
+                }
+            }
+            hostname_len *= 2;
+        }
+
         // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
     	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
     	/*         ^-------------------------------------------^  */
@@ -1623,7 +1641,21 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 }
                 zbx_json_close(&j);
                 free(names);
-           }
+            }
+
+            // TODO expose labels in discovery
+            /*
+            if (SUCCEED == zbx_json_brackets_by_name(&jp_row, "Labels", &jp_data2))
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "Parsing \"Labels\" array in the received JSON object");
+                // {"label":"description", "label2":"description2"}
+                if (SUCCEED == zbx_json_brackets_open(p, &jp_row))
+                {
+                    zabbix_log(LOG_LEVEL_DEBUG, "IN IMPLEMENTATION");
+                    continue;
+                }
+            }
+            */
         }
 
         zbx_json_close(&j);

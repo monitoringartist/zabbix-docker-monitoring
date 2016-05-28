@@ -1,14 +1,14 @@
 Zabbix Docker Monitoring
 ========================
 
-If you like or use this project, please provide feedback to author - Star it ★. 
+If you like or use this project, please provide feedback to author - Star it ★.
 
-Monitoring of Docker container by using Zabbix. Available CPU, mem, 
+Monitoring of Docker container by using Zabbix. Available CPU, mem,
 blkio container metrics and some containers config details e.g. IP, name, ...
-Zabbix Docker module has native support for Docker containers (Systemd included) 
-and should support also a few other container type (e.g. LXC) out of the box. 
-Please feel free to test and provide feedback/open issue. 
-Module is focused on the performance, see section 
+Zabbix Docker module has native support for Docker containers (Systemd included)
+and should support also a few other container type (e.g. LXC) out of the box.
+Please feel free to test and provide feedback/open issue.
+Module is focused on the performance, see section
 [Module vs. UserParameter script](#module-vs-userparameter-script).
 
 Module is available as a Docker image as well. Quick start:
@@ -19,15 +19,14 @@ docker run \
   -h $(hostname) \
   -p 10050:10050 \
   -v /:/rootfs \
+  -v /var/run:/var/run \
   -e "ZA_Server=<ZABBIX SERVER IP/DNS NAME>" \
   -d monitoringartist/zabbix-agent-xxl-limited:latest
 ```
 
-**Ubuntu/Debian users need also** `-v /var/run:/var/run`.
-
 Visit [Zabbix agent 3.0 XXL with Docker monitoring support](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
 
-Please donate to author, so he can continue to publish other awesome projects 
+Please donate to author, so he can continue to publish other awesome projects
 for free:
 
 [![Paypal donate button](http://jangaraj.com/img/github-donate-button02.png)]
@@ -42,7 +41,7 @@ Build
 (https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
 If provided build doesn't work on your system, please see section [Compilation]
 (#compilation). Or you can check [folder dockerfiles]
-(https://github.com/monitorinartist/Zabbix-Docker-Monitoring/tree/master/dockerfiles), 
+(https://github.com/monitorinartist/Zabbix-Docker-Monitoring/tree/master/dockerfiles),
 where Dockerfiles for different OS/Zabbix versions are prepared.
 
 Available metrics
@@ -50,16 +49,16 @@ Available metrics
 
 Note: cid - container ID, two options are available:
 
-- full container ID (fid - 64 character string), e.g. 
+- full container ID (64 character string - macro *{#HCONTAINERID}*), e.g.
 *2599a1d88f75ea2de7283cbf469ea00f0e5d42aaace95f90ffff615c16e8fade*
-- (human) name or short container ID - prefix "/" must be used, e.g. 
-*/zabbix-server* or */2599a1d88f75*  
+- human name or short container ID (macros *{#HCONTAINERID}* or *{#SCONTAINERID}*) - prefix "/" must be used, e.g.
+*/zabbix-server* or */2599a1d88f75*
 
 | Key | Description |
 | --- | ----------- |
-| **docker.discovery[\<par1\>,\<par2\>,\<par3\>]** | **LLD discovering:**<br>Only running containers are discovered.<br>[Additional Docker permissions](#additional-docker-permissions) are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID. Optional parameters are used for definition of HCONTAINERID - docker.inspect function will be used in this case.<br>For example:<br>*docker.discovery[Config,Env,MESOS_TASK_ID=]* is recommended for Mesos monitoring<br>Note: *docker.discovery* is faster version of *docker.discovery[Name]* |  
+| **docker.discovery[\<par1\>,\<par2\>,\<par3\>]** | **LLD discovering:**<br>Only running containers are discovered.<br>[Additional Docker permissions](#additional-docker-permissions) are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID. Optional parameters are used for definition of HCONTAINERID - docker.inspect function will be used in this case.<br>For example:<br>*docker.discovery[Config,Env,MESOS_TASK_ID=]* is recommended for Mesos monitoring<br>Note 1: *docker.discovery* is faster version of *docker.discovery[Name]*<br>Note 2: Available macros:<br>*{#FCONTAINERID}* - full container ID<br>*{#SCONTAINERID}* - short container ID<br>*{#HCONTAINERID}* - human name of container<br>*{#SYSTEM.HOSTNAME}* - system hostname |
 | **docker.mem[cid,mmetric]** | **Memory metrics:**<br>**mmetric** - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable*, Note: if you have problem with memory metrics, be sure that memory cgroup subsystem is enabled - kernel parameter: *cgroup_enable=memory* |
-| **docker.cpu[cid,cmetric]** | **CPU metrics:**<br>**cmetric** - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Jiffy CPU counter is recalculated to % value by Zabbix. | 
+| **docker.cpu[cid,cmetric]** | **CPU metrics:**<br>**cmetric** - any available CPU metric in the pseudo-file cpuacct.stat, e.g.: *system, user*<br>Jiffy CPU counter is recalculated to % value by Zabbix. |
 | **docker.dev[cid,bfile,bmetric]** | **Blk IO metrics:**<br>**bfile** - container blkio pseudo-file, e.g.: *blkio.io_merged, blkio.io_queued, blkio.io_service_bytes, blkio.io_serviced, blkio.io_service_time, blkio.io_wait_time, blkio.sectors, blkio.time, blkio.avg_queue_size, blkio.idle_time, blkio.dequeue, ...*<br>**bmetric** - any available blkio metric in selected pseudo-file, e.g.: *Total*. Option for selected block device only is also available e.g. *'8:0 Sync'* (quotes must be used in key parameter in this case)<br>Note: Some pseudo blkio files are available only if kernel config *CONFIG_DEBUG_BLK_CGROUP=y*, see recommended docs. |
 | **docker.inspect[cid,par1,\<par2\>,\<par3\>]** | **Docker inspection:**<br>Requested value from Docker inspect JSON object (e.g. [API v1.21](http://docs.docker.com/engine/reference/api/docker_remote_api_v1.21/#inspect-a-container)) is returned.<br>**par1** - name of 1st level JSON property<br>**par2** - optional name of 2nd level JSON property<br>**par3** - optional name of 3rd level JSON property or selector of item in the JSON array<br>For example:<br>*docker.inspect[cid,NetworkSettings,IPAddress], docker.inspect[cid,Config,Env,MESOS_TASK_ID=], docker.inspect[cid,State,StartedAt], docker.inspect[cid,Name]*<br>Note 1: Requested value must be plain text/numeric value. JSON objects and booleans are not supported.<br>Note 2: [Additional Docker permissions](#additional-docker-permissions) are needed.<br>Note 3: If you use selector for selecting value in array, then selector string is removed from returned value. |
 | **docker.info[info]** | **Docker information:**<br>Requested value from Docker info JSON object (e.g. [API v1.21](http://docs.docker.com/engine/reference/api/docker_remote_api_v1.21/#display-system-wide-information)) is returned.<br>**info** - name of requested information, e.g. *Containers, Images, NCPU, ...*<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed. |
@@ -84,12 +83,12 @@ Container log monitoring
 ========================
 
 [Standard Zabbix log monitoring]
-(https://www.zabbix.com/documentation/3.0/manual/config/items/itemtypes/log_items) 
-can be used. Keep in mind, that Zabbix agent must support active mode for log 
-monitoring. Stdout/stderr Docker container console output is logged by Docker 
-into file */var/lib/docker/containers/<fid>/<fid>-json.log*. If the application 
-in container is not able to log to stdout/stderr, link log file to  
-stdout/stderr. For example: 
+(https://www.zabbix.com/documentation/3.0/manual/config/items/itemtypes/log_items)
+can be used. Keep in mind, that Zabbix agent must support active mode for log
+monitoring. Stdout/stderr Docker container console output is logged by Docker
+into file */var/lib/docker/containers/<fid>/<fid>-json.log* (fid - full container
+ID = macro *{#FCONTAINERID}*). If the application in container is not able to
+log to stdout/stderr, link log file to stdout/stderr. For example:
 
 ```
 ln -sf /dev/stdout /var/log/nginx/access.log
@@ -111,7 +110,11 @@ Recommended Zabbix log key for this case:
 log[/var/lib/docker/containers/<fid>/<fid>-json.log,"\"log\":\"(.*)\",\"stream",,,skip,\1]
 ```
 
-You can utilize Zabbix LLD for automatic Docker container log monitoring.
+You can utilize Zabbix LLD for automatic Docker container log monitoring. In that case it'll be:
+
+```
+log[/var/lib/docker/containers/{#FCONTAINERID}/{#FCONTAINERID}-json.log,"\"log\":\"(.*)\",\"stream",,,skip,\1]
+```
 
 Images
 ======
@@ -134,14 +137,14 @@ You have two options, how to get additional Docker permissions:
 usermod -aG docker zabbix
 ```
 
-- Or edit zabbix_agentd.conf and set AllowRoot (Zabbix agent with root 
+- Or edit zabbix_agentd.conf and set AllowRoot (Zabbix agent with root
 permissions):
 
 ```
 AllowRoot=1
-``` 
+```
 
-Note: If you use Docker from RHEL/Centos repositories, then you have to 
+Note: If you use Docker from RHEL/Centos repositories, then you have to
 use *AllowRoot=1* option.
 
 SELinux
@@ -204,7 +207,7 @@ Installation
 ============
 
 * Import provided template [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml).
-* Configure your Zabbix agent(s) - load downloaded/compiled 
+* Configure your Zabbix agent(s) - load downloaded/compiled
 zabbix_module_docker.so<br>
 https://www.zabbix.com/documentation/3.0/manual/config/items/loadablemodules
 
@@ -236,29 +239,29 @@ How it works
 ============
 
 See https://blog.docker.com/2013/10/gathering-lxc-docker-containers-metrics/
-Metrics for containers are read from cgroup file system. 
-[Docker API](https://docs.docker.com/reference/api/docker_remote_api) is used 
-for discovering and some keys. However root or docker permissions are required 
-for communication with Docker via unix socket. You can test API also in your 
+Metrics for containers are read from cgroup file system.
+[Docker API](https://docs.docker.com/reference/api/docker_remote_api) is used
+for discovering and some keys. However root or docker permissions are required
+for communication with Docker via unix socket. You can test API also in your
 command line:
 
 ```
 echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
 ```
-    
+
 Module vs. UserParameter script
 ===============================
 
 Module is ~10x quicker, because it's compiled binary code.
 I've used my project [Zabbix agent stress test]
-(https://github.com/monitoringartist/zabbix-agent-stress-test) for performance 
+(https://github.com/monitoringartist/zabbix-agent-stress-test) for performance
 tests.
 
 Part of config in zabbix_agentd.conf:
 
     UserParameter=xdocker.cpu[*],grep $2 /cgroup/cpuacct/docker/$1/cpuacct.stat | awk '{print $$2}'
     LoadModule=zabbix_module_docker.so
-    
+
 Tests:
 
     [root@dev zabbix-agent-stress-test]# ./zabbix-agent-stress-test.py -s 127.0.0.1 -k "xdocker.cpu[d5bf68ec1fb570d8ac3047226397edd8618eed14278ce035c98fbceef02d7730,system]" -t 20
@@ -287,7 +290,7 @@ Tests:
     ^C
     Success: 5358   Errors: 0       Avg rate: 192.56 qps    Execution time: 20.53 sec
     Avg rate based on total execution time and success connections: 261.02 qps
-    
+
     [root@dev zabbix-agent-stress-test]# ./zabbix-agent-stress-test.py -s 127.0.0.1 -k "docker.cpu[d5bf68ec1fb570d8ac3047226397edd8618eed14278ce035c98fbceef02d7730,system]" -t 20
     Warning: you are starting more threads, than your system has available CPU cores (4)!
     Starting 20 threads, host: 127.0.0.1:10050, key: docker.cpu[d5bf68ec1fb570d8ac3047226397edd8618eed14278ce035c98fbceef02d7730,system]
@@ -314,12 +317,12 @@ Tests:
     ^C
     Success: 49684  Errors: 0       Avg rate: 2673.85 qps   Execution time: 20.52 sec
     Avg rate based on total execution time and success connections: 2420.70 qps
-    
+
 Results of 20s stress test:
 
 | StartAgent value | Module qps | UserParameter script qps |
 | ---------------- | ---------- | ------------------------ |
-| 3 | 2420.70 | 261.02 |     
+| 3 | 2420.70 | 261.02 |
 | 10 | 2612.20 | 332.62 |
 | 20 | 2487.93 | 348.52 |
 
@@ -332,7 +335,7 @@ Part of config in zabbix_agentd.conf:
 
 [container_discover.sh]
 (https://github.com/bsmile/zabbix-docker-lld/blob/master/usr/lib/zabbix/script/container_discover.sh):
-    
+
 Test with 237 running containers:
 
     [root@dev ~]# docker info
@@ -349,12 +352,12 @@ Test with 237 running containers:
     Username: username
     Registry: [https://index.docker.io/v1/]
     [root@dev ~]# time zabbix_get -s 127.0.0.1 -k docker.discovery > /dev/null
-    
+
     real    0m0.112s
     user    0m0.000s
     sys     0m0.003s
     [root@dev ~]# time zabbix_get -s 127.0.0.1 -k xdocker.discovery > /dev/null
-    
+
     real    0m5.856s
     user    0m0.000s
     sys     0m0.002s
@@ -430,14 +433,14 @@ Test with 237 running containers:
     ^C
     Success: 193    Errors: 0       Avg rate: 8.83 qps      Execution time: 31.79 sec
     Avg rate based on total execution time and success connections: 6.07 qps
-       
+
 Troubleshooting
 ===============
 
 Edit your zabbix_agentd.conf and set DebugLevel:
 
     DebugLevel=4
-    
+
 Module debug messages will be available in standard zabbix_agentd.log.
 
 Issues and feature requests
@@ -452,13 +455,13 @@ Recommended docs
 - https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
 - https://www.kernel.org/doc/Documentation/cgroups/memory.txt
 - https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
-- https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/index.html       
+- https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/index.html
 
 Author
 ======
 
-[Devops Monitoring zExpert](http://www.jangaraj.com 'DevOps / Docker / Kubernetes / Zabbix / Zenoss / Monitoring'), 
-who loves monitoring systems, which start with letter Z. 
+[Devops Monitoring zExpert](http://www.jangaraj.com 'DevOps / Docker / Kubernetes / Zabbix / Zenoss / Monitoring'),
+who loves monitoring systems, which start with letter Z.
 Those are Zabbix and Zenoss.
 
 Professional monitoring services:
