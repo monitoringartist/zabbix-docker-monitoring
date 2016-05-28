@@ -24,6 +24,8 @@ docker run \
   -d monitoringartist/zabbix-agent-xxl-limited:latest
 ```
 
+**Don't use `localhost` or `127.0.0.1` in `ZA_Server` setting!**
+
 Visit [Zabbix agent 3.0 XXL with Docker monitoring](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
 
 Please donate to author, so he can continue to publish other awesome projects
