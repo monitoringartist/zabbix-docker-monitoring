@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.5.6";
+char    *m_version = "v0.5.7";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -710,7 +710,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         char    line[MAX_STRING_LEN];
-        char    *metric2 = malloc(strlen(metric)+1);
+        char    *metric2 = malloc(strlen(metric)+3);
         memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
         zbx_uint64_t    value = 0;
@@ -817,7 +817,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         char    line[MAX_STRING_LEN];
-        char    *metric2 = malloc(strlen(metric)+1);
+        char    *metric2 = malloc(strlen(metric)+3);
         memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
         zbx_uint64_t    value = 0;
@@ -930,7 +930,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         char    line[MAX_STRING_LEN];
-        char    *metric2 = malloc(strlen(metric)+1);
+        char    *metric2 = malloc(strlen(metric)+3);
         zbx_uint64_t cpu_num;
         memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
