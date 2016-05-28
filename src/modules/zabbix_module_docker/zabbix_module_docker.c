@@ -1656,18 +1656,53 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             }
 
             // TODO expose labels in discovery
-            /*
+            
             if (SUCCEED == zbx_json_brackets_by_name(&jp_row, "Labels", &jp_data2))
             {
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsing \"Labels\" array in the received JSON object");
                 // {"label":"description", "label2":"description2"}
-                if (SUCCEED == zbx_json_brackets_open(p, &jp_row))
-                {
-                    zabbix_log(LOG_LEVEL_DEBUG, "IN IMPLEMENTATION");
-                    continue;
+                if (SUCCEED == zbx_json_brackets_open(p, &jp_data2))
+                {                
+zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
+/*                
+    char			buf[1024];
+    p = NULL            
+	while (NULL != (p = zbx_json_pair_next(jp_row, p, buf, sizeof(buf))) && SUCCEED == ret)
+	{
+    }                
+/*                
+                    p = NULL
+                    while (NULL != (p = zbx_json_next_value_dyn(&jp_row, p, &buf, &buf_alloc, NULL)))
+                	{
+                		if (NULL == (fields[fields_count++] = DBget_field(table, buf)))
+                		{
+                			*error = zbx_dsprintf(*error, "invalid field name \"%s.%s\"", table->table, buf);
+                			goto out;
+                		}
+                	}
+                    
+
+                    /*
+                    while (strchr(&jp_row, ':') != NULL) {
+                         // labels listing
+                         zabbix_log(LOG_LEVEL_DEBUG, "Labels available");
+                         /*
+                         jp_data2.start = jp_data2.start + s_size + 3;
+                         if ((result = strchr(jp_data2.start, '"')) != NULL)
+                         {
+                            s_size = strlen(jp_data2.start) - strlen(result) + 1;
+                            names = realloc(names, s_size);
+                            zbx_strlcpy(names, jp_data2.start, s_size);
+                         } else {
+                            zabbix_log(LOG_LEVEL_DEBUG, "This should never happen - \" not found in non-first Names values");
+                            break;
+                         }
+                         
+                    }
+                    */
                 }
             }
-            */
+            
         }
 
         zbx_json_close(&j);

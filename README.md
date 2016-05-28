@@ -11,7 +11,7 @@ Please feel free to test and provide feedback/open issue.
 Module is focused on the performance, see section
 [Module vs. UserParameter script](#module-vs-userparameter-script).
 
-Module is available as a Docker image as well. Quick start:
+Module is available as a part of Docker image zabbix-agent-xxl-limited. Quick start:
 
 ```
 docker run \
@@ -24,7 +24,7 @@ docker run \
   -d monitoringartist/zabbix-agent-xxl-limited:latest
 ```
 
-Visit [Zabbix agent 3.0 XXL with Docker monitoring support](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
+Visit [Zabbix agent 3.0 XXL with Docker monitoring](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
 
 Please donate to author, so he can continue to publish other awesome projects
 for free:
@@ -211,6 +211,12 @@ Installation
 zabbix_module_docker.so<br>
 https://www.zabbix.com/documentation/3.0/manual/config/items/loadablemodules
 
+Available templates:
+
+- [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml) - standard (recommended) template
+- [Zabbix-Template-App-Docker-active.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-active.xml) - standard template with active checks 
+- [Zabbix-Template-App-Docker-Mesos.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-Mesos.xml) - template for monitoring of Docker containers in Mesos cluster  
+
 Compilation
 ===========
 
@@ -233,7 +239,7 @@ wget https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring
 make
 ```
 
-Output will be binary file (dynamically linked shared object library) zabbix_module_docker.so, which can be loaded by zabbix agent.
+Output will be binary file (dynamically linked shared object library) `zabbix_module_docker.so`, which can be loaded by zabbix agent.
 
 You can use also Docker for compilation. Example of Dockerfiles, which has been prepared for module compilation - https://github.com/monitoringartist/zabbix-docker-monitoring/tree/master/dockerfiles
 
@@ -462,11 +468,10 @@ Recommended docs
 Author
 ======
 
-[Devops Monitoring zExpert](http://www.jangaraj.com 'DevOps / Docker / Kubernetes / Zabbix / Zenoss / Monitoring'),
-who loves monitoring systems, which start with letter Z.
-Those are Zabbix and Zenoss.
+[Devops Monitoring Expert](http://www.jangaraj.com 'DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Monitoring'),
+who loves monitoring systems, which start with letter Z. Those are Zabbix and Zenoss.
 
-Professional monitoring services:
+Professional devops / monitoring services:
 
 [![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)]
-(http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / Zabbix / Zenoss / Monitoring')
+(http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Monitoring')
