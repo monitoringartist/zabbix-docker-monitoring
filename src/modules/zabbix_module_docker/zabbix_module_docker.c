@@ -48,6 +48,8 @@ static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -63,6 +65,8 @@ static ZBX_METRIC keys[] =
         {"docker.discovery", CF_HAVEPARAMS, zbx_module_docker_discovery,    "<parameter 1>, <parameter 2>, <parameter 3>"},
         {"docker.inspect", CF_HAVEPARAMS, zbx_module_docker_inspect, "full container id, parameter 1, <parameter 2>"},
         {"docker.cstatus", CF_HAVEPARAMS, zbx_module_docker_cstatus, "status"},
+        {"docker.istatus", CF_HAVEPARAMS, zbx_module_docker_istatus, "status"},
+        {"docker.vstatus", CF_HAVEPARAMS, zbx_module_docker_vstatus, "status"},                
         {"docker.info", CF_HAVEPARAMS,  zbx_module_docker_info, "full container id, info"},
         {"docker.stats",CF_HAVEPARAMS,  zbx_module_docker_stats,"full container id, parameter 1, <parameter 2>, <parameter 3>"},
         {"docker.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full container id"},
@@ -1957,6 +1961,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             return SYSINFO_RET_FAIL;
         }
 
+        // TODO use API filter for status &filters=%7B%status%22%3A%5B%22created%22%5D%7D created|restarting|running|paused|exited|dead 
         if (1 > request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
@@ -2152,4 +2157,146 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
         }
         return SYSINFO_RET_FAIL;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_istatus                                        *
+ *                                                                            *
+ * Purpose: count of images in defined status                             *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_istatus()");
+
+        if (socket_api != 1)
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
+            SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
+            return SYSINFO_RET_FAIL;
+        }
+
+        if (1 != request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
+                return SYSINFO_RET_FAIL;
+        }
+
+        char    *state, *query;
+        state = get_rparam(request, 0);
+
+        if (strcmp(state, "All") == 0)
+        {
+            // All
+            const char *answer = zbx_module_docker_socket_query("GET /images/json?all=1&dangling=true HTTP/1.0\r\n\n", 0);
+            if(strcmp(answer, "") == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.istatus is not available at the moment - some problem with Docker's socket API");
+                SET_MSG_RESULT(result, strdup("docker.istatus is not available at the moment - some problem with Docker's socket API"));
+                return SYSINFO_RET_FAIL;
+            }
+            struct zbx_json_parse	jp_data;
+            jp_data.start = &answer[0];
+            jp_data.end = &answer[strlen(answer)];
+            int count = zbx_json_count(&jp_data);
+            free((void*) answer);
+            zabbix_log(LOG_LEVEL_DEBUG, "Count of images in %s status: %d", state, count);
+            SET_UI64_RESULT(result, count);
+            return SYSINFO_RET_OK;
+        } else if (strcmp(state, "Dangling") == 0) {
+            // Dangling
+            const char *answer = zbx_module_docker_socket_query("GET /images/json?all=false&filters=%7B%22dangling%22%3A%5B%22true%22%5D%7D HTTP/1.0\r\n\n", 0);
+            if(strcmp(answer, "") == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.istatus is not available at the moment - some problem with Docker's socket API");
+                SET_MSG_RESULT(result, strdup("docker.istatus is not available at the moment - some problem with Docker's socket API"));
+                return SYSINFO_RET_FAIL;
+            }
+            struct zbx_json_parse	jp_data;
+            jp_data.start = &answer[0];
+            jp_data.end = &answer[strlen(answer)];
+            int count = zbx_json_count(&jp_data);
+            free((void*) answer);
+            zabbix_log(LOG_LEVEL_DEBUG, "Count of images in %s status: %d", state, count);
+            SET_UI64_RESULT(result, count);
+            return SYSINFO_RET_OK;        
+        }
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_vstatus                                        *
+ *                                                                            *
+ * Purpose: count of volumes in defined status                             *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_vstatus()");
+
+        if (socket_api != 1)
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
+            SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
+            return SYSINFO_RET_FAIL;
+        }
+
+        if (1 != request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
+                return SYSINFO_RET_FAIL;
+        }
+
+        char    *state, *query;
+        state = get_rparam(request, 0);
+        // TODO count items in section "Volumes"
+        if (strcmp(state, "All") == 0)
+        {
+            // All
+            const char *answer = zbx_module_docker_socket_query("GET /volumes HTTP/1.0\r\n\n", 0);
+            if(strcmp(answer, "") == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.vstatus is not available at the moment - some problem with Docker's socket API");
+                SET_MSG_RESULT(result, strdup("docker.vstatus is not available at the moment - some problem with Docker's socket API"));
+                return SYSINFO_RET_FAIL;
+            }
+            struct zbx_json_parse	jp_data, jp_data2;
+            jp_data.start = &answer[0];
+            jp_data.end = &answer[strlen(answer)];
+            if (SUCCEED != zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
+                int count = zbx_json_count(&jp_data2);
+                free((void*) answer);
+                zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
+                SET_UI64_RESULT(result, count);
+                return SYSINFO_RET_OK;
+            }
+        } else if (strcmp(state, "Dangling") == 0) {
+            // Dangling
+            const char *answer = zbx_module_docker_socket_query("GET /volumes?filters=%7B%22dangling%22%3A%5B%22true%22%5D%7D HTTP/1.0\r\n\n", 0);
+            if(strcmp(answer, "") == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.vstatus is not available at the moment - some problem with Docker's socket API");
+                SET_MSG_RESULT(result, strdup("docker.vstatus is not available at the moment - some problem with Docker's socket API"));
+                return SYSINFO_RET_FAIL;
+            }
+            struct zbx_json_parse	jp_data;
+            jp_data.start = &answer[0];
+            jp_data.end = &answer[strlen(answer)];
+            int count = zbx_json_count(&jp_data);
+            free((void*) answer);
+            zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
+            SET_UI64_RESULT(result, count);
+            return SYSINFO_RET_OK;        
+        }
 }
