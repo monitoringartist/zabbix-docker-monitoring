@@ -4,12 +4,14 @@ Zabbix Docker Monitoring
 If you like or use this project, please provide feedback to author - Star it ★.
 
 Monitoring of Docker container by using Zabbix. Available CPU, mem,
-blkio container metrics and some containers config details e.g. IP, name, ...
+blkio, net container metrics and some containers config details e.g. IP, name, ...
 Zabbix Docker module has native support for Docker containers (Systemd included)
 and should support also a few other container type (e.g. LXC) out of the box.
 Please feel free to test and provide feedback/open issue.
 Module is focused on the performance, see section
 [Module vs. UserParameter script](#module-vs-userparameter-script).
+
+Monitoring of systemd is integrated, visit [zabbix-systemd-monitoring project](https://github.com/monitoringartist/zabbix-systemd-monitoring).
 
 Module is available as a part of Docker image zabbix-agent-xxl-limited. Quick start:
 
@@ -73,12 +75,8 @@ Note: cid - container ID, two options are available:
 
 Maybe in the future:
 
-- systemd.service.discovery - discovering of systemd services
-- systemd.service.cpu - cpu metrics of systemd service
-- systemd.service.mem - mem metrics of systemd service
-- systemd.service.dev - blk io metrics of systemd service
-- systemd.service.net - net metrics of systemd service
-- systemd.service.log - log monitoring of systemd service
+- systemd.net - net metrics of systemd units
+- systemd.log - log monitoring of systemd units
 - docker.cpu - collector implementation
 
 Container log monitoring

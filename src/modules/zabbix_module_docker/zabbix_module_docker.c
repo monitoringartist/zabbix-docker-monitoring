@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.5.8";
+char    *m_version = "v0.6.0";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -57,7 +57,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result);
-
+int     zbx_module_systemd_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG            FUNCTION                TEST PARAMETERS */
@@ -66,7 +66,7 @@ static ZBX_METRIC keys[] =
         {"docker.inspect", CF_HAVEPARAMS, zbx_module_docker_inspect, "full container id, parameter 1, <parameter 2>"},
         {"docker.cstatus", CF_HAVEPARAMS, zbx_module_docker_cstatus, "status"},
         {"docker.istatus", CF_HAVEPARAMS, zbx_module_docker_istatus, "status"},
-        {"docker.vstatus", CF_HAVEPARAMS, zbx_module_docker_vstatus, "status"},                
+        {"docker.vstatus", CF_HAVEPARAMS, zbx_module_docker_vstatus, "status"},
         {"docker.info", CF_HAVEPARAMS,  zbx_module_docker_info, "full container id, info"},
         {"docker.stats",CF_HAVEPARAMS,  zbx_module_docker_stats,"full container id, parameter 1, <parameter 2>, <parameter 3>"},
         {"docker.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full container id"},
@@ -74,6 +74,11 @@ static ZBX_METRIC keys[] =
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
         {"docker.xnet", CF_HAVEPARAMS,  zbx_module_docker_net,  "full container id, interface, network metric name"},
         {"docker.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full container id, blkio file, blkio metric name"},
+        {"systemd.discovery", CF_HAVEPARAMS, zbx_module_systemd_discovery,    "parameter 1"},
+        {"systemd.mem",  CF_HAVEPARAMS,  zbx_module_docker_mem,  "full unit id, memory metric name"},
+        {"systemd.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full unit id, cpu metric name"},
+        {"systemd.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full unit id"},
+        {"systemd.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full unit id, blkio file, blkio metric name"},
         {NULL}
 };
 
@@ -580,8 +585,8 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.up/systemd.up check is not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up/systemd.up check is not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -589,8 +594,8 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
-                    zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no cpu_cgroup directory");
-                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no cpu_cgroup directory"));
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.up/systemd.up check is not available at the moment - no cpu_cgroup directory");
+                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up/systemd.up check is not available at the moment - no cpu_cgroup directory"));
                     return SYSINFO_RET_FAIL;
                 }
         }
@@ -600,40 +605,42 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         char    *stat_file = "/cpuacct.stat";
         char    *cgroup = cpu_cgroup;
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (c_prefix != NULL)
-        {
-            filename_size += strlen(c_prefix);
-        }
-        if (c_suffix != NULL)
-        {
-            filename_size += strlen(c_suffix);
+        if (strstr(container, ".") == NULL) {
+            if (c_prefix != NULL)
+            {
+                filename_size += strlen(c_prefix);
+            }
+            if (c_suffix != NULL)
+            {
+                filename_size += strlen(c_suffix);
+            }
         }
         char    *filename = malloc(filename_size);
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
-        if (c_prefix != NULL)
+        if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
-        free(container);
-        if (c_suffix != NULL)
+        if (strstr(container, ".") == NULL && c_suffix != NULL)
         {
             zbx_strlcat(filename, c_suffix, filename_size);
         }
+        free(container);
         zbx_strlcat(filename, stat_file, filename_size);
         zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "Cannot open Docker container metric file: '%s', container doesn't run", filename);
+                zabbix_log(LOG_LEVEL_DEBUG, "Cannot open metric file: '%s', container doesn't run", filename);
                 free(filename);
                 SET_DBL_RESULT(result, 0);
                 return SYSINFO_RET_OK;
         }
         zbx_fclose(file);
-        zabbix_log(LOG_LEVEL_DEBUG, "Can open Docker container metric file: '%s', container is running", filename);
+        zabbix_log(LOG_LEVEL_DEBUG, "Can open metric file: '%s', container is running", filename);
         free(filename);
         SET_DBL_RESULT(result, 1);
         return SYSINFO_RET_OK;
@@ -666,8 +673,8 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.dev metrics are not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev metrics are not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.dev/systemd.dev metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev/systemd.dev metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -679,24 +686,26 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         char    *cgroup = "blkio/";
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (c_prefix != NULL)
-        {
-            filename_size += strlen(c_prefix);
-        }
-        if (c_suffix != NULL)
-        {
-            filename_size += strlen(c_suffix);
+        if (strstr(container, ".") == NULL) {
+            if (c_prefix != NULL)
+            {
+                filename_size += strlen(c_prefix);
+            }
+            if (c_suffix != NULL)
+            {
+                filename_size += strlen(c_suffix);
+            }
         }
         char    *filename = malloc(filename_size);
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
-        if (c_prefix != NULL)
+        if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
-        if (c_suffix != NULL)
+        if (strstr(container, ".") == NULL && c_suffix != NULL)
         {
             zbx_strlcat(filename, c_suffix, filename_size);
         }
@@ -705,11 +714,11 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
                 free(container);
                 free(stat_file);
                 free(filename);
-                SET_MSG_RESULT(result, strdup("Cannot open Docker container stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled"));
+                SET_MSG_RESULT(result, strdup("Cannot open stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -732,7 +741,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
                          break;
                      }
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; stat file: %s, metric: %s; value: %d", container, stat_file, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; stat file: %s, metric: %s; value: %d", container, stat_file, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -745,7 +754,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         free(metric2);
 
         if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container blkio file"));
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in blkio file"));
 
         return ret;
 }
@@ -777,8 +786,8 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.mem metrics are not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem metrics are not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.mem/systemd.mem metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem/systemd.mem metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -787,24 +796,28 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         char    *stat_file = "/memory.stat";
         char    *cgroup = "memory/";
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (c_prefix != NULL)
-        {
-            filename_size += strlen(c_prefix);
+
+        if (strstr(container, ".") == NULL) {
+            if (c_prefix != NULL)
+            {
+                filename_size += strlen(c_prefix);
+            }
+            if (c_suffix != NULL)
+            {
+                filename_size += strlen(c_suffix);
+            }
         }
-        if (c_suffix != NULL)
-        {
-            filename_size += strlen(c_suffix);
-        }
+
         char    *filename = malloc(filename_size);
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
-        if (c_prefix != NULL)
+        if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
-        if (c_suffix != NULL)
+        if (strstr(container, ".") == NULL && c_suffix != NULL)
         {
             zbx_strlcat(filename, c_suffix, filename_size);
         }
@@ -813,10 +826,10 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
                 free(container);
                 free(filename);
-                SET_MSG_RESULT(result, strdup("Cannot open Docker container memory.stat file"));
+                SET_MSG_RESULT(result, strdup("Cannot open memory.stat file"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -835,7 +848,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -847,7 +860,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         free(metric2);
 
         if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container memory.stat file"));
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in memory.stat file"));
 
         return ret;
 }
@@ -880,8 +893,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu/systemd.cpu metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu/systemd.cpu metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -889,8 +902,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
-                    zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu check is not available at the moment - no cpu_cgroup directory");
-                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu check is not available at the moment - no cpu_cgroup directory"));
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu/systemd.cpu check is not available at the moment - no cpu_cgroup directory");
+                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu/systemd.cpu check is not available at the moment - no cpu_cgroup directory"));
                     return SYSINFO_RET_FAIL;
                 }
         }
@@ -910,24 +923,26 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
         }
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (c_prefix != NULL)
-        {
-            filename_size += strlen(c_prefix);
-        }
-        if (c_suffix != NULL)
-        {
-            filename_size += strlen(c_suffix);
+        if (strstr(container, ".") == NULL) {
+            if (c_prefix != NULL)
+            {
+                filename_size += strlen(c_prefix);
+            }
+            if (c_suffix != NULL)
+            {
+                filename_size += strlen(c_suffix);
+            }
         }
         char    *filename = malloc(filename_size);
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
-        if (c_prefix != NULL)
+        if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
         }
         zbx_strlcat(filename, container, filename_size);
-        if (c_suffix != NULL)
+        if (strstr(container, ".") == NULL && c_suffix != NULL)
         {
             zbx_strlcat(filename, c_suffix, filename_size);
         }
@@ -936,10 +951,10 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
-                zabbix_log(LOG_LEVEL_ERR, "Cannot open Docker container metric file: '%s'", filename);
+                zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
                 free(filename);
                 free(container);
-                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open Docker container %s file", ++stat_file));
+                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open %s file", ++stat_file));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -964,7 +979,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 {
                     value /= cpu_num;
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Container: %s; metric: %s; value: %d", container, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -976,7 +991,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         free(metric2);
 
         if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in Docker container cpuacct.stat file"));
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in cpuacct.stat file"));
 
         return ret;
 }
@@ -1606,7 +1621,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                     s_size = strlen(jp_data2.start) - strlen(result) + 1;
                     names = malloc(s_size);
                     zbx_strlcpy(names, jp_data2.start, s_size);
-                    while (strchr(names, '/') != NULL) {
+                    while (strstr(names, "/") != NULL) {
                          // linked name - search another one
                          jp_data2.start = jp_data2.start + s_size + 3;
                          if ((result = strchr(jp_data2.start, '"')) != NULL)
@@ -1670,21 +1685,22 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             }
 
             // TODO expose labels in discovery
-
+/*
             if (SUCCEED == zbx_json_brackets_by_name(&jp_row, "Labels", &jp_data2))
             {
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsing \"Labels\" array in the received JSON object");
                 // {"label":"description", "label2":"description2"}
                 if (SUCCEED == zbx_json_brackets_open(p, &jp_data2))
                 {
-zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
-/*
-    char			buf[1024];
-    p = NULL
-	while (NULL != (p = zbx_json_pair_next(jp_row, p, buf, sizeof(buf))) && SUCCEED == ret)
-	{
-    }
-/*
+                    zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
+*/
+                    /*
+                        char			buf[1024];
+                        p = NULL
+                    	while (NULL != (p = zbx_json_pair_next(jp_row, p, buf, sizeof(buf))) && SUCCEED == ret)
+                    	{
+                        }
+                    /*
                     p = NULL
                     while (NULL != (p = zbx_json_next_value_dyn(&jp_row, p, &buf, &buf_alloc, NULL)))
                 	{
@@ -1714,9 +1730,10 @@ zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
 
                     }
                     */
+/*
                 }
             }
-
+*/
         }
 
         zbx_json_close(&j);
@@ -1961,7 +1978,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             return SYSINFO_RET_FAIL;
         }
 
-        // TODO use API filter for status &filters=%7B%status%22%3A%5B%22created%22%5D%7D created|restarting|running|paused|exited|dead 
+        // TODO use API filter for status &filters=%7B%status%22%3A%5B%22created%22%5D%7D created|restarting|running|paused|exited|dead
         if (1 > request->nparam)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
@@ -2225,7 +2242,7 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of images in %s status: %d", state, count);
             SET_UI64_RESULT(result, count);
-            return SYSINFO_RET_OK;        
+            return SYSINFO_RET_OK;
         }
 }
 
@@ -2297,6 +2314,129 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
             SET_UI64_RESULT(result, count);
-            return SYSINFO_RET_OK;        
+            return SYSINFO_RET_OK;
         }
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_systemd_discovery                                *
+ *                                                                            *
+ * Purpose: systemd discovery                                               *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_systemd_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_systemd_discovery()");
+        int     ret = SYSINFO_RET_FAIL;
+        char    *metric, *type;
+
+        struct zbx_json j;
+        if(strcmp(driver, "system.slice/") != 0) {
+            zabbix_log(LOG_LEVEL_WARNING, "systemd was not detected");
+            zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
+            zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+            zbx_json_close(&j);
+            SET_MSG_RESULT(result, zbx_strdup(NULL, "Systemd was not detected"));
+            zbx_json_free(&j);
+            return SYSINFO_RET_FAIL;
+        }
+
+        if (1 != request->nparam)
+        {
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
+                return SYSINFO_RET_FAIL;
+        }
+
+        if(stat_dir == NULL && zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "systemd.discovery is not available at the moment - no stat directory - empty discovery");
+            zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
+            zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+            zbx_json_close(&j);
+            SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
+            zbx_json_free(&j);
+            return SYSINFO_RET_FAIL;
+        }
+
+        char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container, *hid;
+        FILE            *f;
+        DIR             *dir;
+        zbx_stat_t      sb;
+        char            *file = NULL, *dot;
+        struct dirent   *d;
+        char    *cgroup = cpu_cgroup;
+        size_t  ddir_size = strlen(cpu_cgroup) + strlen(stat_dir) + strlen(driver) + 2;
+        char    *ddir = malloc(ddir_size);
+        zbx_strlcpy(ddir, stat_dir, ddir_size);
+        zbx_strlcat(ddir, cgroup, ddir_size);
+        zbx_strlcat(ddir, driver, ddir_size);
+
+        if (NULL == (dir = opendir(ddir)))
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "%s: %s", ddir, zbx_strerror(errno));
+            free(ddir);
+            return SYSINFO_RET_FAIL;
+        }
+
+        zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
+        zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+
+        size_t type_size = strlen(get_rparam(request, 0)) + 2;
+        type = malloc(type_size);
+        zbx_strlcpy(type, ".", type_size);
+        zbx_strlcat(type, get_rparam(request, 0), type_size);
+
+        while (NULL != (d = readdir(dir)))
+        {
+                if(0 == strcmp(d->d_name, ".") || 0 == strcmp(d->d_name, ".."))
+                        continue;
+
+                file = zbx_dsprintf(file, "%s/%s", ddir, d->d_name);
+
+                if (0 != zbx_stat(file, &sb) || 0 == S_ISDIR(sb.st_mode))
+                        continue;
+
+                // end '.service'
+                dot = strrchr(d->d_name, '.');
+                if (dot == NULL || strcmp(dot, type) != 0) {
+                    continue;
+                }
+
+                hid = NULL;
+                hid = malloc(strlen(d->d_name));
+                zbx_strlcpy(hid, d->d_name, strlen(d->d_name));
+                // remove suffix (.type)
+                hid = strtok(hid, ".");
+                // remove preffix (systemd-)
+                if (strncmp(hid, "systemd-", strlen("systemd-")) == 0) {
+                    hid += strlen("systemd-");
+                }
+
+                zbx_json_addobject(&j, NULL);
+                zbx_json_addstring(&j, "{#FID}", d->d_name, ZBX_JSON_TYPE_STRING);
+                zbx_json_addstring(&j, "{#HID}", hid, ZBX_JSON_TYPE_STRING);
+                zbx_json_close(&j);
+        }
+
+        if(0 != closedir(dir))
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "%s: %s\n", ddir, zbx_strerror(errno));
+        }
+
+        zbx_json_close(&j);
+
+        SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
+
+        zbx_json_free(&j);
+
+        free(ddir);
+        free(type);
+
+        return SYSINFO_RET_OK;
 }
