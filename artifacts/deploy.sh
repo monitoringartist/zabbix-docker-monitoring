@@ -9,16 +9,15 @@ mkdir -p out/centos7
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
 docker run --rm -v $PWD/out/centos7:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
-ls -lah out/centos7
 cd out/centos7
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../..
 
-mkdir -p debian8
+mkdir -p out/debian8
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
-docker run --rm -v $PWD/debian8:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker run --rm -v $PWD/out/debian8:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
 cd out/debian8
 md5sum zabbix_module_docker.so > md5sum.txt
@@ -26,9 +25,9 @@ sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../..
 
-mkdir -p ubuntu14
+mkdir -p out/ubuntu14
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
-docker run --rm -v $PWD/ubuntu14:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker run --rm -v $PWD/out/ubuntu14:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
 cd out/ubuntu14
 md5sum zabbix_module_docker.so > md5sum.txt
