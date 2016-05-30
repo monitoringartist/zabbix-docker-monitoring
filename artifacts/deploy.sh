@@ -10,15 +10,15 @@ docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/
 docker run --rm -v $PWD/centos7:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
 
-mkdir -p debian8
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
-docker run --rm -v $PWD/debian8:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
-docker rmi -f local/zabbix-docker-module-compilation
+#mkdir -p debian8
+#docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
+#docker run --rm -v $PWD/debian8:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+#docker rmi -f local/zabbix-docker-module-compilation
 
-mkdir -p ubuntu14
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
-docker run --rm -v $PWD/ubuntu14:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
-docker rmi -f local/zabbix-docker-module-compilation
+#mkdir -p ubuntu14
+#docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+#docker run --rm -v $PWD/ubuntu14:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+#docker rmi -f local/zabbix-docker-module-compilation
 }
 
 # Pull requests and commits to other branches shouldn't try to deploy, just build to verify
@@ -59,9 +59,11 @@ fi
 
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
+pwd
+ls
 git add centos7
-git add debian8
-git add ubuntu14
+#git add debian8
+#git add ubuntu14
 git commit -m "Deploy to GitHub Pages: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
