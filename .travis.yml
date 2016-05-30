@@ -31,8 +31,9 @@ script:
   - "cd src/modules/zabbix_module_docker"  
   - "cp /home/travis/build/monitoringartist/zabbix-docker-monitoring/src/modules/zabbix_module_docker/* ."
   - "make"
+  - "cd /home/travis/build/monitoringartist/zabbix-docker-monitoring/"
+  - "bash ./artifacts/deploy.sh"
 
-script: bash ./artifacts/deploy.sh
 env:
   global:
   - ENCRYPTION_LABEL: "469b4b5a68a6"
