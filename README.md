@@ -1,7 +1,7 @@
 Zabbix Docker Monitoring
 ========================
 
-If you like or use this project, please provide feedback to author - Star it ★.
+![Docker logo](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/logo_docker.png) If you like or use this project, please provide feedback to author - Star it ★.
 
 Monitoring of Docker container by using Zabbix. Available CPU, mem,
 blkio, net container metrics and some containers config details e.g. IP, name, ...
