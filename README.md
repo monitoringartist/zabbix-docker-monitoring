@@ -36,14 +36,13 @@ for free:
 [![Paypal donate button](http://jangaraj.com/img/github-donate-button02.png)]
 (https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8LB6J222WRUZ4)
 
-Build
+Build [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring)
 =====
 
-[Download latest build (RHEL 7, CentOS 7, Ubuntu 14, ...)]
-(https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/files/zabbix24/src/modules/zabbix_module_docker/zabbix_module_docker.so)
-[![Build Status](https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/status.png)]
-(https://drone.io/github.com/jangaraj/Zabbix-Docker-Monitoring/latest)<br>
-If provided build doesn't work on your system, please see section [Compilation]
+Download latest build for only Zabbix 3.0 agents:
+| [![Red Hat 7](doc/logo_redhat.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) [![CentOS 7](doc/logo_centos.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) | [![Debian 8](doc/logo_debian.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/zabbix_module_docker.so)  | [![Ubuntu 14](doc/logo_ubuntu.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/zabbix_module_docker.so) |
+
+If provided builds don't work on your system or you don't use Zabbix 3.0, please see section [Compilation]
 (#compilation). Or you can check [folder dockerfiles]
 (https://github.com/monitorinartist/Zabbix-Docker-Monitoring/tree/master/dockerfiles),
 where Dockerfiles for different OS/Zabbix versions are prepared.
