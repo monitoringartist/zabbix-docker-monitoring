@@ -45,10 +45,10 @@ Download latest build only for Zabbix 3.0 agents:
 | :---: | :---: | :---: |
 | [![Red Hat 7](doc/logo_redhat.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) [![CentOS 7](doc/logo_centos.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) | [![Debian 8](doc/logo_debian.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/zabbix_module_docker.so)  | [![Ubuntu 14](doc/logo_ubuntu.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/zabbix_module_docker.so) |
 
-If provided builds don't work on your system or you don't use Zabbix 3.0, please see section [Compilation]
+If provided build doesn't work on your system or you are not using Zabbix 3.0, please see section [Compilation]
 (#compilation). Or you can check [folder dockerfiles]
 (https://github.com/monitorinartist/Zabbix-Docker-Monitoring/tree/master/dockerfiles),
-where Dockerfiles for different OS/Zabbix versions are prepared.
+where Dockerfiles for different OS/Zabbix versions can be customized.
 
 Available metrics
 =================
