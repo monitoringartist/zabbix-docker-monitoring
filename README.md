@@ -39,7 +39,7 @@ for free:
 Build [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring)
 =====
 
-Download latest build only for Zabbix 3.0 agents:
+Download latest build of zabbix_module_docker.so only for Zabbix 3.0 agents:
 
 | [Red Hat 7 / CentOS 7](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) | [Debian 8](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/zabbix_module_docker.so) | [Ubuntu 14](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/zabbix_module_docker.so) |
 | :---: | :---: | :---: |
