@@ -29,7 +29,7 @@
                     <type>0</type>
                     <snmp_community/>
                     <snmp_oid/>
-                    <key>docker.discovery[Config,Env,MESOS_TASK_ID=]</key>
+                    <key>docker.discovery[Config,Env,MESOS_TASK_ID=|mesos_task_id=]</key>
                     <delay>600</delay>
                     <status>0</status>
                     <allowed_hosts/>

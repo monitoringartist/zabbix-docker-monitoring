@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.6.0";
+char    *m_version = "v0.6.1";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -146,7 +146,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_socket_query()");
 
         struct sockaddr_un address;
-        int sock, nbytes, tbytes = 0;
+        int sock, nbytes;
         size_t addr_length;
         char buffer[buffer_size+1];
         char *response_substr, *response, *empty="", *message = NULL, *temp1, *temp2;
@@ -197,7 +197,7 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         }
         close(sock);
         // remove http header
-        if (response_substr = strstr(message, "\r\n\r\n"))
+        if ((response_substr = strstr(message, "\r\n\r\n")))
         {
             response_substr += 4;
             size_t response_size = strlen(response_substr) + 1;
@@ -272,7 +272,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
             return iresult;
         }
 
-	    struct zbx_json_parse jp_data2, jp_data3, jp_row;
+	    struct zbx_json_parse jp_data2;
         char api_value[buffer_size];
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
@@ -325,9 +325,9 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                 } else {
                                     // find item in array - selector is param3
     	                            const char	*p_array = NULL;
-                                    char *result_array, *value;
+                                    char *result_array, *value, *selector, *string, *tofree;
                                     while (NULL != (p_array = zbx_json_next(&jp_data_array, p_array)))
-   	                              {
+   	                                {
                                        if ((result_array = strchr(p_array+1, '"')) != NULL)
                                        {
                                            s_size = strlen(p_array+1) - strlen(result_array) + 1;
@@ -335,20 +335,28 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                            zbx_strlcpy(value, p_array+1, s_size);
                                            zabbix_log(LOG_LEVEL_DEBUG, "Array item: %s", value);
 
-                                           // if start of value match with array selector return without selector
-                                           if (strncmp(value, get_rparam(request, 3), strlen(get_rparam(request, 3))) == 0)
-                                           {
-                                                // remove selector from returned value
-                                                value += strlen(get_rparam(request, 3));
+                                           tofree = string = strdup(get_rparam(request, 3));
 
-                                                zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, get_rparam(request, 3), value);
-                                                iresult.value = zbx_strdup(NULL, value);
-                                                iresult.return_code = SYSINFO_RET_OK;
-                                                value -= strlen(get_rparam(request, 3));
-                                                free((void*) value);
-                                                free((void*) answer);
-                                                return iresult;
+                                           // hacking: Marathon MESOS_TASK_ID, Chronos - mesos_task_id
+                                           // docker.inspect[cid,Config,Env,MESOS_TASK_ID=|mesos_task_id=]
+                                           while ((selector = strsep(&string, "|")) != NULL) {
+                                               // if start of value match with array selector return without selector
+                                               if (strncmp(value, selector, strlen(selector)) == 0)
+                                               {
+                                                    // remove selector from returned value
+                                                    value += strlen(selector);
+
+                                                    zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, selector, value);
+                                                    iresult.value = zbx_strdup(NULL, value);
+                                                    iresult.return_code = SYSINFO_RET_OK;
+                                                    value -= strlen(selector);
+                                                    free((void*) value);
+                                                    free((void*) answer);
+                                                    free((void*) tofree);
+                                                    return iresult;
+                                               }
                                            }
+                                           free(tofree);
                                        } else {
                                            free((void*) value);
                                            free((void*) answer);
@@ -573,8 +581,7 @@ int     zbx_docker_dir_detect()
 int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_up()");
-        char    *container, *metric;
-        int     ret = SYSINFO_RET_FAIL;
+        char    *container;
 
         if (1 != request->nparam)
         {
@@ -601,7 +608,6 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
-        metric = get_rparam(request, 1);
         char    *stat_file = "/cpuacct.stat";
         char    *cgroup = cpu_cgroup;
         size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
@@ -1265,14 +1271,13 @@ int     zbx_module_uninit()
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_uninit()");
 
         const char* znetns_prefix = "zabbix_module_docker_";
-        FILE            *f;
         DIR             *dir;
         struct dirent   *d;
 
-        if (NULL == (dir = opendir("/var/run/netns/")))
+        if (NULL == (dir = opendir("/var/run/netns")))
         {
-            zabbix_log(LOG_LEVEL_WARNING, "/var/run/netns/: %s", zbx_strerror(errno));
-            return ZBX_MODULE_FAIL;
+            zabbix_log(LOG_LEVEL_DEBUG, "/var/run/netns: %s", zbx_strerror(errno));
+            return ZBX_MODULE_OK;
         }
         char *file = NULL;
         while (NULL != (d = readdir(dir)))
@@ -1317,7 +1322,6 @@ int     zbx_docker_perm()
         // I hope that zabbix user cannot be member of more than 10 groups
         int j, ngroups = 10;
         gid_t *groups;
-        struct passwd *pw;
         struct group *gr;
         groups = malloc(ngroups * sizeof (gid_t));
         if (groups == NULL)
@@ -1445,11 +1449,9 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
             return SYSINFO_RET_FAIL;
         }
 
-        char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container, *containerid;
-        FILE            *f;
         DIR             *dir;
         zbx_stat_t      sb;
-        char            *file = NULL, scontainerid[13];
+        char            *file = NULL, *containerid, scontainerid[13];
         struct dirent   *d;
         char    *cgroup = "cpuset/";
         size_t  ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(driver) + 2;
@@ -1566,13 +1568,22 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             return SYSINFO_RET_FAIL;
         }
 
+        zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
+        zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+
+        // empty reponse
+        if (strcmp(answer, "[]\n") == 0) {
+            zbx_json_close(&j);
+            SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
+            zbx_json_free(&j);
+            free((void*) answer);
+            return SYSINFO_RET_OK;
+        }
+
 	    struct zbx_json_parse	jp_data2, jp_row;
 	    const char		*p = NULL;
         char cid[cid_length], scontainerid[13];
         size_t  s_size;
-
-        zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-        zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
 
         size_t hostname_len = 128;
         while (1) {
@@ -1639,7 +1650,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                     names = malloc(s_size);
                     zbx_strlcpy(names, jp_data2.start, s_size-3);
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Parsed first container name: %s", names);
+                zabbix_log(LOG_LEVEL_DEBUG, "Parsed container name: %s", names);
 
                 // FCONTAINERID - full container id
                 if (SUCCEED != zbx_json_value_by_name(&jp_row, "Id", cid, cid_length))
@@ -1661,11 +1672,11 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                     init_request(&request2);
                     add_request_param(&request2, zbx_strdup(NULL, cid));
                     int n;
+                    struct inspect_result iresult;
                     for(n = 0; n < request->nparam; n++)
                     {
                        add_request_param(&request2, zbx_strdup(NULL, (request)->params[n]));
                     }
-                    struct inspect_result iresult;
                     iresult = zbx_module_docker_inspect_exec(&request2);
                     free_request(&request2);
                     if (iresult.return_code == SYSINFO_RET_OK) {
@@ -1759,9 +1770,9 @@ int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result
 {
         if (socket_api == 1)
         {
-            zbx_module_docker_discovery_extended(request, result);
+            return zbx_module_docker_discovery_extended(request, result);
         } else {
-            zbx_module_docker_discovery_basic(request, result);
+            return zbx_module_docker_discovery_basic(request, result);
         }
 }
 
@@ -1873,7 +1884,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
             return SYSINFO_RET_FAIL;
         }
 
-	    struct zbx_json_parse jp_data2, jp_data3, jp_row;
+	    struct zbx_json_parse jp_data2, jp_data3;
         char api_value[buffer_size];
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
@@ -1986,7 +1997,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
 
-        char    *state, *query;
+        char    *state;
         state = get_rparam(request, 0);
 
         if (strcmp(state, "Up") == 0)
@@ -2053,11 +2064,17 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         return SYSINFO_RET_FAIL;
                     }
 
+                    // empty reponse
+                    if (strcmp(answer, "[]\n") == 0) {
+                       SET_UI64_RESULT(result, 0);
+                       free((void*) answer);
+                       return SYSINFO_RET_OK;
+                    }
+
                     int count = 0;
-            	    struct zbx_json_parse	jp_data2, jp_row;
+            	    struct zbx_json_parse	jp_row;
             	    const char		*p = NULL;
                     char status[cid_length];
-                    size_t  s_size;
 
                     // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                 	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
@@ -2125,11 +2142,17 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                                 return SYSINFO_RET_FAIL;
                             }
 
+                            // empty reponse
+                            if (strcmp(answer, "[]\n") == 0) {
+                               SET_UI64_RESULT(result, 0);
+                               free((void*) answer);
+                               return SYSINFO_RET_OK;
+                            }
+
                             int count = 0;
-                    	    struct zbx_json_parse	jp_data2, jp_row;
+                    	    struct zbx_json_parse	jp_row;
                     	    const char		*p = NULL;
                             char status[cid_length];
-                            size_t  s_size;
 
                             // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                         	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
@@ -2205,7 +2228,7 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
 
-        char    *state, *query;
+        char    *state;
         state = get_rparam(request, 0);
 
         if (strcmp(state, "All") == 0)
@@ -2244,6 +2267,10 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             SET_UI64_RESULT(result, count);
             return SYSINFO_RET_OK;
         }
+
+        zabbix_log(LOG_LEVEL_DEBUG, "Not supported image state: %s", state);
+        SET_MSG_RESULT(result, strdup("Not supported image state"));
+        return SYSINFO_RET_FAIL;
 }
 
 /******************************************************************************
@@ -2275,7 +2302,7 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
         }
 
-        char    *state, *query;
+        char    *state;
         state = get_rparam(request, 0);
         // TODO count items in section "Volumes"
         if (strcmp(state, "All") == 0)
@@ -2288,6 +2315,14 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, strdup("docker.vstatus is not available at the moment - some problem with Docker's socket API"));
                 return SYSINFO_RET_FAIL;
             }
+
+            if(strncmp(answer, "404 ", strlen("404 ")) == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.vstatus is not available for your Docker version");
+                SET_MSG_RESULT(result, strdup("docker.vstatus is not available for your Docker version"));
+                return SYSINFO_RET_FAIL;
+            }
+
             struct zbx_json_parse	jp_data, jp_data2;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
@@ -2307,6 +2342,14 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, strdup("docker.vstatus is not available at the moment - some problem with Docker's socket API"));
                 return SYSINFO_RET_FAIL;
             }
+
+            if(strncmp(answer, "404 ", strlen("404 ")) == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.vstatus is not available for your Docker version");
+                SET_MSG_RESULT(result, strdup("docker.vstatus is not available for your Docker version"));
+                return SYSINFO_RET_FAIL;
+            }
+
             struct zbx_json_parse	jp_data;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
@@ -2316,6 +2359,10 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             SET_UI64_RESULT(result, count);
             return SYSINFO_RET_OK;
         }
+
+        zabbix_log(LOG_LEVEL_DEBUG, "Not supported volume state: %s", state);
+        SET_MSG_RESULT(result, strdup("Not supported volume state"));
+        return SYSINFO_RET_FAIL;
 }
 
 /******************************************************************************
@@ -2332,8 +2379,7 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
 int     zbx_module_systemd_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_systemd_discovery()");
-        int     ret = SYSINFO_RET_FAIL;
-        char    *metric, *type;
+        char    *type;
 
         struct zbx_json j;
         if(strcmp(driver, "system.slice/") != 0) {
@@ -2364,11 +2410,9 @@ int     zbx_module_systemd_discovery(AGENT_REQUEST *request, AGENT_RESULT *resul
             return SYSINFO_RET_FAIL;
         }
 
-        char            line[MAX_STRING_LEN], *p, *mpoint, *mtype, container, *hid;
-        FILE            *f;
         DIR             *dir;
         zbx_stat_t      sb;
-        char            *file = NULL, *dot;
+        char            *file = NULL, *dot, *hid;
         struct dirent   *d;
         char    *cgroup = cpu_cgroup;
         size_t  ddir_size = strlen(cpu_cgroup) + strlen(stat_dir) + strlen(driver) + 2;
