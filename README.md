@@ -218,7 +218,17 @@ Available templates:
 
 - [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml) - standard (recommended) template
 - [Zabbix-Template-App-Docker-active.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-active.xml) - standard template with active checks 
-- [Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml) - template for monitoring of Docker containers in Mesos cluster (frameworkd Marathon/Chronos)  
+- [Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml) - template for monitoring of Docker containers in Mesos cluster (frameworkd Marathon/Chronos)
+
+You can use Docker image [monitoringartist/zabbix-templates](https://hub.docker.com/r/monitoringartist/zabbix-templates/) for import of Zabbix-Template-App-Docker.xml template. For example:
+
+``` 
+docker run --rm \
+  -e XXL_apiurl=http://zabbix.org/zabbix \
+  -e XXL_apiuser=Admin \
+  -e XXL_apipass=zabbix \
+  monitoringartist/zabbix-templates
+```  
 
 Compilation
 ===========
