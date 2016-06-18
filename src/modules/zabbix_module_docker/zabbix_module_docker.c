@@ -642,13 +642,13 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 zabbix_log(LOG_LEVEL_DEBUG, "Cannot open metric file: '%s', container doesn't run", filename);
                 free(filename);
-                SET_DBL_RESULT(result, 0);
+                SET_UI64_RESULT(result, 0);
                 return SYSINFO_RET_OK;
         }
         zbx_fclose(file);
         zabbix_log(LOG_LEVEL_DEBUG, "Can open metric file: '%s', container is running", filename);
         free(filename);
-        SET_DBL_RESULT(result, 1);
+        SET_UI64_RESULT(result, 1);
         return SYSINFO_RET_OK;
 }
 
