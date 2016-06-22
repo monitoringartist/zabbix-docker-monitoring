@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.6.1";
+char    *m_version = "v0.6.3";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -231,7 +231,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_inspect_exec()");
         struct inspect_result iresult;
 
-        if (socket_api != 1)
+        if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not available");
             iresult.value = zbx_strdup(NULL, "Docker's socket API is not available");
@@ -1357,6 +1357,42 @@ int     zbx_docker_perm()
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_docker_api_detect                                            *
+ *                                                                            *
+ * Purpose: the function is trying to test Docker API availability            *
+ *                                                                            *
+ * Return value: 0 - API not detected                                         *
+ *               1 - API detected                                             *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_docker_api_detect()
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_api_detect()");
+        // test root or docker permission
+        if (geteuid() != 0 && zbx_docker_perm() != 1 )
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are available");
+            socket_api = 0;
+            return socket_api;
+        } else {
+            // test Docker's socket connection
+            const char *echo = zbx_module_docker_socket_query("GET /_ping HTTP/1.0\r\n\n", 0);
+            if (strcmp(echo, "OK") == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket works - extended docker metrics are available");
+                socket_api = 1;
+                return socket_api;
+            } else {
+                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket doesn't work - only basic docker metrics are available");
+                socket_api = 0;
+                return socket_api;
+            }
+            free((void*) echo);
+        }
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_module_init                                                  *
  *                                                                            *
  * Purpose: the function is called on agent startup                           *
@@ -1373,25 +1409,7 @@ int     zbx_module_init()
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_init()");
         zabbix_log(LOG_LEVEL_DEBUG, "zabbix_module_docker %s, compilation time: %s %s", m_version, __DATE__, __TIME__);
         zbx_docker_dir_detect();
-        // test root or docker permission
-        if (geteuid() != 0 && zbx_docker_perm() != 1 )
-        {
-            zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are available");
-            socket_api = 0;
-        } else {
-            // test Docker's socket connection
-            const char *echo = zbx_module_docker_socket_query("GET /_ping HTTP/1.0\r\n\n", 0);
-            if (strcmp(echo, "OK") == 0)
-            {
-                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket works - extended docker metrics are available");
-                socket_api = 1;
-            } else {
-                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket doesn't work - only basic docker metrics are available");
-                socket_api = 0;
-            }
-            free((void*) echo);
-        }
-
+        zbx_docker_api_detect();
         return ZBX_MODULE_OK;
 }
 
@@ -1768,11 +1786,11 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
  ******************************************************************************/
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-        if (socket_api == 1)
+        if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
-            return zbx_module_docker_discovery_extended(request, result);
-        } else {
             return zbx_module_docker_discovery_basic(request, result);
+        } else {
+            return zbx_module_docker_discovery_extended(request, result);
         }
 }
 
@@ -1791,7 +1809,7 @@ int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_info()");
 
-        if (socket_api != 1)
+        if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
             SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
@@ -1847,7 +1865,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_stats()");
 
-        if (socket_api != 1)
+        if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
             SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
@@ -1982,7 +2000,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_cstatus()");
 
-        if (socket_api != 1)
+        if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
             SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
@@ -2214,7 +2232,7 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_istatus()");
 
-        if (socket_api != 1)
+        if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
             SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
@@ -2288,7 +2306,7 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_vstatus()");
 
-        if (socket_api != 1)
+        if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avalaible");
             SET_MSG_RESULT(result, strdup("Docker's socket API is not avalaible"));
