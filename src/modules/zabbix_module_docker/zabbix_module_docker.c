@@ -265,7 +265,6 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
         free(query);
         if(strcmp(answer, "") == 0)
         {
-            free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "docker.inspect is not available at the moment - some problem with Docker's socket API");
             iresult.value = zbx_strdup(NULL, "docker.inspect is not available at the moment - some problem with Docker's socket API");
             iresult.return_code = SYSINFO_RET_FAIL;
