@@ -211,19 +211,6 @@ semodule_package -o zabbix-docker.pp -m zabbix-docker.mod
 semodule -i zabbix-docker.pp
 ```
 
-systemd
-=======
-
-If you are using your systems `zabbix-agent` package, it might have sat rules that makes the `zabbix-agent` start just after the network is up and running. This might cause problems, since we are not yet ready to start ourself, as we are now depending on `Docker`.
-
-If you have problems that `zabbix-agent` wont start up completly when running systemd. You can add an additional file to `/etc/systemd/system/zabbix-agent.service.d/zabbix.conf` (you need to create the folder as well), with the content;
-
-```
-[Unit]
-After=docker.service
-```
-
-Remember to run `systemctl daemon-reload` when you are done editing it. The zabbix-agent should start correctly after this little change.
 
 Installation
 ============

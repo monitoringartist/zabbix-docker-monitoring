@@ -42,7 +42,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.6.3";
+char    *m_version = "v0.6.4";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -919,6 +919,9 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if(strcmp(metric, "user") == 0 || strcmp(metric, "system") == 0) {
             stat_file = "/cpuacct.stat";
             cgroup = cpu_cgroup;
+        } else if(strcmp(metric, "total") == 0) {
+            stat_file = "/cpuacct.usage";
+            cgroup = cpu_cgroup;
         } else {
             stat_file = "/cpu.stat";
             if (strchr(cpu_cgroup, ',') != NULL) {
@@ -969,15 +972,24 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
         zbx_uint64_t    value = 0;
-        zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in cpuacct.stat file", metric);
+        zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in %s file", metric, ++stat_file);
+
         while (NULL != fgets(line, sizeof(line), file))
         {
-                if (0 != strncmp(line, metric2, strlen(metric2)))
+                if (0 != strncmp(metric, "total", 5) && 0 != strncmp(line, metric2, strlen(metric2)))
                         continue;
-                if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value))
-                {
-                        zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
-                        continue;
+                if (0 != strncmp(metric, "total", 5) {
+                    if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value))
+                    {
+                            zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
+                            continue;
+                    }
+                } else {
+                    if (1 != sscanf(line, "%*s" ZBX_FS_UI64, &value))
+                    {
+                            zabbix_log(LOG_LEVEL_ERR, "xxx sscanf failed for matched metric line");
+                            continue;
+                    }
                 }
                 // normalize CPU usage by using number of online CPUs
                 if (1 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN)))
@@ -996,7 +1008,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         free(metric2);
 
         if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in cpuacct.stat file"));
+                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find a line with requested metric in %s file", stat_file));
 
         return ret;
 }
