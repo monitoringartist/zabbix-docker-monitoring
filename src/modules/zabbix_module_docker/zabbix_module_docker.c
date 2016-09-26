@@ -36,13 +36,17 @@
 #include "common/common.h"
 #include "sysinfo.c"
 
+#ifndef ZBX_MODULE_API_VERSION
+#       define ZBX_MODULE_API_VERSION   ZBX_MODULE_API_VERSION_ONE
+#endif
+
 struct inspect_result
 {
    char  *value;
    int   return_code;
 };
 
-char    *m_version = "v0.6.3";
+char    *m_version = "v0.6.4";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
