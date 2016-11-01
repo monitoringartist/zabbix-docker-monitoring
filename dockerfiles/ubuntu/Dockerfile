@@ -6,7 +6,7 @@ FROM ubuntu:14.04
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
 # Define required Zabbix version (tag/<version>) or branch (branches/<version>), e.g. tags/2.4.5, or branches/2.4  
-ENV ZABBIX_VERSION=branches/3.0
+ENV ZABBIX_VERSION=branches/3.2
 
 WORKDIR /root
 
