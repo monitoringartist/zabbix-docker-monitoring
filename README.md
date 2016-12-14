@@ -1,7 +1,9 @@
-Zabbix Docker Monitoring
-========================
+[<img src="https://monitoringartist.github.io/managed-by-monitoringartist.png" alt="Managed by Monitoring Artist: DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Terraform / Monitoring" align="right"/>](http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Terraform / Monitoring')
 
-![Docker logo](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/logo_docker.png) If you like or use this project, please provide feedback to author - Star it ★.
+# Zabbix Docker Monitoring
+
+If you like or use this project, please provide feedback to author - Star it ★
+and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYIokAyIMs2Qv19fzPxMWBubS9ESOYjJ2w_P222k5SuQuvoA/viewform).
 
 **Overview of Monitoring Artist (dockerized) monitoring ecosystem:**
 
