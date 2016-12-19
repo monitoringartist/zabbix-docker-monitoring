@@ -7,7 +7,7 @@ and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYI
 
 **Overview of Monitoring Artist (dockerized) monitoring ecosystem:**
 
-- **[Zabbix XXL](https://hub.docker.com/r/monitoringartist/zabbix-3.0-xxl/)** - standard Zabbix 3.0 server/proxy/UI/snmpd/java gateway with additional XXL extensions
+- **[Zabbix XXL](https://hub.docker.com/r/monitoringartist/zabbix-xxl/)** - standard Zabbix 3+ server/proxy/UI/snmpd/java gateway with additional XXL extensions
 - **[Zabbix agent XXL](https://hub.docker.com/r/monitoringartist/zabbix-agent-xxl-limited/)** - Zabbix 3.0 agent with [Docker (Mesos/Chronos/Marathon) monitoring](https://github.com/monitoringartist/zabbix-docker-monitoring) and [systemd monitoring](https://github.com/monitoringartist/zabbix-systemd-monitoring)
 - **[Zabbix templates](https://hub.docker.com/r/monitoringartist/zabbix-templates/)** - tiny (5MB) image for easy template deployment of selected Zabbix monitoring templates
 - **[Zabbix extension - all templates](https://hub.docker.com/r/monitoringartist/zabbix-ext-all-templates/)** - storage image for Zabbix XXL with 200+ [community templates](https://github.com/monitoringartist/zabbix-community-repos)
@@ -50,18 +50,25 @@ for free:
 [![Paypal donate button](http://jangaraj.com/img/github-donate-button02.png)]
 (https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8LB6J222WRUZ4)
 
-Build [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring)
-=====
+Builds [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring)
+======
 
-Download latest build of zabbix_module_docker.so only for Zabbix 3.2 agents:
+Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents:
 
-| [Red Hat 7 / CentOS 7](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) | [Debian 8](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.2/zabbix_module_docker.so) | [Ubuntu 14](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) |
-| :---: | :---: | :---: |
-| [![Red Hat 7](doc/logo_redhat.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) [![CentOS 7](doc/logo_centos.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) | [![Debian 8](doc/logo_debian.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.2/zabbix_module_docker.so)  | [![Ubuntu 14](doc/logo_ubuntu.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) |
+| OS        | Docker module for Zabbix 3.2  | Docker module for Zabbix 3.0   |
+| --------- | :---------------------------: | :----------------------------: |
+| RedHat 7  | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.0/zabbix_module_docker.so) |
+| CentOS 7  | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.0/zabbix_module_docker.so) |
+| RedHat 6  | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos6/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos6/3.0/zabbix_module_docker.so) |
+| CentOS 6  | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos6/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos6/3.0/zabbix_module_docker.so) |
+| Debian 8  | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.0/zabbix_module_docker.so) |
+| Debian 7  | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian7/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian7/3.0/zabbix_module_docker.so) |
+| Ubuntu 14 | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.0/zabbix_module_docker.so) |
+| Ubuntu 16 | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu16/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu16/3.0/zabbix_module_docker.so) |
 
-If provided build doesn't work on your system or you are not using Zabbix 3.2, please see section [Compilation]
+If provided build doesn't work on your system, please see section [Compilation]
 (#compilation). Or you can check [folder dockerfiles]
-(https://github.com/monitorinartist/Zabbix-Docker-Monitoring/tree/master/dockerfiles),
+(https://github.com/monitorinartist/zabbix-docker-monitoring/tree/master/dockerfiles),
 where Dockerfiles for different OS/Zabbix versions can be customized.
 
 Grafana dashboard
@@ -144,11 +151,11 @@ Images
 ======
 
 Docker container CPU graph in Zabbix:
-![Docker container CPU graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-cpu-graph.png)
+![Docker container CPU graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/doc/zabbix-docker-container-cpu-graph.png)
 Docker container memory graph in Zabbix:
-![Docker container memory graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-memory-graph.png)
+![Docker container memory graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/doc/zabbix-docker-container-memory-graph.png)
 Docker container state graph in Zabbix:
-![Docker container state graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/doc/zabbix-docker-container-state-graph.png)
+![Docker container state graph in Zabbix](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/doc/zabbix-docker-container-state-graph.png)
 
 Additional Docker permissions
 =============================
@@ -248,15 +255,15 @@ Basic compilation steps (please use right Zabbix branch version):
 # Required CentOS/RHEL tools: yum install -y wget autoconf automake gcc svn
 # Required Debian/Ubuntu tools: apt-get install -y wget autoconf automake gcc subversion make pkg-config
 cd ~
-mkdir zabbix30
-cd zabbix30
-svn co svn://svn.zabbix.com/branches/3.0 .
+mkdir zabbix
+cd zabbix
+svn co svn://svn.zabbix.com/branches/3.2 .
 ./bootstrap.sh
 ./configure --enable-agent
 mkdir src/modules/zabbix_module_docker
 cd src/modules/zabbix_module_docker
-wget https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/zabbix_module_docker.c
-wget https://raw.githubusercontent.com/monitoringartist/Zabbix-Docker-Monitoring/master/src/modules/zabbix_module_docker/Makefile
+wget https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/src/modules/zabbix_module_docker/zabbix_module_docker.c
+wget https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/src/modules/zabbix_module_docker/Makefile
 make
 ```
 
