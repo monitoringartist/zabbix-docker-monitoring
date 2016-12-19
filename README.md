@@ -55,9 +55,9 @@ Build [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-moni
 
 Download latest build of zabbix_module_docker.so only for Zabbix 3.2 agents:
 
-| [Red Hat 7 / CentOS 7](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) | [Debian 8](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/zabbix_module_docker.so) | [Ubuntu 14](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/zabbix_module_docker.so) |
+| [Red Hat 7 / CentOS 7](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) | [Debian 8](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.2/zabbix_module_docker.so) | [Ubuntu 14](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) |
 | :---: | :---: | :---: |
-| [![Red Hat 7](doc/logo_redhat.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) [![CentOS 7](doc/logo_centos.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/zabbix_module_docker.so) | [![Debian 8](doc/logo_debian.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/zabbix_module_docker.so)  | [![Ubuntu 14](doc/logo_ubuntu.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/zabbix_module_docker.so) |
+| [![Red Hat 7](doc/logo_redhat.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) [![CentOS 7](doc/logo_centos.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos7/3.2/zabbix_module_docker.so) | [![Debian 8](doc/logo_debian.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.2/zabbix_module_docker.so)  | [![Ubuntu 14](doc/logo_ubuntu.png)](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) |
 
 If provided build doesn't work on your system or you are not using Zabbix 3.2, please see section [Compilation]
 (#compilation). Or you can check [folder dockerfiles]

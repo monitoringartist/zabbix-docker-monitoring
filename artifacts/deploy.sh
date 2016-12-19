@@ -5,35 +5,68 @@ SOURCE_BRANCH="master"
 TARGET_BRANCH="gh-pages"
 
 function doCompile {
-mkdir -p out/centos7
+mkdir -p out/centos7/3.2/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
-docker run --rm -v $PWD/out/centos7:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker run --rm -v $PWD/out/centos7/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
-cd out/centos7
+cd out/centos7/3.2/
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../..
+cd ../../..
 
-mkdir -p out/debian8
+sed -i "s/FROM centos:centos7/FROM centos:centos6/g" dockerfiles/centos/Dockerfile;
+mkdir -p out/centos6/3.2/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
+docker run --rm -v $PWD/out/centos6/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/centos6/3.2/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+mkdir -p out/debian8/3.2/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
-docker run --rm -v $PWD/out/debian8:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker run --rm -v $PWD/out/debian8/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
-cd out/debian8
+cd out/debian8/3.2/
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../..
+cd ../../..
 
-mkdir -p out/ubuntu14
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
-docker run --rm -v $PWD/out/ubuntu14:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+sed -i "s/FROM debian:jessie/FROM debian:wheezy/g" dockerfiles/debian/Dockerfile
+mkdir -p out/debian7/3.2/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
+docker run --rm -v $PWD/out/debian7/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
-cd out/ubuntu14
+cd out/debian7/3.2/
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../..
+cd ../../..
+
+mkdir -p out/ubuntu14/3.2/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+docker run --rm -v $PWD/out/ubuntu14/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/ubuntu14/3.2/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM ubuntu:14.04/FROM ubuntu:16.04/g" dockerfiles/ubuntu/Dockerfile
+mkdir -p out/ubuntu16/3.2/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+docker run --rm -v $PWD/out/ubuntu16/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/ubuntu16/3.2/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
 }
 
 # Pull requests and commits to other branches shouldn't try to deploy, just build to verify
@@ -75,8 +108,11 @@ fi
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
 git add centos7
+git add centos6
 git add debian8
+git add debian7
 git add ubuntu14
+git add ubuntu16
 git commit -m "Deploy to GitHub Pages: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
@@ -91,4 +127,3 @@ ssh-add deploy_key
 
 # Now that we're all set up, we can push.
 git push $SSH_REPO $TARGET_BRANCH
-
