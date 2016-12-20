@@ -14,7 +14,7 @@ RUN \
    zypper install -y git subversion automake autoconf gcc make pkg-config && \
    git clone https://github.com/monitoringartist/zabbix-docker-monitoring && \
    mkdir ~/zabbix/ && \
-   svn co svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
+   svn co -q svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
    ./bootstrap.sh  && \
    ./configure --enable-agent  && \

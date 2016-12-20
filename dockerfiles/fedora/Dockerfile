@@ -11,10 +11,10 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   dnf -y install git subversion automake autoconf gcc make && \
+   dnf -y -q install git subversion automake autoconf gcc make && \
    git clone https://github.com/monitoringartist/zabbix-docker-monitoring && \
    mkdir ~/zabbix/ && \
-   svn co svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
+   svn co -q svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
    ./bootstrap.sh && \
    ./configure --enable-agent && \

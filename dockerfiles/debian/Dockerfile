@@ -12,10 +12,10 @@ WORKDIR /root
 
 RUN \
    apt-get update && \
-   apt-get --assume-yes install git subversion automake autoconf gcc make pkg-config && \
+   apt-get -q --assume-yes install git subversion automake autoconf gcc make pkg-config && \
    git clone https://github.com/monitoringartist/zabbix-docker-monitoring && \
    mkdir ~/zabbix/ && \
-   svn co svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
+   svn co -q svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
    ./bootstrap.sh  && \
    ./configure --enable-agent  && \
