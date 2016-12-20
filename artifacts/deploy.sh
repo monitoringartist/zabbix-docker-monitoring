@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 
 SOURCE_BRANCH="master"
 TARGET_BRANCH="gh-pages"
