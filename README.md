@@ -27,7 +27,7 @@ Module is focused on the performance, see section
 
 Monitoring of systemd is integrated, visit [zabbix-systemd-monitoring project](https://github.com/monitoringartist/zabbix-systemd-monitoring).
 
-Module is available as a part of Docker image zabbix-agent-xxl-limited. Quick start:
+Module is available also as a part of Docker image [zabbix-agent-xxl-limited](https://hub.docker.com/r/monitoringartist/zabbix-agent-xxl-limited/). Quick start:
 
 ```
 docker run \
@@ -42,7 +42,7 @@ docker run \
 
 **Don't use `localhost` or `127.0.0.1` in `ZA_Server` setting!**
 
-Visit [Zabbix agent 3.0 XXL with Docker monitoring](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
+Visit [Zabbix agent XXL with Docker monitoring](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
 
 Please donate to author, so he can continue to publish other awesome projects
 for free:
@@ -50,10 +50,30 @@ for free:
 [![Paypal donate button](http://jangaraj.com/img/github-donate-button02.png)]
 (https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8LB6J222WRUZ4)
 
-Builds [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring)
-======
+# Installation
 
-Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents:
+* Import provided template [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml).
+* Configure your Zabbix agent(s) - load downloaded (see table below) or your
+[compiled](#compilation) `zabbix_module_docker.so`<br>
+https://www.zabbix.com/documentation/3.0/manual/config/items/loadablemodules
+
+Available templates:
+
+- [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml) - standard (recommended) template
+- [Zabbix-Template-App-Docker-active.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-active.xml) - standard template with active checks
+- [Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml) - template for monitoring of Docker containers in Mesos cluster (frameworkd Marathon/Chronos)
+
+You can use Docker image [monitoringartist/zabbix-templates](https://hub.docker.com/r/monitoringartist/zabbix-templates/) for import of Zabbix-Template-App-Docker.xml template. For example:
+
+```
+docker run --rm \
+  -e XXL_apiurl=http://zabbix.org/zabbix \
+  -e XXL_apiuser=Admin \
+  -e XXL_apipass=zabbix \
+  monitoringartist/zabbix-templates
+```
+
+Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring):
 
 | OS          | Docker module for Zabbix 3.2  | Docker module for Zabbix 3.0   |
 | ----------- | :---------------------------: | :----------------------------: |
@@ -75,15 +95,13 @@ If provided build doesn't work on your system, please see section [Compilation]
 (https://github.com/monitorinartist/zabbix-docker-monitoring/tree/master/dockerfiles),
 where Dockerfiles for different OS/Zabbix versions can be customized.
 
-Grafana dashboard
-=================
+# Grafana dashboard
 
 Custom Grafana dashboard for Docker monitoring with used Zabbix Docker (Mesos, Marathon/Chronos) templates is available in [Grafana Zabbix dashboards repo](https://github.com/monitoringartist/grafana-zabbix-dashboards).
 
 ![Grafana dashboard Overview Docker](https://raw.githubusercontent.com/monitoringartist/grafana-zabbix-dashboards/master/overview-docker/overview-docker.png) 
 
-Available metrics
-=================
+# Available metrics
 
 Note: cid - container ID, two options are available:
 
@@ -94,7 +112,7 @@ Note: cid - container ID, two options are available:
 
 | Key | Description |
 | --- | ----------- |
-| **docker.discovery[\<par1\>,\<par2\>,\<par3\>]** | **LLD discovering:**<br>Only running containers are discovered.<br>[Additional Docker permissions](#additional-docker-permissions) are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID. Optional parameters are used for definition of HCONTAINERID - docker.inspect function will be used in this case.<br>For example:<br>*docker.discovery[Config,Env,MESOS_TASK_ID=]* is recommended for Mesos monitoring<br>Note 1: *docker.discovery* is faster version of *docker.discovery[Name]*<br>Note 2: Available macros:<br>*{#FCONTAINERID}* - full container ID (64 character string)<br>*{#SCONTAINERID}* - short container ID (12 character string)<br>*{#HCONTAINERID}* - human name of container<br>*{#SYSTEM.HOSTNAME}* - system hostname |
+| **docker.discovery[\<par1\>,\<par2\>,\<par3\>]** | **LLD discovering:**<br>Only running containers are discovered.<br>[Additional Docker permissions](#additional-docker-permissions) are needed, when you want to see container name (human name) in metrics/graphs instead of short container ID. Optional parameters are used for definition of HCONTAINERID - docker.inspect function will be used in this case.<br>For example:<br>*docker.discovery[Config,Env,MESOS_TASK_ID=]* is recommended for Mesos/Chronos/Marathon container monitoring<br>Note 1: *docker.discovery* is faster version of *docker.discovery[Name]*<br>Note 2: Available macros:<br>*{#FCONTAINERID}* - full container ID (64 character string)<br>*{#SCONTAINERID}* - short container ID (12 character string)<br>*{#HCONTAINERID}* - human name of container<br>*{#SYSTEM.HOSTNAME}* - system hostname |
 | **docker.mem[cid,mmetric]** | **Memory metrics:**<br>**mmetric** - any available memory metric in the pseudo-file memory.stat, e.g.: *cache, rss, mapped_file, pgpgin, pgpgout, swap, pgfault, pgmajfault, inactive_anon, active_anon, inactive_file, active_file, unevictable, hierarchical_memory_limit, hierarchical_memsw_limit, total_cache, total_rss, total_mapped_file, total_pgpgin, total_pgpgout, total_swap, total_pgfault, total_pgmajfault, total_inactive_anon, total_active_anon, total_inactive_file, total_active_file, total_unevictable*, Note: if you have problem with memory metrics, be sure that memory cgroup subsystem is enabled - kernel parameter: *cgroup_enable=memory* |
 | **docker.cpu[cid,cmetric]** | **CPU metrics:**<br>**cmetric** - any available CPU metric in the pseudo-file cpuacct.stat/cpu.stat, e.g.: *system, user* or container [throttling metrics](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/sec-cpu.html): *nr_throttled, throttled_time*<br>Note: Jiffy CPU counter is recalculated to % value by Zabbix. |
 | **docker.dev[cid,bfile,bmetric]** | **Blk IO metrics:**<br>**bfile** - container blkio pseudo-file, e.g.: *blkio.io_merged, blkio.io_queued, blkio.io_service_bytes, blkio.io_serviced, blkio.io_service_time, blkio.io_wait_time, blkio.sectors, blkio.time, blkio.avg_queue_size, blkio.idle_time, blkio.dequeue, ...*<br>**bmetric** - any available blkio metric in selected pseudo-file, e.g.: *Total*. Option for selected block device only is also available e.g. *'8:0 Sync'* (quotes must be used in key parameter in this case)<br>Note: Some pseudo blkio files are available only if kernel config *CONFIG_DEBUG_BLK_CGROUP=y*, see recommended docs. |
@@ -223,31 +241,6 @@ checkmodule -M -m -o zabbix-docker.mod zabbix-docker.te
 semodule_package -o zabbix-docker.pp -m zabbix-docker.mod
 semodule -i zabbix-docker.pp
 ```
-
-
-Installation
-============
-
-* Import provided template [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml).
-* Configure your Zabbix agent(s) - load downloaded/compiled
-zabbix_module_docker.so<br>
-https://www.zabbix.com/documentation/3.0/manual/config/items/loadablemodules
-
-Available templates:
-
-- [Zabbix-Template-App-Docker.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker.xml) - standard (recommended) template
-- [Zabbix-Template-App-Docker-active.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-active.xml) - standard template with active checks 
-- [Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/template/Zabbix-Template-App-Docker-Mesos-Marathon-Chronos.xml) - template for monitoring of Docker containers in Mesos cluster (frameworkd Marathon/Chronos)
-
-You can use Docker image [monitoringartist/zabbix-templates](https://hub.docker.com/r/monitoringartist/zabbix-templates/) for import of Zabbix-Template-App-Docker.xml template. For example:
-
-``` 
-docker run --rm \
-  -e XXL_apiurl=http://zabbix.org/zabbix \
-  -e XXL_apiuser=Admin \
-  -e XXL_apipass=zabbix \
-  monitoringartist/zabbix-templates
-```  
 
 Compilation
 ===========
