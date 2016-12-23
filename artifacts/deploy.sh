@@ -304,6 +304,7 @@ git add fedora25
 git add fedora24
 git add opensuse42
 git add opensuse13
+git add amazonlinux
 git commit -m "CI build deployment to GitHub Pages: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
