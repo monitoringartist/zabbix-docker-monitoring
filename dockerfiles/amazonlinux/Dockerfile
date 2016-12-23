@@ -1,7 +1,7 @@
 # https://github.com/monitoringartist/zabbix-docker-monitoring
 
 # Define required CentOS version by using FROM tag. Avalaible: centos7/centos6/...
-FROM fedora:25
+FROM amazonlinux:latest
 
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
@@ -11,7 +11,7 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   dnf -y -q install git subversion automake autoconf gcc make && \
+   yum -y -q install git subversion automake autoconf gcc make && \
    git clone https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \

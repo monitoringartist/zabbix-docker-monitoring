@@ -6,6 +6,17 @@ SOURCE_BRANCH="master"
 TARGET_BRANCH="gh-pages"
 
 function doCompile {
+
+mkdir -p out/amazonlinux/3.2/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/amazonlinux/Dockerfile .
+docker run --rm -v $PWD/out/amazonlinux/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/amazonlinux/3.2/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
 mkdir -p out/centos7/3.2/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
 docker run --rm -v $PWD/out/centos7/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
@@ -113,6 +124,17 @@ cd ../../..
 
 
 ########## 3.0 section #####################
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.0#g" dockerfiles/amazonlinux/Dockerfile
+mkdir -p out/amazonlinux/3.0/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/amazonlinux/Dockerfile .
+docker run --rm -v $PWD/out/amazonlinux/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/amazonlinux/3.0/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
 git checkout -- dockerfiles/centos/Dockerfile
 sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.0#g" dockerfiles/centos/Dockerfile
 

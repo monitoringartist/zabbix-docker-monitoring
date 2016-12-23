@@ -13,8 +13,7 @@ WORKDIR /root
 RUN \
    yum -y -q install git subversion automake autoconf gcc make && \
    git clone https://github.com/monitoringartist/zabbix-docker-monitoring && \
-   mkdir ~/zabbix/ && \
-   svn co -q svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
+   svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
    ./bootstrap.sh && \
    ./configure --enable-agent && \
