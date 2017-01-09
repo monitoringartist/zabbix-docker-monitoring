@@ -250,8 +250,10 @@ You have to compile module, if provided binary doesn't work on your system.
 Basic compilation steps (please use right Zabbix branch version):
 
 ```
-# Required CentOS/RHEL tools: yum install -y wget autoconf automake gcc svn
-# Required Debian/Ubuntu tools: apt-get install -y wget autoconf automake gcc subversion make pkg-config
+# Required CentOS/RHEL packages:   yum install -y wget autoconf automake gcc svn
+# Required Debian/Ubuntu packages: apt-get install -y wget autoconf automake gcc subversion make pkg-config
+# Required Fedora packages:        dnf install -y git subversion automake autoconf gcc make
+# Required openSUSE packages:      zypper install -y git subversion automake autoconf gcc make pkg-config
 cd ~
 svn export svn://svn.zabbix.com/branches/3.2 zabbix
 cd zabbix
