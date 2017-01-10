@@ -7,7 +7,7 @@ notifications:
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y wget autoconf automake gcc subversion make pkg-config
+  - sudo apt-get install -qq -y wget autoconf automake gcc subversion make pkg-config
 
 services:
   - docker
@@ -21,10 +21,9 @@ branches:
      - master
      
 before_script:  
-  - "mkdir ~/zabbix30"
-  - "cd ~/zabbix30"
-  - "svn co svn://svn.zabbix.com/branches/3.0 ."
-  - "./bootstrap.sh"
+  - "svn --quiet export svn://svn.zabbix.com/3.0 ~/zabbix/"
+  - "cd ~/zabbix"
+  - "./bootstrap.sh 1>/dev/null"
   - "./configure --enable-agent"  
   - "mkdir src/modules/zabbix_module_docker"
 script:  
