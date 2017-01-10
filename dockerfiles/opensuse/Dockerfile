@@ -11,11 +11,11 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   zypper install -y git subversion automake autoconf gcc make pkg-config && \
-   git clone https://github.com/monitoringartist/zabbix-docker-monitoring && \
+   zypper install -y -q git subversion automake autoconf gcc make pkg-config && \
+   git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
-   ./bootstrap.sh && \
+   ./bootstrap.sh 1>/dev/null && \
    ./configure --enable-agent && \
    cp -R ~/zabbix-docker-monitoring/src/modules/zabbix_module_docker/ ~/zabbix/src/modules/ && \
    cd ~/zabbix/src/modules/zabbix_module_docker && \
