@@ -21,7 +21,7 @@ branches:
      - master
      
 before_script:  
-  - "svn --quiet export svn://svn.zabbix.com/3.0 ~/zabbix/"
+  - "svn --quiet export svn://svn.zabbix.com/branches/3.2 ~/zabbix/"
   - "cd ~/zabbix"
   - "./bootstrap.sh 1>/dev/null"
   - "./configure --enable-agent"  
