@@ -12,7 +12,7 @@ WORKDIR /root
 
 RUN \
    apt-get update -qq && \
-   apt-get -q --assume-yes install git subversion automake autoconf gcc make pkg-config && \
+   apt-get -qq --assume-yes install git subversion automake autoconf gcc make pkg-config && \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
