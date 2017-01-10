@@ -252,8 +252,8 @@ Basic compilation steps (please use right Zabbix branch version):
 ```
 # Required CentOS/RHEL packages:   yum install -y wget autoconf automake gcc svn
 # Required Debian/Ubuntu packages: apt-get install -y wget autoconf automake gcc subversion make pkg-config
-# Required Fedora packages:        dnf install -y git subversion automake autoconf gcc make
-# Required openSUSE packages:      zypper install -y git subversion automake autoconf gcc make pkg-config
+# Required Fedora packages:        dnf install -y wget autoconf automake gcc subversion make
+# Required openSUSE packages:      zypper install -y wget autoconf automake gcc subversion make pkg-config
 cd ~
 svn export svn://svn.zabbix.com/branches/3.2 zabbix
 cd zabbix
