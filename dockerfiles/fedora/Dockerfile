@@ -11,7 +11,7 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   dnf -y -qq install git subversion automake autoconf gcc make && \
+   dnf -y -q install git subversion automake autoconf gcc make && \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \

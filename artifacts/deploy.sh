@@ -8,6 +8,7 @@ TARGET_BRANCH="gh-pages"
 function doCompile {
 
 mkdir -p out/amazonlinux/3.2/
+docker pull amazonlinux:latest > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/amazonlinux/Dockerfile .
 docker run --rm -v $PWD/out/amazonlinux/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -18,6 +19,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 mkdir -p out/centos7/3.2/
+docker pull centos:centos7 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
 docker run --rm -v $PWD/out/centos7/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -29,6 +31,7 @@ cd ../../..
 
 sed -i "s/FROM centos:centos7/FROM centos:centos6/g" dockerfiles/centos/Dockerfile;
 mkdir -p out/centos6/3.2/
+docker pull centos:centos6 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
 docker run --rm -v $PWD/out/centos6/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -39,6 +42,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 mkdir -p out/debian8/3.2/
+docker pull debian:jessie > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
 docker run --rm -v $PWD/out/debian8/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -50,6 +54,7 @@ cd ../../..
 
 sed -i "s/FROM debian:jessie/FROM debian:wheezy/g" dockerfiles/debian/Dockerfile
 mkdir -p out/debian7/3.2/
+docker pull debian:wheezy > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
 docker run --rm -v $PWD/out/debian7/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -60,6 +65,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 mkdir -p out/ubuntu14/3.2/
+docker pull ubuntu:14.04 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
 docker run --rm -v $PWD/out/ubuntu14/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -71,6 +77,7 @@ cd ../../..
 
 sed -i "s/FROM ubuntu:14.04/FROM ubuntu:16.04/g" dockerfiles/ubuntu/Dockerfile
 mkdir -p out/ubuntu16/3.2/
+docker pull ubuntu:16.04 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
 docker run --rm -v $PWD/out/ubuntu16/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -81,6 +88,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 mkdir -p out/opensuse42/3.2/
+docker pull opensuse:42.1 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
 docker run --rm -v $PWD/out/opensuse42/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -92,6 +100,7 @@ cd ../../..
 
 sed -i "s/FROM opensuse:42.1/FROM opensuse:13.2/g" dockerfiles/opensuse/Dockerfile
 mkdir -p out/opensuse13/3.2/
+docker pull opensuse:13.2 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
 docker run --rm -v $PWD/out/opensuse13/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -102,6 +111,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 mkdir -p out/fedora25/3.2/
+docker pull fedora:25 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
 docker run --rm -v $PWD/out/fedora25/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
@@ -113,6 +123,7 @@ cd ../../..
 
 sed -i "s/FROM fedora:25/FROM fedora:24/g" dockerfiles/fedora/Dockerfile
 mkdir -p out/fedora24/3.2/
+docker pull fedora:24 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
 docker run --rm -v $PWD/out/fedora24/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
