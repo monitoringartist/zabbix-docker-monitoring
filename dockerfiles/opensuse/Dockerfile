@@ -11,7 +11,7 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   zypper install --non-interactive git subversion automake autoconf gcc make pkg-config && \
+   zypper install --no-confirm --no-recommends git subversion automake autoconf gcc make pkg-config && \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
