@@ -492,12 +492,19 @@ Recommended docs
 - https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
 - https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/index.html
 
-Author
-======
+# Author
 
 [Devops Monitoring Expert](http://www.jangaraj.com 'DevOps / Docker / Kubernetes / AWS ECS / Google GCP / Zabbix / Zenoss / Terraform / Monitoring'),
-who loves monitoring systems, which start with letter Z. Those are Zabbix and Zenoss.
+who loves monitoring systems and cutting/bleeding edge technologies: Docker,
+Kubernetes, ECS, AWS, Google GCP, Terraform, Lambda, Zabbix, Grafana, Elasticsearch,
+Kibana, Prometheus, Sysdig, ...
 
-Professional devops / monitoring services:
+Summary:
+* 1000+ [GitHub](https://github.com/monitoringartist/) stars
+* 6000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
+* 800 000+ [Docker image](https://hub.docker.com/u/monitoringartist/) pulls
+
+Professional devops / monitoring / consulting services:
 
 [![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)](http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Google GCP / Zabbix / Zenoss / Terraform / Monitoring')
+
