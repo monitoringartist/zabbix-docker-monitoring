@@ -7,8 +7,8 @@ and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYI
 
 **Overview of Monitoring Artist (dockerized) monitoring ecosystem:**
 
-- **[Zabbix XXL](https://hub.docker.com/r/monitoringartist/zabbix-xxl/)** - standard Zabbix 3+ server/proxy/UI/snmpd/java gateway with additional XXL extensions
-- **[Zabbix agent XXL](https://hub.docker.com/r/monitoringartist/zabbix-agent-xxl-limited/)** - Zabbix 3.0 agent with [Docker (Mesos/Chronos/Marathon) monitoring](https://github.com/monitoringartist/zabbix-docker-monitoring) and [systemd monitoring](https://github.com/monitoringartist/zabbix-systemd-monitoring)
+- **[Zabbix XXL](https://hub.docker.com/r/monitoringartist/zabbix-xxl/)** - standard Zabbix server/proxy/UI/snmpd/java gateway with additional XXL extensions
+- **[Dockbix agent XXL](https://hub.docker.com/r/monitoringartist/dockbix-agent-xxl-limited/)** - Zabbix agent with [Docker (Kubernetes/Mesos/Chronos/Marathon) monitoring](https://github.com/monitoringartist/zabbix-docker-monitoring)
 - **[Zabbix templates](https://hub.docker.com/r/monitoringartist/zabbix-templates/)** - tiny (5MB) image for easy template deployment of selected Zabbix monitoring templates
 - **[Zabbix extension - all templates](https://hub.docker.com/r/monitoringartist/zabbix-ext-all-templates/)** - storage image for Zabbix XXL with 200+ [community templates](https://github.com/monitoringartist/zabbix-community-repos)
 - **[Kubernetized Zabbix](https://github.com/monitoringartist/kubernetes-zabbix)** - containerized Zabbix cluster based on Kubernetes
@@ -25,24 +25,23 @@ Please feel free to test and provide feedback/open issue.
 Module is focused on the performance, see section
 [Module vs. UserParameter script](#module-vs-userparameter-script).
 
-Monitoring of systemd is integrated, visit [zabbix-systemd-monitoring project](https://github.com/monitoringartist/zabbix-systemd-monitoring).
-
-Module is available also as a part of Docker image [zabbix-agent-xxl-limited](https://hub.docker.com/r/monitoringartist/zabbix-agent-xxl-limited/). Quick start:
+Module is available also as a part of another project - Docker image
+[dockbix-agent-xxl-limited](https://hub.docker.com/r/monitoringartist/dockbix-agent-xxl-limited/)
+(OS Linux host metrics are supported as well). Quick start:
 
 ```
 docker run \
-  --name=zabbix-agent-xxl \
-  -h $(hostname) \
-  -p 10050:10050 \
+  --name=dockbix-agent-xxl \
+  --net=host \
+  --privileged \
   -v /:/rootfs \
   -v /var/run:/var/run \
+  --restart unless-stopped \
   -e "ZA_Server=<ZABBIX SERVER IP/DNS NAME>" \
-  -d monitoringartist/zabbix-agent-xxl-limited:latest
+  -d monitoringartist/dockbix-agent-xxl-limited:latest
 ```
 
-**Don't use `localhost` or `127.0.0.1` in `ZA_Server` setting!**
-
-Visit [Zabbix agent XXL with Docker monitoring](https://github.com/monitoringartist/zabbix-agent-xxl) for more information.
+Visit [Dockbix agent XXL with Docker monitoring](https://github.com/monitoringartist/dockbix-agent-xxl) for more informations.
 
 Please donate to author, so he can continue to publish other awesome projects
 for free:
@@ -507,4 +506,3 @@ Summary:
 Professional devops / monitoring / consulting services:
 
 [![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)](http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Google GCP / Zabbix / Zenoss / Terraform / Monitoring')
-
