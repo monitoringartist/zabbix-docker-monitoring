@@ -29,7 +29,7 @@ Module is available also as a part of another project - Docker image
 [dockbix-agent-xxl-limited](https://hub.docker.com/r/monitoringartist/dockbix-agent-xxl-limited/)
 (OS Linux host metrics are supported as well). Quick start:
 
-![Dockbix Agent XXL Docker container](https://raw.githubusercontent.com/monitoringartist/dockbix-agent-xxl/master/doc/dockbix-agent-xxl.gif)
+[![Dockbix Agent XXL Docker container](https://raw.githubusercontent.com/monitoringartist/dockbix-agent-xxl/master/doc/dockbix-agent-xxl.gif)](https://github.com/monitoringartist/dockbix-agent-xxl)
 
 ```
 docker run \
