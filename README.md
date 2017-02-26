@@ -29,6 +29,8 @@ Module is available also as a part of another project - Docker image
 [dockbix-agent-xxl-limited](https://hub.docker.com/r/monitoringartist/dockbix-agent-xxl-limited/)
 (OS Linux host metrics are supported as well). Quick start:
 
+![Dockbix Agent XXL Docker container](https://raw.githubusercontent.com/monitoringartist/dockbix-agent-xxl/master/doc/dockbix-agent-xxl.gif)
+
 ```
 docker run \
   --name=dockbix-agent-xxl \
@@ -38,6 +40,7 @@ docker run \
   -v /var/run:/var/run \
   --restart unless-stopped \
   -e "ZA_Server=<ZABBIX SERVER IP/DNS NAME>" \
+  -e "ZA_ServerActive=<ZABBIX SERVER IP/DNS NAME>" \
   -d monitoringartist/dockbix-agent-xxl-limited:latest
 ```
 
