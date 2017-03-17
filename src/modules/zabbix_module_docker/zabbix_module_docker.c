@@ -46,7 +46,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.6.4";
+char    *m_version = "v0.6.5";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -2347,7 +2347,8 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             struct zbx_json_parse	jp_data, jp_data2;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
-            if (SUCCEED != zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
+
+            if (SUCCEED == zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
                 int count = zbx_json_count(&jp_data2);
                 free((void*) answer);
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
@@ -2371,14 +2372,17 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
             }
 
-            struct zbx_json_parse	jp_data;
+            struct zbx_json_parse	jp_data, jp_data2;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
-            int count = zbx_json_count(&jp_data);
-            free((void*) answer);
-            zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
-            SET_UI64_RESULT(result, count);
-            return SYSINFO_RET_OK;
+
+            if (SUCCEED == zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
+                int count = zbx_json_count(&jp_data2);
+                free((void*) answer);
+                zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
+                SET_UI64_RESULT(result, count);
+                return SYSINFO_RET_OK;
+            }
         }
 
         zabbix_log(LOG_LEVEL_DEBUG, "Not supported volume state: %s", state);
