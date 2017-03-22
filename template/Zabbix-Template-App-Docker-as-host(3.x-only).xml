@@ -15,8 +15,8 @@
     </groups>
     <templates>
         <template>
-            <template>Template App Docker as host - www.monitoringartist.com</template>
-            <name>Template App Docker as host - www.monitoringartist.com</name>
+            <template>UNTESTED Template App Docker as host - www.monitoringartist.com</template>
+            <name>UNTESTED Template App Docker as host - www.monitoringartist.com</name>
             <description/>
             <groups>
                 <group>
