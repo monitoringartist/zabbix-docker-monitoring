@@ -1,3 +1,7 @@
+# Changes 0.6.6
+- fixed incorrect CPU multiplier in the template ([#30)(https://github.com/monitoringartist/zabbix-docker-monitoring/issues/30))
+- added total CPU metric (current sum of user+system ticks)
+
 # Changes 0.6.5
 
 - fixed incorrect docker.vstatus metric ([#66](https://github.com/monitoringartist/zabbix-docker-monitoring/issues/66))
