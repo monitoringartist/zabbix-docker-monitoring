@@ -1082,8 +1082,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         if (SYSINFO_RET_FAIL == ret) {
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in cpuacct.stat/cpu.stat file"));
         } else {
-                 // normalize CPU usage by using number of online CPUs
-                if (1 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN)))
+                // normalize CPU usage by using number of online CPUs - only tick metrics
+                if ((strcmp(metric, "user") == 0 || strcmp(metric, "system") == 0 || strcmp(metric, "total") == 0) && (1 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN))))
                 {
                         result_value /= cpu_num;
                 }
