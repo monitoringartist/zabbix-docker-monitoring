@@ -1075,7 +1075,6 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         zbx_fclose(file);
-        free(container);
         free(filename);
         free(metric2);
 
@@ -1091,6 +1090,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, result_value);
                 SET_UI64_RESULT(result, result_value);
         }
+        free(container);
 
         return ret;
 }

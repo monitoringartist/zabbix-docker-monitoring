@@ -105,55 +105,12 @@
                             <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
-                            <name>CPU system time {#HCONTAINERID}</name>
+                            <name>CPU utilisation {#HCONTAINERID}</name>
                             <type>0</type>
                             <snmp_community/>
                             <multiplier>1</multiplier>
                             <snmp_oid/>
-                            <key>docker.cpu[/{#SCONTAINERID},system]</key>
-                            <delay>30</delay>
-                            <history>90</history>
-                            <trends>365</trends>
-                            <status>0</status>
-                            <value_type>0</value_type>
-                            <allowed_hosts/>
-                            <units>%</units>
-                            <delta>1</delta>
-                            <snmpv3_contextname/>
-                            <snmpv3_securityname/>
-                            <snmpv3_securitylevel>0</snmpv3_securitylevel>
-                            <snmpv3_authprotocol>0</snmpv3_authprotocol>
-                            <snmpv3_authpassphrase/>
-                            <snmpv3_privprotocol>0</snmpv3_privprotocol>
-                            <snmpv3_privpassphrase/>
-                            <formula>1</formula>
-                            <delay_flex/>
-                            <params/>
-                            <ipmi_sensor/>
-                            <data_type>0</data_type>
-                            <authtype>0</authtype>
-                            <username/>
-                            <password/>
-                            <publickey/>
-                            <privatekey/>
-                            <port/>
-                            <description/>
-                            <inventory_link>0</inventory_link>
-                            <applications>
-                                <application>
-                                    <name>Docker</name>
-                                </application>
-                            </applications>
-                            <valuemap/>
-                            <logtimefmt/>
-                        </item_prototype>
-                        <item_prototype>
-                            <name>CPU user time {#HCONTAINERID}</name>
-                            <type>0</type>
-                            <snmp_community/>
-                            <multiplier>1</multiplier>
-                            <snmp_oid/>
-                            <key>docker.cpu[/{#SCONTAINERID},user]</key>
+                            <key>docker.cpu[/{#SCONTAINERID},total]</key>
                             <delay>30</delay>
                             <history>90</history>
                             <trends>365</trends>
@@ -323,7 +280,7 @@
                     <trigger_prototypes/>
                     <graph_prototypes>
                         <graph_prototype>
-                            <name>CPU utilization of {#HCONTAINERID} container</name>
+                            <name>CPU utilisation of {#HCONTAINERID} container</name>
                             <width>900</width>
                             <height>200</height>
                             <yaxismin>0.0000</yaxismin>
@@ -343,31 +300,19 @@
                                 <graph_item>
                                     <sortorder>0</sortorder>
                                     <drawtype>0</drawtype>
-                                    <color>990000</color>
+                                    <color>666666</color>
                                     <yaxisside>0</yaxisside>
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
                                     <item>
                                         <host>Template App Docker Mesos - www.monitoringartist.com</host>
-                                        <key>docker.cpu[/{#SCONTAINERID},system]</key>
-                                    </item>
-                                </graph_item>
-                                <graph_item>
-                                    <sortorder>1</sortorder>
-                                    <drawtype>0</drawtype>
-                                    <color>000099</color>
-                                    <yaxisside>0</yaxisside>
-                                    <calc_fnc>2</calc_fnc>
-                                    <type>0</type>
-                                    <item>
-                                        <host>Template App Docker Mesos - www.monitoringartist.com</host>
-                                        <key>docker.cpu[/{#SCONTAINERID},user]</key>
+                                        <key>docker.cpu[/{#SCONTAINERID},total]</key>
                                     </item>
                                 </graph_item>
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Memory usage of {#HCONTAINERID} container</name>
+                            <name>Memory utilisation of {#HCONTAINERID} container</name>
                             <width>900</width>
                             <height>200</height>
                             <yaxismin>0.0000</yaxismin>
