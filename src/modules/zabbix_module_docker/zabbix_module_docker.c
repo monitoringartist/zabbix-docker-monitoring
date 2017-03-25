@@ -1,6 +1,6 @@
 /*
 ** Zabbix module for Docker container monitoring
-** Copyright (C) 2014-2016 Jan Garaj - www.monitoringartist.com
+** Copyright (C) 2014-2017 Jan Garaj - www.monitoringartist.com
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ struct inspect_result
    int   return_code;
 };
 
-char    *m_version = "v0.6.5";
+char    *m_version = "v0.6.6";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -219,6 +219,91 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket response: %s", temp2);
         free(temp2);
         return response;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_docker_perm                                                  *
+ *                                                                            *
+ * Purpose: test if agent has docker permission (docker group membership)     *
+ *                                                                            *
+ * Return value: ZBX_MODULE_OK - has docker perm                              *
+ *               ZBX_MODULE_FAIL - has not docker perm                        *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_docker_perm()
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_perm()");
+        // I hope that zabbix user cannot be member of more than 10 groups
+        int j, ngroups = 10;
+        gid_t *groups;
+        struct group *gr;
+        groups = malloc(ngroups * sizeof (gid_t));
+        if (groups == NULL)
+        {
+            zabbix_log(LOG_LEVEL_WARNING, "Malloc error");
+            return 0;
+        }
+
+        struct passwd *p = getpwuid(geteuid());
+        if (getgrouplist(p->pw_name, geteuid(), groups, &ngroups) == -1)
+        {
+             zabbix_log(LOG_LEVEL_WARNING, "getgrouplist() returned -1; ngroups = %d\n", ngroups);
+             free(groups);
+             return 0;
+        }
+
+        for (j = 0; j < ngroups; j++)
+        {
+               gr = getgrgid(groups[j]);
+               if (gr != NULL)
+               {
+                   if (strcmp(gr->gr_name, "docker") == 0)
+                   {
+                       zabbix_log(LOG_LEVEL_DEBUG, "zabbix agent user has docker perm");
+                       free(groups);
+                       return 1;
+                   }
+               }
+        }
+        free(groups);
+        return 0;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_docker_api_detect                                            *
+ *                                                                            *
+ * Purpose: the function is trying to test Docker API availability            *
+ *                                                                            *
+ * Return value: 0 - API not detected                                         *
+ *               1 - API detected                                             *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_docker_api_detect()
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_api_detect()");
+        // test root or docker permission
+        if (geteuid() != 0 && zbx_docker_perm() != 1 )
+        {
+            zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are available");
+            socket_api = 0;
+            return socket_api;
+        } else {
+            // test Docker's socket connection
+            const char *echo = zbx_module_docker_socket_query("GET /_ping HTTP/1.0\r\n\n", 0);
+            if (strcmp(echo, "OK") == 0)
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket works - extended docker metrics are available");
+                socket_api = 1;
+                return socket_api;
+            } else {
+                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket doesn't work - only basic docker metrics are available");
+                socket_api = 0;
+                return socket_api;
+            }
+            free((void*) echo);
+        }
 }
 
 /******************************************************************************
@@ -920,7 +1005,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
         metric = get_rparam(request, 1);
         char    *cgroup = NULL, *stat_file = NULL;
-        if(strcmp(metric, "user") == 0 || strcmp(metric, "system") == 0) {
+        if(strcmp(metric, "user") == 0 || strcmp(metric, "system") == 0 || strcmp(metric, "total") == 0) {
             stat_file = "/cpuacct.stat";
             cgroup = cpu_cgroup;
         } else {
@@ -973,34 +1058,39 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         memcpy(metric2, metric, strlen(metric));
         memcpy(metric2 + strlen(metric), " ", 2);
         zbx_uint64_t    value = 0;
-        zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in cpuacct.stat file", metric);
+        zbx_uint64_t    result_value = 0;
+        zabbix_log(LOG_LEVEL_DEBUG, "Looking metric %s in cpuacct.stat/cpu.stat file", metric);
         while (NULL != fgets(line, sizeof(line), file))
         {
-                if (0 != strncmp(line, metric2, strlen(metric2)))
+                if (0 != strcmp("total", metric) && 0 != strncmp(line, metric2, strlen(metric2))) {
                         continue;
+                }
                 if (1 != sscanf(line, "%*s " ZBX_FS_UI64, &value))
                 {
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
-                // normalize CPU usage by using number of online CPUs
-                if (1 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN)))
-                {
-                    value /= cpu_num;
-                }
-                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, value);
-                SET_UI64_RESULT(result, value);
+                result_value += value;
                 ret = SYSINFO_RET_OK;
-                break;
         }
-        zbx_fclose(file);
 
-        free(container);
+        zbx_fclose(file);
         free(filename);
         free(metric2);
 
-        if (SYSINFO_RET_FAIL == ret)
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in cpuacct.stat file"));
+        if (SYSINFO_RET_FAIL == ret) {
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in cpuacct.stat/cpu.stat file"));
+        } else {
+                // normalize CPU usage by using number of online CPUs - only tick metrics
+                if ((strcmp(metric, "user") == 0 || strcmp(metric, "system") == 0 || strcmp(metric, "total") == 0) && (1 < (cpu_num = sysconf(_SC_NPROCESSORS_ONLN))))
+                {
+                        result_value /= cpu_num;
+                }
+
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, result_value);
+                SET_UI64_RESULT(result, result_value);
+        }
+        free(container);
 
         return ret;
 }
@@ -1307,91 +1397,6 @@ int     zbx_module_uninit()
         free(stat_dir);
 
         return ZBX_MODULE_OK;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_docker_perm                                                  *
- *                                                                            *
- * Purpose: test if agent has docker permission (docker group membership)     *
- *                                                                            *
- * Return value: ZBX_MODULE_OK - has docker perm                              *
- *               ZBX_MODULE_FAIL - has not docker perm                        *
- *                                                                            *
- ******************************************************************************/
-int     zbx_docker_perm()
-{
-        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_perm()");
-        // I hope that zabbix user cannot be member of more than 10 groups
-        int j, ngroups = 10;
-        gid_t *groups;
-        struct group *gr;
-        groups = malloc(ngroups * sizeof (gid_t));
-        if (groups == NULL)
-        {
-            zabbix_log(LOG_LEVEL_WARNING, "Malloc error");
-            return 0;
-        }
-
-        struct passwd *p = getpwuid(geteuid());
-        if (getgrouplist(p->pw_name, geteuid(), groups, &ngroups) == -1)
-        {
-             zabbix_log(LOG_LEVEL_WARNING, "getgrouplist() returned -1; ngroups = %d\n", ngroups);
-             free(groups);
-             return 0;
-        }
-
-        for (j = 0; j < ngroups; j++)
-        {
-               gr = getgrgid(groups[j]);
-               if (gr != NULL)
-               {
-                   if (strcmp(gr->gr_name, "docker") == 0)
-                   {
-                       zabbix_log(LOG_LEVEL_DEBUG, "zabbix agent user has docker perm");
-                       free(groups);
-                       return 1;
-                   }
-               }
-        }
-        free(groups);
-        return 0;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_docker_api_detect                                            *
- *                                                                            *
- * Purpose: the function is trying to test Docker API availability            *
- *                                                                            *
- * Return value: 0 - API not detected                                         *
- *               1 - API detected                                             *
- *                                                                            *
- ******************************************************************************/
-int     zbx_docker_api_detect()
-{
-        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_docker_api_detect()");
-        // test root or docker permission
-        if (geteuid() != 0 && zbx_docker_perm() != 1 )
-        {
-            zabbix_log(LOG_LEVEL_DEBUG, "Additional permission of Zabbix Agent are not detected - only basic docker metrics are available");
-            socket_api = 0;
-            return socket_api;
-        } else {
-            // test Docker's socket connection
-            const char *echo = zbx_module_docker_socket_query("GET /_ping HTTP/1.0\r\n\n", 0);
-            if (strcmp(echo, "OK") == 0)
-            {
-                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket works - extended docker metrics are available");
-                socket_api = 1;
-                return socket_api;
-            } else {
-                zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket doesn't work - only basic docker metrics are available");
-                socket_api = 0;
-                return socket_api;
-            }
-            free((void*) echo);
-        }
 }
 
 /******************************************************************************
@@ -1725,14 +1730,13 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 if (SUCCEED == zbx_json_brackets_open(p, &jp_data2))
                 {
                     zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
-*/
-                    /*
+
                         char			buf[1024];
                         p = NULL
                     	while (NULL != (p = zbx_json_pair_next(jp_row, p, buf, sizeof(buf))) && SUCCEED == ret)
                     	{
                         }
-                    /*
+
                     p = NULL
                     while (NULL != (p = zbx_json_next_value_dyn(&jp_row, p, &buf, &buf_alloc, NULL)))
                 	{
@@ -1743,12 +1747,10 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 		}
                 	}
 
-
-                    /*
                     while (strchr(&jp_row, ':') != NULL) {
                          // labels listing
                          zabbix_log(LOG_LEVEL_DEBUG, "Labels available");
-                         /*
+
                          jp_data2.start = jp_data2.start + s_size + 3;
                          if ((result = strchr(jp_data2.start, '"')) != NULL)
                          {
@@ -1761,8 +1763,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                          }
 
                     }
-                    */
-/*
+
                 }
             }
 */
