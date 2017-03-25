@@ -100,7 +100,7 @@
                             <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
-                            <name>CPU utilisation {#HCONTAINERID}</name>
+                            <name>CPU utilization {#HCONTAINERID}</name>
                             <type>7</type>
                             <snmp_community/>
                             <multiplier>1</multiplier>
@@ -275,7 +275,7 @@
                     <trigger_prototypes/>
                     <graph_prototypes>
                         <graph_prototype>
-                            <name>CPU utilisation of {#HCONTAINERID} container</name>
+                            <name>CPU utilization of {#HCONTAINERID} container</name>
                             <width>900</width>
                             <height>200</height>
                             <yaxismin>0.0000</yaxismin>
@@ -295,7 +295,7 @@
                                 <graph_item>
                                     <sortorder>0</sortorder>
                                     <drawtype>0</drawtype>
-                                    <color>666666</color>
+                                    <color>444444</color>
                                     <yaxisside>0</yaxisside>
                                     <calc_fnc>2</calc_fnc>
                                     <type>0</type>
@@ -307,7 +307,7 @@
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Memory utilisation of {#HCONTAINERID} container</name>
+                            <name>Memory utilization of {#HCONTAINERID} container</name>
                             <width>900</width>
                             <height>200</height>
                             <yaxismin>0.0000</yaxismin>
