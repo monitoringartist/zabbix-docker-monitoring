@@ -1,7 +1,7 @@
 # Changes 0.6.6
 - fixed incorrect CPU multiplier in the template ([#30](https://github.com/monitoringartist/zabbix-docker-monitoring/issues/30)) - update your container CPU triggers
-- added total CPU utilisation metric (current sum of user+system ticks)
-- total CPU utilisation metric is used in the templates instead of user+system CPU utilisation
+- added total CPU utilization metric (current sum of user+system ticks)
+- total CPU utilization metric is used in the templates instead of user+system CPU utilization
 
 # Changes 0.6.5
 
