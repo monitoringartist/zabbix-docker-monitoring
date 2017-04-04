@@ -485,12 +485,12 @@ Issues and feature requests
 Please use Github issue tracker.
 
 Recommended docs
-===============
+================
 
-- https://docs.docker.com/articles/runmetrics/
-- https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
-- https://www.kernel.org/doc/Documentation/cgroups/memory.txt
-- https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
+- https://docs.docker.com/engine/admin/runmetrics/
+- https://www.kernel.org/doc/Documentation/cgroup-v1/blkio-controller.txt
+- https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
+- https://www.kernel.org/doc/Documentation/cgroup-v1/cpuacct.txt
 - https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/index.html
 
 # Author
