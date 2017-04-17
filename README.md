@@ -192,7 +192,9 @@ You have two options, how to get additional Docker permissions:
 usermod -aG docker zabbix
 ```
 
-- Or edit zabbix_agentd.conf and set AllowRoot (Zabbix agent with root
+Or
+
+- Edit zabbix_agentd.conf and set AllowRoot (Zabbix agent with root
 permissions):
 
 ```
@@ -206,7 +208,7 @@ SELinux
 -------
 If you are on a system that have `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots.
 
-*zabbix-docker.te*
+*[zabbix-docker.te](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/selinux/zabbix-docker.te)*
 ```
 module zabbix-docker 1.1;
 
