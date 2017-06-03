@@ -92,9 +92,8 @@ Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents [![
 | Ubuntu 16    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu16/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu16/3.0/zabbix_module_docker.so) |
 | Ubuntu 14    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.0/zabbix_module_docker.so) |
 
-If provided build doesn't work on your system, please see section [Compilation]
-(#compilation). Or you can check [folder dockerfiles]
-(https://github.com/monitorinartist/zabbix-docker-monitoring/tree/master/dockerfiles),
+If provided build doesn't work on your system, please see section [Compilation](#compilation).
+Or you can check [folder dockerfiles](https://github.com/monitorinartist/zabbix-docker-monitoring/tree/master/dockerfiles),
 where Dockerfiles for different OS/Zabbix versions can be customized.
 
 # Grafana dashboard
@@ -137,8 +136,7 @@ Maybe in the future:
 Container log monitoring
 ========================
 
-[Standard Zabbix log monitoring]
-(https://www.zabbix.com/documentation/3.0/manual/config/items/itemtypes/log_items)
+[Standard Zabbix log monitoring](https://www.zabbix.com/documentation/3.0/manual/config/items/itemtypes/log_items)
 can be used. Keep in mind, that Zabbix agent must support active mode for log
 monitoring. Stdout/stderr Docker container console output is logged by Docker
 into file */var/lib/docker/containers/\<fid\>/\<fid\>-json.log* (fid - full container
@@ -291,9 +289,8 @@ Module vs. UserParameter script
 ===============================
 
 Module is ~10x quicker, because it's compiled binary code.
-I've used my project [Zabbix agent stress test]
-(https://github.com/monitoringartist/zabbix-agent-stress-test) for performance
-tests.
+I've used my project [Zabbix agent stress test](https://github.com/monitoringartist/zabbix-agent-stress-test)
+for performance tests.
 
 Part of config in zabbix_agentd.conf:
 
@@ -371,8 +368,7 @@ Part of config in zabbix_agentd.conf:
     UserParameter=xdocker.discovery,/etc/zabbix/scripts/container_discover.sh
     LoadModule=zabbix_module_docker.so
 
-[container_discover.sh]
-(https://github.com/bsmile/zabbix-docker-lld/blob/master/usr/lib/zabbix/script/container_discover.sh):
+[container_discover.sh](https://github.com/bsmile/zabbix-docker-lld/blob/master/usr/lib/zabbix/script/container_discover.sh):
 
 Test with 237 running containers:
 
