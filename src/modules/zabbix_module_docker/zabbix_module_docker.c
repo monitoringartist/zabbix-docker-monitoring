@@ -2032,14 +2032,20 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
                 return SYSINFO_RET_FAIL;
             }
-            struct zbx_json_parse	jp_data;
-            jp_data.start = &answer[0];
-            jp_data.end = &answer[strlen(answer)];
-            int count = zbx_json_count(&jp_data);
+            if(strcmp(answer, "[]\n") == 0)
+            {
+                int count = 0;
+            } else {
+                struct zbx_json_parse	jp_data;
+                jp_data.start = &answer[0];
+                jp_data.end = &answer[strlen(answer)];
+                int count = zbx_json_count(&jp_data);
+            }
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
             SET_UI64_RESULT(result, count);
             return SYSINFO_RET_OK;
+
         } else {
             if (strcmp(state, "Exited") == 0)
             {
@@ -2052,10 +2058,15 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                     SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
                     return SYSINFO_RET_FAIL;
                 }
-                struct zbx_json_parse	jp_data;
-                jp_data.start = &answer[0];
-                jp_data.end = &answer[strlen(answer)];
-                int count = zbx_json_count(&jp_data);
+                if(strcmp(answer, "[]\n") == 0)
+                {
+                    int count = 0;
+                } else {
+                    struct zbx_json_parse	jp_data;
+                    jp_data.start = &answer[0];
+                    jp_data.end = &answer[strlen(answer)];
+                    int count = zbx_json_count(&jp_data);
+                }
                 free((void*) answer);
 
                 // # Up
@@ -2066,9 +2077,14 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                     SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
                     return SYSINFO_RET_FAIL;
                 }
-                jp_data.start = &answer2[0];
-                jp_data.end = &answer2[strlen(answer2)];
-                count = count - zbx_json_count(&jp_data);
+                if(strcmp(answer2, "[]\n") == 0)
+                {
+                    count = 0;
+                } else {
+                    jp_data.start = &answer2[0];
+                    jp_data.end = &answer2[strlen(answer2)];
+                    count = count - zbx_json_count(&jp_data);
+                }
                 free((void*) answer2);
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
                 SET_UI64_RESULT(result, count);
@@ -2143,10 +2159,15 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                             SET_MSG_RESULT(result, strdup("docker.cstatus is not available at the moment - some problem with Docker's socket API"));
                             return SYSINFO_RET_FAIL;
                         }
-                        struct zbx_json_parse	jp_data;
-                        jp_data.start = &answer[0];
-                        jp_data.end = &answer[strlen(answer)];
-                        int count = zbx_json_count(&jp_data);
+                        if(strcmp(answer, "[]\n") == 0)
+                        {
+                            int count = 0;
+                        } else {
+                            struct zbx_json_parse	jp_data;
+                            jp_data.start = &answer[0];
+                            jp_data.end = &answer[strlen(answer)];
+                            int count = zbx_json_count(&jp_data);
+                        }
                         free((void*) answer);
                         zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
                         SET_UI64_RESULT(result, count);
