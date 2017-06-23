@@ -2358,12 +2358,19 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
 
             struct zbx_json_parse	jp_data, jp_data2;
+            int count;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
 
             if (SUCCEED == zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
-                int count = zbx_json_count(&jp_data2);
+                count = zbx_json_count(&jp_data2);
                 free((void*) answer);
+                zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
+                SET_UI64_RESULT(result, count);
+                return SYSINFO_RET_OK;
+            } else {
+                free((void*) answer);
+                count = 0;
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
                 SET_UI64_RESULT(result, count);
                 return SYSINFO_RET_OK;
@@ -2386,12 +2393,19 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
 
             struct zbx_json_parse	jp_data, jp_data2;
+            int count;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
 
             if (SUCCEED == zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
-                int count = zbx_json_count(&jp_data2);
+                count = zbx_json_count(&jp_data2);
                 free((void*) answer);
+                zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
+                SET_UI64_RESULT(result, count);
+                return SYSINFO_RET_OK;
+            } else {
+                free((void*) answer);
+                count = 0;
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
                 SET_UI64_RESULT(result, count);
                 return SYSINFO_RET_OK;
