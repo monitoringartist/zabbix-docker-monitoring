@@ -2264,21 +2264,26 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         char    *state;
         state = get_rparam(request, 0);
+        struct zbx_json_parse	jp_data;
+        int count = 0;
 
         if (strcmp(state, "All") == 0)
         {
             // All
             const char *answer = zbx_module_docker_socket_query("GET /images/json?all=1&dangling=true HTTP/1.0\r\n\n", 0);
+
             if(strcmp(answer, "") == 0)
             {
                 zabbix_log(LOG_LEVEL_DEBUG, "docker.istatus is not available at the moment - some problem with Docker's socket API");
                 SET_MSG_RESULT(result, strdup("docker.istatus is not available at the moment - some problem with Docker's socket API"));
                 return SYSINFO_RET_FAIL;
             }
-            struct zbx_json_parse	jp_data;
-            jp_data.start = &answer[0];
-            jp_data.end = &answer[strlen(answer)];
-            int count = zbx_json_count(&jp_data);
+            if(strcmp(answer, "[]\n") != 0)
+            {
+                jp_data.start = &answer[0];
+                jp_data.end = &answer[strlen(answer)];
+                count = zbx_json_count(&jp_data);
+            }
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of images in %s status: %d", state, count);
             SET_UI64_RESULT(result, count);
@@ -2292,10 +2297,12 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 SET_MSG_RESULT(result, strdup("docker.istatus is not available at the moment - some problem with Docker's socket API"));
                 return SYSINFO_RET_FAIL;
             }
-            struct zbx_json_parse	jp_data;
-            jp_data.start = &answer[0];
-            jp_data.end = &answer[strlen(answer)];
-            int count = zbx_json_count(&jp_data);
+            if(strcmp(answer, "[]\n") != 0)
+            {
+                jp_data.start = &answer[0];
+                jp_data.end = &answer[strlen(answer)];
+                count = zbx_json_count(&jp_data);
+            }
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of images in %s status: %d", state, count);
             SET_UI64_RESULT(result, count);
