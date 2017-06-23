@@ -127,12 +127,6 @@ Note: cid - container ID, two options are available:
 | | |
 | **docker.xnet[cid,interface,nmetric]** | **Network metrics (experimental):**<br>**interface** - name of interface, e.g. eth0, if name is *all*, then sum of selected metric across all interfaces is returned (lo included)<br>**nmetric** - any available network metric name from output of command netstat -i:<br>*MTU, Met, RX-OK, RX-ERR, RX-DRP, RX-OVR, TX-OK, TX-ERR, TX-DRP, TX-OVR*<br>For example:<br>*docker.xnet[cid,eth0,TX-OK]<br>docker.xnet[cid,all,RX-ERR]*<br>Note: [Root permissions (AllowRoot=1)](#additional-docker-permissions) are required, because net namespaces (/var/run/netns/) are created/used|
 
-Maybe in the future:
-
-- systemd.net - net metrics of systemd units
-- systemd.log - log monitoring of systemd units
-- docker.cpu - collector implementation
-
 Container log monitoring
 ========================
 

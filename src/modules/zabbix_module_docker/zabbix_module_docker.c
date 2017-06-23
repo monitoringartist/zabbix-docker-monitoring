@@ -61,7 +61,6 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result);
-int     zbx_module_systemd_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG            FUNCTION                TEST PARAMETERS */
@@ -78,11 +77,6 @@ static ZBX_METRIC keys[] =
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
         {"docker.xnet", CF_HAVEPARAMS,  zbx_module_docker_net,  "full container id, interface, network metric name"},
         {"docker.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full container id, blkio file, blkio metric name"},
-        {"systemd.discovery", CF_HAVEPARAMS, zbx_module_systemd_discovery,    "parameter 1"},
-        {"systemd.mem",  CF_HAVEPARAMS,  zbx_module_docker_mem,  "full unit id, memory metric name"},
-        {"systemd.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full unit id, cpu metric name"},
-        {"systemd.up",   CF_HAVEPARAMS,  zbx_module_docker_up,   "full unit id"},
-        {"systemd.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full unit id, blkio file, blkio metric name"},
         {NULL}
 };
 
@@ -680,8 +674,8 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.up/systemd.up check is not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up/systemd.up check is not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -689,8 +683,8 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
-                    zabbix_log(LOG_LEVEL_DEBUG, "docker.up/systemd.up check is not available at the moment - no cpu_cgroup directory");
-                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up/systemd.up check is not available at the moment - no cpu_cgroup directory"));
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.up check is not available at the moment - no cpu_cgroup directory");
+                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.up check is not available at the moment - no cpu_cgroup directory"));
                     return SYSINFO_RET_FAIL;
                 }
         }
@@ -767,8 +761,8 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.dev/systemd.dev metrics are not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev/systemd.dev metrics are not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.dev metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.dev metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -880,8 +874,8 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.mem/systemd.mem metrics are not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem/systemd.mem metrics are not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.mem metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.mem metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -987,8 +981,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         if (stat_dir == NULL || driver == NULL)
         {
-                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu/systemd.cpu metrics are not available at the moment - no stat directory");
-                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu/systemd.cpu metrics are not available at the moment - no stat directory"));
+                zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu metrics are not available at the moment - no stat directory");
+                SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu metrics are not available at the moment - no stat directory"));
                 return SYSINFO_RET_FAIL;
         }
 
@@ -996,8 +990,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         {
                 if (zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
                 {
-                    zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu/systemd.cpu check is not available at the moment - no cpu_cgroup directory");
-                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu/systemd.cpu check is not available at the moment - no cpu_cgroup directory"));
+                    zabbix_log(LOG_LEVEL_DEBUG, "docker.cpu check is not available at the moment - no cpu_cgroup directory");
+                    SET_MSG_RESULT(result, zbx_strdup(NULL, "docker.cpu check is not available at the moment - no cpu_cgroup directory"));
                     return SYSINFO_RET_FAIL;
                 }
         }
@@ -2407,124 +2401,4 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
         zabbix_log(LOG_LEVEL_DEBUG, "Not supported volume state: %s", state);
         SET_MSG_RESULT(result, strdup("Not supported volume state"));
         return SYSINFO_RET_FAIL;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_module_systemd_discovery                                *
- *                                                                            *
- * Purpose: systemd discovery                                               *
- *                                                                            *
- * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
- *                                 as not supported by zabbix                 *
- *               SYSINFO_RET_OK - success                                     *
- *                                                                            *
- ******************************************************************************/
-int     zbx_module_systemd_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
-{
-        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_systemd_discovery()");
-        char    *type;
-
-        struct zbx_json j;
-        if(strcmp(driver, "system.slice/") != 0) {
-            zabbix_log(LOG_LEVEL_WARNING, "systemd was not detected");
-            zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-            zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
-            zbx_json_close(&j);
-            SET_MSG_RESULT(result, zbx_strdup(NULL, "Systemd was not detected"));
-            zbx_json_free(&j);
-            return SYSINFO_RET_FAIL;
-        }
-
-        if (1 != request->nparam)
-        {
-                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
-                SET_MSG_RESULT(result, strdup("Invalid number of parameters"));
-                return SYSINFO_RET_FAIL;
-        }
-
-        if(stat_dir == NULL && zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
-        {
-            zabbix_log(LOG_LEVEL_DEBUG, "systemd.discovery is not available at the moment - no stat directory - empty discovery");
-            zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-            zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
-            zbx_json_close(&j);
-            SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-            zbx_json_free(&j);
-            return SYSINFO_RET_FAIL;
-        }
-
-        DIR             *dir;
-        zbx_stat_t      sb;
-        char            *file = NULL, *dot, *hid;
-        struct dirent   *d;
-        char    *cgroup = cpu_cgroup;
-        size_t  ddir_size = strlen(cpu_cgroup) + strlen(stat_dir) + strlen(driver) + 2;
-        char    *ddir = malloc(ddir_size);
-        zbx_strlcpy(ddir, stat_dir, ddir_size);
-        zbx_strlcat(ddir, cgroup, ddir_size);
-        zbx_strlcat(ddir, driver, ddir_size);
-
-        if (NULL == (dir = opendir(ddir)))
-        {
-            zabbix_log(LOG_LEVEL_WARNING, "%s: %s", ddir, zbx_strerror(errno));
-            free(ddir);
-            return SYSINFO_RET_FAIL;
-        }
-
-        zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-        zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
-
-        size_t type_size = strlen(get_rparam(request, 0)) + 2;
-        type = malloc(type_size);
-        zbx_strlcpy(type, ".", type_size);
-        zbx_strlcat(type, get_rparam(request, 0), type_size);
-
-        while (NULL != (d = readdir(dir)))
-        {
-                if(0 == strcmp(d->d_name, ".") || 0 == strcmp(d->d_name, ".."))
-                        continue;
-
-                file = zbx_dsprintf(file, "%s/%s", ddir, d->d_name);
-
-                if (0 != zbx_stat(file, &sb) || 0 == S_ISDIR(sb.st_mode))
-                        continue;
-
-                // end '.service'
-                dot = strrchr(d->d_name, '.');
-                if (dot == NULL || strcmp(dot, type) != 0) {
-                    continue;
-                }
-
-                hid = NULL;
-                hid = malloc(strlen(d->d_name));
-                zbx_strlcpy(hid, d->d_name, strlen(d->d_name));
-                // remove suffix (.type)
-                hid = strtok(hid, ".");
-                // remove preffix (systemd-)
-                if (strncmp(hid, "systemd-", strlen("systemd-")) == 0) {
-                    hid += strlen("systemd-");
-                }
-
-                zbx_json_addobject(&j, NULL);
-                zbx_json_addstring(&j, "{#FID}", d->d_name, ZBX_JSON_TYPE_STRING);
-                zbx_json_addstring(&j, "{#HID}", hid, ZBX_JSON_TYPE_STRING);
-                zbx_json_close(&j);
-        }
-
-        if(0 != closedir(dir))
-        {
-            zabbix_log(LOG_LEVEL_WARNING, "%s: %s\n", ddir, zbx_strerror(errno));
-        }
-
-        zbx_json_close(&j);
-
-        SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-
-        zbx_json_free(&j);
-
-        free(ddir);
-        free(type);
-
-        return SYSINFO_RET_OK;
 }
