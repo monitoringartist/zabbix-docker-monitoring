@@ -45,6 +45,7 @@ struct inspect_result
    char  *value;
    int   return_code;
 };
+struct timeval stimeout;
 
 char    *m_version = "v0.6.6";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
@@ -108,7 +109,8 @@ int     zbx_module_api_version()
 void    zbx_module_item_timeout(int timeout)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_item_timeout()");
-        item_timeout = timeout;
+        stimeout.tv_sec = item_timeout = timeout;
+        stimeout.tv_usec = 0;
 }
 
 /******************************************************************************
@@ -161,6 +163,15 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
             zabbix_log(LOG_LEVEL_WARNING, "Cannot connect to standard docker's socket /var/run/docker.sock");
             return empty;
         }
+
+        // socket input/output timeout
+        if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&stimeout, sizeof(stimeout)) < 0) {
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_RCVTIMEO socket timeout: %d seconds", stimeout.tv_sec);
+        }
+        if (setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&stimeout, sizeof(stimeout)) < 0) {
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_SNDTIMEO socket timeout: %d seconds", stimeout.tv_sec);
+        }
+
         temp1 = string_replace(query, "\n", "");
         temp2 = string_replace(temp1, "\r", "");
         free(temp1);
