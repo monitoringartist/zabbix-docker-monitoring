@@ -124,6 +124,7 @@ Note: cid - container ID, two options are available:
 | **docker.istatus[status]** | **Count of Docker images in defined status:**<br>**status** - image status, available statuses:<br>*All* - all images<br>*Dangling* - count of dangling images<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed.|
 | **docker.vstatus[status]** | **Count of Docker volumes in defined status:**<br>**status** - volume status, available statuses:<br>*All* - all volumes<br>*Dangling* - count of dangling volumes<br>Note 1: [Additional Docker permissions](#additional-docker-permissions) are needed.<br>Note2: Docker API v1.21+ is required|
 | **docker.up[cid]** | **Running state check:**<br>1 if container is running, otherwise 0 |
+| **docker.modver** | **Version of the loaded docker module** |
 | | |
 | **docker.xnet[cid,interface,nmetric]** | **Network metrics (experimental):**<br>**interface** - name of interface, e.g. eth0, if name is *all*, then sum of selected metric across all interfaces is returned (lo included)<br>**nmetric** - any available network metric name from output of command netstat -i:<br>*MTU, Met, RX-OK, RX-ERR, RX-DRP, RX-OVR, TX-OK, TX-ERR, TX-DRP, TX-OVR*<br>For example:<br>*docker.xnet[cid,eth0,TX-OK]<br>docker.xnet[cid,all,RX-ERR]*<br>Note: [Root permissions (AllowRoot=1)](#additional-docker-permissions) are required, because net namespaces (/var/run/netns/) are created/used|
 
