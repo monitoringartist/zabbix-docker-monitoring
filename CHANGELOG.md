@@ -1,6 +1,7 @@
 # Changes 0.6.7
-- cstatus, vstatus fix
-- removed official support for systemd - code moved to https://github.com/cavaliercoder/zabbix-module-systemd
+- fixed incorrect docker.cstatus/vstatus/istatus metric ([#74](https://github.com/monitoringartist/zabbix-docker-monitoring/issues/74))
+- removed support for systemd - code has been moved to https://github.com/cavaliercoder/zabbix-module-systemd
+- new item key docker.modver
 
 # Changes 0.6.6
 - fixed incorrect CPU multiplier in the template ([#30](https://github.com/monitoringartist/zabbix-docker-monitoring/issues/30)) - update your container CPU triggers
