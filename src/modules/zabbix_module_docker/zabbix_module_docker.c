@@ -47,7 +47,7 @@ struct inspect_result
 };
 struct timeval stimeout;
 
-char    *m_version = "v0.6.6";
+char    *m_version = "v0.6.7";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -62,6 +62,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     zbx_module_docker_modver(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG            FUNCTION                TEST PARAMETERS */
@@ -78,6 +79,7 @@ static ZBX_METRIC keys[] =
         {"docker.cpu",  CF_HAVEPARAMS,  zbx_module_docker_cpu,  "full container id, cpu metric name"},
         {"docker.xnet", CF_HAVEPARAMS,  zbx_module_docker_net,  "full container id, interface, network metric name"},
         {"docker.dev",  CF_HAVEPARAMS,  zbx_module_docker_dev,  "full container id, blkio file, blkio metric name"},
+        {"docker.modver",  CF_HAVEPARAMS,  zbx_module_docker_modver},
         {NULL}
 };
 
@@ -2435,4 +2437,22 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
         zabbix_log(LOG_LEVEL_DEBUG, "Not supported volume state: %s", state);
         SET_MSG_RESULT(result, strdup("Not supported volume state"));
         return SYSINFO_RET_FAIL;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_docker_modver                                         *
+ *                                                                            *
+ * Purpose: return current docker module version                              *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - function failed, item will be marked      *
+ *                                 as not supported by zabbix                 *
+ *               SYSINFO_RET_OK - success                                     *
+ *                                                                            *
+ ******************************************************************************/
+int     zbx_module_docker_modver(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_modver()");
+        SET_STR_RESULT(result, zbx_strdup(NULL, m_version));
+        return SYSINFO_RET_OK;
 }
