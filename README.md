@@ -1,6 +1,6 @@
 [<img src="https://monitoringartist.github.io/managed-by-monitoringartist.png" alt="Managed by Monitoring Artist: DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Terraform / Monitoring" align="right"/>](http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Terraform / Monitoring')
 
-# Zabbix Docker Monitoring
+# Zabbix Docker Monitoring [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring)
 
 If you like or use this project, please provide feedback to author - Star it ★
 and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYIokAyIMs2Qv19fzPxMWBubS9ESOYjJ2w_P222k5SuQuvoA/viewform).
@@ -27,7 +27,7 @@ Module is focused on the performance, see section
 
 Module is available also as a part of another project - Docker image
 [dockbix-agent-xxl-limited](https://hub.docker.com/r/monitoringartist/dockbix-agent-xxl-limited/)
-(OS Linux host metrics are supported as well). Quick start:
+(OS Linux host metrics and other selected metrics are supported as well). Quick start:
 
 [![Dockbix Agent XXL Docker container](https://raw.githubusercontent.com/monitoringartist/dockbix-agent-xxl/master/doc/dockbix-agent-xxl.gif)](https://github.com/monitoringartist/dockbix-agent-xxl)
 
@@ -74,7 +74,7 @@ docker run --rm \
   monitoringartist/zabbix-templates
 ```
 
-Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring):
+Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents:
 
 | OS           | Docker module for Zabbix 3.2  | Docker module for Zabbix 3.0   |
 | ------------ | :---------------------------: | :----------------------------: |
@@ -93,7 +93,7 @@ Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents [![
 | Ubuntu 14    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.0/zabbix_module_docker.so) |
 
 If provided build doesn't work on your system, please see section [Compilation](#compilation).
-Or you can check [folder dockerfiles](https://github.com/monitorinartist/zabbix-docker-monitoring/tree/master/dockerfiles),
+Or you can check [folder dockerfiles](https://github.com/monitoringartist/zabbix-docker-monitoring/tree/master/dockerfiles),
 where Dockerfiles for different OS/Zabbix versions can be customized.
 
 # Grafana dashboard
@@ -124,14 +124,9 @@ Note: cid - container ID, two options are available:
 | **docker.istatus[status]** | **Count of Docker images in defined status:**<br>**status** - image status, available statuses:<br>*All* - all images<br>*Dangling* - count of dangling images<br>Note: [Additional Docker permissions](#additional-docker-permissions) are needed.|
 | **docker.vstatus[status]** | **Count of Docker volumes in defined status:**<br>**status** - volume status, available statuses:<br>*All* - all volumes<br>*Dangling* - count of dangling volumes<br>Note 1: [Additional Docker permissions](#additional-docker-permissions) are needed.<br>Note2: Docker API v1.21+ is required|
 | **docker.up[cid]** | **Running state check:**<br>1 if container is running, otherwise 0 |
+| **docker.modver** | Version of the loaded docker module |
 | | |
-| **docker.xnet[cid,interface,nmetric]** | **Network metrics (experimental):**<br>**interface** - name of interface, e.g. eth0, if name is *all*, then sum of selected metric across all interfaces is returned (lo included)<br>**nmetric** - any available network metric name from output of command netstat -i:<br>*MTU, Met, RX-OK, RX-ERR, RX-DRP, RX-OVR, TX-OK, TX-ERR, TX-DRP, TX-OVR*<br>For example:<br>*docker.xnet[cid,eth0,TX-OK]<br>docker.xnet[cid,all,RX-ERR]*<br>Note: [Root permissions (AllowRoot=1)](#additional-docker-permissions) are required, because net namespaces (/var/run/netns/) are created/used|
-
-Maybe in the future:
-
-- systemd.net - net metrics of systemd units
-- systemd.log - log monitoring of systemd units
-- docker.cpu - collector implementation
+| **docker.xnet[cid,interface,nmetric]** | **Network metrics (experimental):**<br>**interface** - name of interface, e.g. eth0, if name is *all*, then sum of selected metric across all interfaces is returned (`lo` included)<br>**nmetric** - any available network metric name from output of command netstat -i:<br>*MTU, Met, RX-OK, RX-ERR, RX-DRP, RX-OVR, TX-OK, TX-ERR, TX-DRP, TX-OVR*<br>For example:<br>*docker.xnet[cid,eth0,TX-OK]<br>docker.xnet[cid,all,RX-ERR]*<br>Note: [Root permissions (AllowRoot=1)](#additional-docker-permissions) are required, because net namespaces (`/var/run/netns/`) are created/used|
 
 Container log monitoring
 ========================
@@ -190,7 +185,7 @@ You have two options, how to get additional Docker permissions:
 usermod -aG docker zabbix
 ```
 
-Or
+**Or**
 
 - Edit zabbix_agentd.conf and set AllowRoot (Zabbix agent with root
 permissions):
@@ -368,7 +363,7 @@ Part of config in zabbix_agentd.conf:
     UserParameter=xdocker.discovery,/etc/zabbix/scripts/container_discover.sh
     LoadModule=zabbix_module_docker.so
 
-[container_discover.sh](https://github.com/bsmile/zabbix-docker-lld/blob/master/usr/lib/zabbix/script/container_discover.sh):
+Shell implementation container_discover.sh:
 
 Test with 237 running containers:
 
