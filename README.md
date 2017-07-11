@@ -199,41 +199,10 @@ use *AllowRoot=1* option.
 
 SELinux
 -------
-If you are on a system that have `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots.
-
-*[zabbix-docker.te](https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/selinux/zabbix-docker.te)*
-```
-module zabbix-docker 1.1;
-
-require {
-        type docker_var_run_t;
-        type unreserved_port_t;
-        type zabbix_agent_t;
-        type docker_t;
-        type cgroup_t;
-        type modules_object_t;
-        class sock_file write;
-        class unix_stream_socket connectto;
-        class capability dac_override;
-        class tcp_socket name_connect;
-        class file { ioctl read getattr lock open execute };
-        class dir { ioctl read getattr lock add_name reparent search open };
-}
-
-#============= zabbix_agent_t ==============
-
-allow zabbix_agent_t docker_t:unix_stream_socket connectto;
-allow zabbix_agent_t docker_var_run_t:sock_file write;
-allow zabbix_agent_t self:capability dac_override;
-allow zabbix_agent_t unreserved_port_t:tcp_socket name_connect;
-allow zabbix_agent_t cgroup_t:file { ioctl read getattr lock open };
-allow zabbix_agent_t cgroup_t:dir { ioctl read getattr lock search open };
-allow zabbix_agent_t modules_object_t:file { read open execute };
-```
-
-Save it, the run:
+If you are on a system that have `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots. Save it, the run:
 
 ```
+wget https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/selinux/zabbix-docker.te
 checkmodule -M -m -o zabbix-docker.mod zabbix-docker.te
 semodule_package -o zabbix-docker.pp -m zabbix-docker.mod
 semodule -i zabbix-docker.pp
@@ -266,19 +235,19 @@ Output will be binary file (dynamically linked shared object library) `zabbix_mo
 
 You can use also Docker for compilation. Example of Dockerfiles, which have been prepared for module compilation - https://github.com/monitoringartist/zabbix-docker-monitoring/tree/master/dockerfiles
 
-How it works
-============
+Troubleshooting
+===============
 
-See https://blog.docker.com/2013/10/gathering-lxc-docker-containers-metrics/
-Metrics for containers are read from cgroup file system.
-[Docker API](https://docs.docker.com/reference/api/docker_remote_api) is used
-for discovering and some keys. However root or docker permissions are required
-for communication with Docker via unix socket. You can test API also in your
-command line:
+Edit your zabbix_agentd.conf and set DebugLevel:
 
-```
-echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
-```
+    DebugLevel=4
+
+Module debug messages will be available in standard zabbix_agentd.log.
+
+Issues and feature requests
+===========================
+
+Please use Github issue tracker.
 
 Module vs. UserParameter script
 ===============================
@@ -463,19 +432,21 @@ Test with 237 running containers:
     Success: 193    Errors: 0       Avg rate: 8.83 qps      Execution time: 31.79 sec
     Avg rate based on total execution time and success connections: 6.07 qps
 
-Troubleshooting
-===============
+How it works
+============
 
-Edit your zabbix_agentd.conf and set DebugLevel:
+See https://blog.docker.com/2013/10/gathering-lxc-docker-containers-metrics/
+Metrics for containers are read from cgroup file system.
+[Docker API](https://docs.docker.com/reference/api/docker_remote_api) is used
+for discovering and some keys. However root or docker permissions are required
+for communication with Docker via unix socket. You can test API also in your
+command line:
 
-    DebugLevel=4
-
-Module debug messages will be available in standard zabbix_agentd.log.
-
-Issues and feature requests
-===========================
-
-Please use Github issue tracker.
+```
+echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
+# or if you have curl 7.40+
+curl --unix-socket /var/run/docker.sock --no-buffer -XGET v1.24/containers/json?all=0
+```
 
 Recommended docs
 ================
@@ -494,10 +465,11 @@ Kubernetes, ECS, AWS, Google GCP, Terraform, Lambda, Zabbix, Grafana, Elasticsea
 Kibana, Prometheus, Sysdig, ...
 
 Summary:
-* 1000+ [GitHub](https://github.com/monitoringartist/) stars
-* 6000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
-* 800 000+ [Docker image](https://hub.docker.com/u/monitoringartist/) pulls
+* 2000+ [GitHub](https://github.com/monitoringartist/) stars
+* 10 000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
+* 1 000 000+ [Docker image](https://hub.docker.com/u/monitoringartist/) pulls
 
 Professional devops / monitoring / consulting services:
 
 [![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)](http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Google GCP / Zabbix / Zenoss / Terraform / Monitoring')
+
