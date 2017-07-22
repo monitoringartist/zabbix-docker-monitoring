@@ -31,7 +31,7 @@ Module is available also as a part of another project - Docker image
 
 [![Dockbix Agent XXL Docker container](https://raw.githubusercontent.com/monitoringartist/dockbix-agent-xxl/master/doc/dockbix-agent-xxl.gif)](https://github.com/monitoringartist/dockbix-agent-xxl)
 
-```
+```bash
 docker run \
   --name=dockbix-agent-xxl \
   --net=host \
@@ -66,7 +66,7 @@ Available templates:
 
 You can use Docker image [monitoringartist/zabbix-templates](https://hub.docker.com/r/monitoringartist/zabbix-templates/) for import of Zabbix-Template-App-Docker.xml template. For example:
 
-```
+```bash
 docker run --rm \
   -e XXL_apiurl=http://zabbix.org/zabbix \
   -e XXL_apiuser=Admin \
@@ -83,6 +83,7 @@ Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents:
 | CentOS 6     | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos6/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/centos6/3.0/zabbix_module_docker.so) |
 | Debian 8     | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian8/3.0/zabbix_module_docker.so) |
 | Debian 7     | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian7/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/debian7/3.0/zabbix_module_docker.so) |
+| Fedora 26    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/fedora26/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/fedora26/3.0/zabbix_module_docker.so) |
 | Fedora 25    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/fedora25/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/fedora25/3.0/zabbix_module_docker.so) |
 | Fedora 24    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/fedora25/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/fedora24/3.0/zabbix_module_docker.so) |
 | openSUSE 42  | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/opensuse42/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/opensuse42/3.0/zabbix_module_docker.so) |
@@ -138,7 +139,7 @@ into file */var/lib/docker/containers/\<fid\>/\<fid\>-json.log* (fid - full cont
 ID = macro *{#FCONTAINERID}*). If the application in container is not able to
 log to stdout/stderr, link log file to stdout/stderr. For example:
 
-```
+```bash
 ln -sf /dev/stdout /var/log/nginx/access.log
 ln -sf /dev/stderr /var/log/nginx/error.log
 ```
@@ -181,7 +182,7 @@ You have two options, how to get additional Docker permissions:
 
 - Add zabbix user to docker group (recommended option):
 
-```
+```bash
 usermod -aG docker zabbix
 ```
 
@@ -190,7 +191,7 @@ usermod -aG docker zabbix
 - Edit zabbix_agentd.conf and set AllowRoot (Zabbix agent with root
 permissions):
 
-```
+```bash
 AllowRoot=1
 ```
 
@@ -201,7 +202,7 @@ SELinux
 -------
 If you are on a system that have `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots. Save it, the run:
 
-```
+```bash
 wget https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/selinux/zabbix-docker.te
 checkmodule -M -m -o zabbix-docker.mod zabbix-docker.te
 semodule_package -o zabbix-docker.pp -m zabbix-docker.mod
@@ -214,7 +215,7 @@ Compilation
 You have to compile module, if provided binary doesn't work on your system.
 Basic compilation steps (please use right Zabbix branch version):
 
-```
+```bash
 # Required CentOS/RHEL packages:   yum install -y wget autoconf automake gcc svn
 # Required Debian/Ubuntu packages: apt-get install -y wget autoconf automake gcc subversion make pkg-config
 # Required Fedora packages:        dnf install -y wget autoconf automake gcc subversion make
@@ -442,7 +443,7 @@ for discovering and some keys. However root or docker permissions are required
 for communication with Docker via unix socket. You can test API also in your
 command line:
 
-```
+```bash
 echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
 # or if you have curl 7.40+
 curl --unix-socket /var/run/docker.sock --no-buffer -XGET v1.24/containers/json?all=0
