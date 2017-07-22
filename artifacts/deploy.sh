@@ -133,17 +133,18 @@ sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
-sed -i "s/FROM fedora:24/FROM fedora:26/g" dockerfiles/fedora/Dockerfile
-mkdir -p out/fedora26/3.2/
-docker pull fedora:24 > /dev/null
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
-docker run --rm -v $PWD/out/fedora26/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
-docker rmi -f local/zabbix-docker-module-compilation
-cd out/fedora26/3.2/
-md5sum zabbix_module_docker.so > md5sum.txt
-sha1sum zabbix_module_docker.so > sha1sum.txt
-sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../../..
+# problem with https://fedoraproject.org/wiki/Changes/pkgconf_as_system_pkg-config_implementation
+#sed -i "s/FROM fedora:24/FROM fedora:26/g" dockerfiles/fedora/Dockerfile
+#mkdir -p out/fedora26/3.2/
+#docker pull fedora:24 > /dev/null
+#docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
+#docker run --rm -v $PWD/out/fedora26/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+#docker rmi -f local/zabbix-docker-module-compilation
+#cd out/fedora26/3.2/
+#md5sum zabbix_module_docker.so > md5sum.txt
+#sha1sum zabbix_module_docker.so > sha1sum.txt
+#sha256sum zabbix_module_docker.so > sha256sum.txt
+#cd ../../..
 
 
 
@@ -280,16 +281,16 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 
-sed -i "s/FROM fedora:24/FROM fedora:26/g" dockerfiles/fedora/Dockerfile
-mkdir -p out/fedora26/3.0/
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
-docker run --rm -v $PWD/out/fedora26/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
-docker rmi -f local/zabbix-docker-module-compilation
-cd out/fedora26/3.0/
-md5sum zabbix_module_docker.so > md5sum.txt
-sha1sum zabbix_module_docker.so > sha1sum.txt
-sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../../..
+#sed -i "s/FROM fedora:24/FROM fedora:26/g" dockerfiles/fedora/Dockerfile
+#mkdir -p out/fedora26/3.0/
+#docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
+#docker run --rm -v $PWD/out/fedora26/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+#docker rmi -f local/zabbix-docker-module-compilation
+#cd out/fedora26/3.0/
+#md5sum zabbix_module_docker.so > md5sum.txt
+#sha1sum zabbix_module_docker.so > sha1sum.txt
+#sha256sum zabbix_module_docker.so > sha256sum.txt
+#cd ../../..
 }
 
 # Pull requests and commits to other branches shouldn't try to deploy, just build to verify
@@ -336,7 +337,7 @@ git add debian8
 git add debian7
 git add ubuntu14
 git add ubuntu16
-git add fedora26
+#git add fedora26
 git add fedora25
 git add fedora24
 git add opensuse42
