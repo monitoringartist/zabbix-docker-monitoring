@@ -122,18 +122,6 @@ sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
-sed -i "s/FROM opensuse:42.1/FROM opensuse:13.2/g" dockerfiles/opensuse/Dockerfile
-mkdir -p out/opensuse13/3.2/
-docker pull opensuse:13.2 > /dev/null
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
-docker run --rm -v $PWD/out/opensuse13/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
-docker rmi -f local/zabbix-docker-module-compilation
-cd out/opensuse13/3.2/
-md5sum zabbix_module_docker.so > md5sum.txt
-sha1sum zabbix_module_docker.so > sha1sum.txt
-sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../../..
-
 mkdir -p out/fedora25/3.2/
 docker pull fedora:25 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
@@ -286,17 +274,6 @@ docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/
 docker run --rm -v $PWD/out/opensuse42/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
 cd out/opensuse42/3.0/
-md5sum zabbix_module_docker.so > md5sum.txt
-sha1sum zabbix_module_docker.so > sha1sum.txt
-sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../../..
-
-sed -i "s/FROM opensuse:42.1/FROM opensuse:13.2/g" dockerfiles/opensuse/Dockerfile
-mkdir -p out/opensuse13/3.0/
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
-docker run --rm -v $PWD/out/opensuse13/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
-docker rmi -f local/zabbix-docker-module-compilation
-cd out/opensuse13/3.0/
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
@@ -457,17 +434,6 @@ docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/
 docker run --rm -v $PWD/out/opensuse42/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
 cd out/opensuse42/3.4/
-md5sum zabbix_module_docker.so > md5sum.txt
-sha1sum zabbix_module_docker.so > sha1sum.txt
-sha256sum zabbix_module_docker.so > sha256sum.txt
-cd ../../..
-
-sed -i "s/FROM opensuse:42.1/FROM opensuse:13.2/g" dockerfiles/opensuse/Dockerfile
-mkdir -p out/opensuse13/3.4/
-docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
-docker run --rm -v $PWD/out/opensuse13/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
-docker rmi -f local/zabbix-docker-module-compilation
-cd out/opensuse13/3.4/
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
