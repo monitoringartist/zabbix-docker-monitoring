@@ -64,6 +64,18 @@ sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
+sed -i "s/FROM debian:wheezy/FROM debian:stretch/g" dockerfiles/debian/Dockerfile
+mkdir -p out/debian9/3.2/
+docker pull debian:stretch > /dev/null
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
+docker run --rm -v $PWD/out/debian9/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/debian9/3.2/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
 mkdir -p out/ubuntu14/3.2/
 docker pull ubuntu:14.04 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
@@ -82,6 +94,18 @@ docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/
 docker run --rm -v $PWD/out/ubuntu16/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
 cd out/ubuntu16/3.2/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM ubuntu:16.04/FROM ubuntu:17.04/g" dockerfiles/ubuntu/Dockerfile
+mkdir -p out/ubuntu17/3.2/
+docker pull ubuntu:17.04 > /dev/null
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+docker run --rm -v $PWD/out/ubuntu17/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/ubuntu17/3.2/
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
@@ -136,7 +160,7 @@ cd ../../..
 # problem with https://fedoraproject.org/wiki/Changes/pkgconf_as_system_pkg-config_implementation
 #sed -i "s/FROM fedora:24/FROM fedora:26/g" dockerfiles/fedora/Dockerfile
 #mkdir -p out/fedora26/3.2/
-#docker pull fedora:24 > /dev/null
+#docker pull fedora:26 > /dev/null
 #docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
 #docker run --rm -v $PWD/out/fedora26/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 #docker rmi -f local/zabbix-docker-module-compilation
@@ -208,6 +232,17 @@ sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
+sed -i "s/FROM debian:wheezy/FROM debian:stretch/g" dockerfiles/debian/Dockerfile
+mkdir -p out/debian9/3.0/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
+docker run --rm -v $PWD/out/debian9/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/debian9/3.0/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
 git checkout -- dockerfiles/ubuntu/Dockerfile
 sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.0#g" dockerfiles/ubuntu/Dockerfile
 
@@ -227,6 +262,17 @@ docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/
 docker run --rm -v $PWD/out/ubuntu16/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation
 cd out/ubuntu16/3.0/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM ubuntu:16.04/FROM ubuntu:17.04/g" dockerfiles/ubuntu/Dockerfile
+mkdir -p out/ubuntu17/3.0/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+docker run --rm -v $PWD/out/ubuntu17/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/ubuntu17/3.0/
 md5sum zabbix_module_docker.so > md5sum.txt
 sha1sum zabbix_module_docker.so > sha1sum.txt
 sha256sum zabbix_module_docker.so > sha256sum.txt
@@ -287,6 +333,178 @@ cd ../../..
 #docker run --rm -v $PWD/out/fedora26/3.0/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 #docker rmi -f local/zabbix-docker-module-compilation
 #cd out/fedora26/3.0/
+#md5sum zabbix_module_docker.so > md5sum.txt
+#sha1sum zabbix_module_docker.so > sha1sum.txt
+#sha256sum zabbix_module_docker.so > sha256sum.txt
+#cd ../../..
+
+########## 3.4 section #####################
+#sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/amazonlinux/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=trunk#g" dockerfiles/amazonlinux/Dockerfile
+mkdir -p out/amazonlinux/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/amazonlinux/Dockerfile .
+docker run --rm -v $PWD/out/amazonlinux/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/amazonlinux/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+git checkout -- dockerfiles/centos/Dockerfile
+#sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/centos/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=trunk#g" dockerfiles/centos/Dockerfile
+
+mkdir -p out/centos7/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
+docker run --rm -v $PWD/out/centos7/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/centos7/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM centos:centos7/FROM centos:centos6/g" dockerfiles/centos/Dockerfile
+mkdir -p out/centos6/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
+docker run --rm -v $PWD/out/centos6/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/centos6/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+git checkout -- dockerfiles/debian/Dockerfile
+#sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/debian/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=trunk#g" dockerfiles/debian/Dockerfile
+
+mkdir -p out/debian8/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
+docker run --rm -v $PWD/out/debian8/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/debian8/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM debian:jessie/FROM debian:wheezy/g" dockerfiles/debian/Dockerfile
+mkdir -p out/debian7/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
+docker run --rm -v $PWD/out/debian7/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/debian7/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM debian:wheezy/FROM debian:stretch/g" dockerfiles/debian/Dockerfile
+mkdir -p out/debian9/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
+docker run --rm -v $PWD/out/debian9/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/debian9/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+git checkout -- dockerfiles/ubuntu/Dockerfile
+#sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/ubuntu/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=trunk#g" dockerfiles/ubuntu/Dockerfile
+
+mkdir -p out/ubuntu14/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+docker run --rm -v $PWD/out/ubuntu14/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/ubuntu14/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM ubuntu:14.04/FROM ubuntu:16.04/g" dockerfiles/ubuntu/Dockerfile
+mkdir -p out/ubuntu16/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+docker run --rm -v $PWD/out/ubuntu16/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/ubuntu16/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM ubuntu:16.04/FROM ubuntu:17.04/g" dockerfiles/ubuntu/Dockerfile
+mkdir -p out/ubuntu17/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
+docker run --rm -v $PWD/out/ubuntu17/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/ubuntu17/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+git checkout -- dockerfiles/opensuse/Dockerfile
+#sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/opensuse/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=trunk#g" dockerfiles/opensuse/Dockerfile
+
+mkdir -p out/opensuse42/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
+docker run --rm -v $PWD/out/opensuse42/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/opensuse42/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM opensuse:42.1/FROM opensuse:13.2/g" dockerfiles/opensuse/Dockerfile
+mkdir -p out/opensuse13/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
+docker run --rm -v $PWD/out/opensuse13/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/opensuse13/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+git checkout -- dockerfiles/fedora/Dockerfile
+#sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/fedora/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=trunk#g" dockerfiles/fedora/Dockerfile
+
+mkdir -p out/fedora25/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
+docker run --rm -v $PWD/out/fedora25/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/fedora25/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+sed -i "s/FROM fedora:25/FROM fedora:24/g" dockerfiles/fedora/Dockerfile
+mkdir -p out/fedora24/3.4/
+docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
+docker run --rm -v $PWD/out/fedora24/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+docker rmi -f local/zabbix-docker-module-compilation
+cd out/fedora24/3.4/
+md5sum zabbix_module_docker.so > md5sum.txt
+sha1sum zabbix_module_docker.so > sha1sum.txt
+sha256sum zabbix_module_docker.so > sha256sum.txt
+cd ../../..
+
+
+#sed -i "s/FROM fedora:24/FROM fedora:26/g" dockerfiles/fedora/Dockerfile
+#mkdir -p out/fedora26/3.4/
+#docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
+#docker run --rm -v $PWD/out/fedora26/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
+#docker rmi -f local/zabbix-docker-module-compilation
+#cd out/fedora26/3.4/
 #md5sum zabbix_module_docker.so > md5sum.txt
 #sha1sum zabbix_module_docker.so > sha1sum.txt
 #sha256sum zabbix_module_docker.so > sha256sum.txt
