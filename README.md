@@ -25,7 +25,7 @@ Please feel free to test and provide feedback/open issue.
 Module is focused on the performance, see section
 [Module vs. UserParameter script](#module-vs-userparameter-script).
 
-Module is available also as a part different GitHub project - Docker image
+Module is available also as a part of different GitHub project - Docker image
 [dockbix-agent-xxl-limited](https://hub.docker.com/r/monitoringartist/dockbix-agent-xxl-limited/)
 (OS Linux host metrics and other selected metrics are supported as well). Quick start:
 
@@ -74,7 +74,7 @@ docker run --rm \
   monitoringartist/zabbix-templates
 ```
 
-Download latest build of `zabbix_module_docker.so` for Zabbix 3.2/3.0 agents:
+Download latest build of `zabbix_module_docker.so` for Zabbix 3.4/3.2/3.0 agents:
 
 | OS           | Module for Zabbix 3.4 | Module for Zabbix 3.2 | Module for Zabbix 3.0 |
 | ------------ | :-------------------: | :-------------------: | :-------------------: |
