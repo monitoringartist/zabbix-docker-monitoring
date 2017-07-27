@@ -112,7 +112,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 mkdir -p out/opensuse42/3.2/
-docker pull opensuse:42.1 > /dev/null
+docker pull opensuse:42.2 > /dev/null
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
 docker run --rm -v $PWD/out/opensuse42/3.2/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
 docker rmi -f local/zabbix-docker-module-compilation

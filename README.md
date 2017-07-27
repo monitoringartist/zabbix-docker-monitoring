@@ -216,10 +216,10 @@ You have to compile module, if provided binary doesn't work on your system.
 Basic compilation steps (please use right Zabbix branch version):
 
 ```bash
-# Required CentOS/RHEL packages:   yum install -y wget autoconf automake gcc svn
-# Required Debian/Ubuntu packages: apt-get install -y wget autoconf automake gcc subversion make pkg-config
-# Required Fedora packages:        dnf install -y wget autoconf automake gcc subversion make
-# Required openSUSE packages:      zypper install -y wget autoconf automake gcc subversion make pkg-config
+# Required CentOS/RHEL packages:   yum install -y wget autoconf automake gcc svn pcre-devel
+# Required Debian/Ubuntu packages: apt-get install -y wget autoconf automake gcc subversion make pkg-config libpcre3-dev
+# Required Fedora packages:        dnf install -y wget autoconf automake gcc subversion make pcre-devel
+# Required openSUSE packages:      zypper install -y wget autoconf automake gcc subversion make pkg-config pcre-devel
 cd ~
 svn export svn://svn.zabbix.com/branches/3.2 zabbix
 cd zabbix

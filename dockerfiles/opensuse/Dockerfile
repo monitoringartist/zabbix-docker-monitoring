@@ -1,7 +1,7 @@
 # https://github.com/monitoringartist/zabbix-docker-monitoring
 
 # Define required Debian version by using FROM tag. Avalaible: wheezy/jessie/...
-FROM opensuse:42.1
+FROM opensuse:42.2
 
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
@@ -11,7 +11,7 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   zypper install --no-confirm --no-recommends git subversion automake autoconf gcc make pkg-config && \
+   zypper install --no-confirm --no-recommends git subversion automake autoconf gcc make pkg-config pcre-devel && \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
