@@ -515,18 +515,19 @@ fi
 
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
+git add amazonlinux
 git add centos7
 git add centos6
+git add debian9
 git add debian8
 git add debian7
-git add ubuntu14
+git add ubuntu17
 git add ubuntu16
+git add ubuntu14
 #git add fedora26
 git add fedora25
 git add fedora24
 git add opensuse42
-git add opensuse13
-git add amazonlinux
 git commit -m "CI build deployment to GitHub Pages: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
