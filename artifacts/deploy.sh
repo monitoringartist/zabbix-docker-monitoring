@@ -316,8 +316,8 @@ cd ../../..
 #cd ../../..
 
 ########## 3.4 section #####################
-#sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/amazonlinux/Dockerfile
-sed -i "s#ENV ZABBIX_VERSION=branches/3.0#ENV ZABBIX_VERSION=trunk#g" dockerfiles/amazonlinux/Dockerfile
+#sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/amazonlinux/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=trunk#g" dockerfiles/amazonlinux/Dockerfile
 mkdir -p out/amazonlinux/3.4/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/amazonlinux/Dockerfile .
 docker run --rm -v $PWD/out/amazonlinux/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
