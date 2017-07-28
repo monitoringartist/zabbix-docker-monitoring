@@ -11,12 +11,12 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   yum -y -q install git subversion automake autoconf gcc make pcre-devel > /dev/null && \
+   yum -y -q install git subversion automake autoconf gcc make pcre-devel 1>/dev/null && \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
    ./bootstrap.sh 1>/dev/null && \
-   ./configure --enable-agent && \
+   ./configure --enable-agent 1>/dev/null && \
    cp -R ~/zabbix-docker-monitoring/src/modules/zabbix_module_docker/ ~/zabbix/src/modules/ && \
    cd ~/zabbix/src/modules/zabbix_module_docker && \
    make

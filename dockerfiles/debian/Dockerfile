@@ -11,8 +11,8 @@ ENV ZABBIX_VERSION=branches/3.2
 WORKDIR /root
 
 RUN \
-   apt-get -qq update  > /dev/null && \
-   apt-get -qq --assume-yes install git subversion automake autoconf gcc make pkg-config libpcre3-dev > /dev/null && \
+   apt-get -qq update  1>/dev/null && \
+   apt-get -qq --assume-yes install git subversion automake autoconf gcc make pkg-config libpcre3-dev 1>/dev/null && \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
