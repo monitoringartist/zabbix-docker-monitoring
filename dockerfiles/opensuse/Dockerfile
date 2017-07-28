@@ -12,7 +12,9 @@ WORKDIR /root
 
 RUN \
    zypper install --no-confirm --no-recommends git subversion automake autoconf gcc make pkg-config pcre-devel 1>/dev/null && \
-   git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring && \
+   git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring
+
+RUN \
    svn --quiet export svn://svn.zabbix.com/${ZABBIX_VERSION} ~/zabbix/ && \
    cd ~/zabbix/ && \
    ./bootstrap.sh 1>/dev/null && \
