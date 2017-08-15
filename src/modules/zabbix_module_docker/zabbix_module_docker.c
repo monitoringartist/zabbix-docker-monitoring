@@ -23,6 +23,7 @@
 #include "module.h"
 #include "sysinc.h"
 #include "zbxjson.h"
+#include "zbxregexp.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -588,7 +589,7 @@ int     zbx_docker_dir_detect()
             ""
         }, **tdriver;
         char path[512];
-        char *temp1, *temp2;
+        const char *mounts_regex = "^[^[:blank:]]+[[:blank:]]+(/[^[:blank:]]+/)[^[:blank:]]+[[:blank:]]+cgroup[[:blank:]]+.*$";
         FILE *fp;
         DIR  *dir;
 
@@ -602,12 +603,11 @@ int     zbx_docker_dir_detect()
         {
             if ((strstr(path, "cpuset cgroup")) != NULL)
             {
-                temp1 = string_replace(path, "cgroup ", "");
-                temp2 = string_replace(temp1, strstr(temp1, " "), "");
-                free(temp1);
-                if (stat_dir != NULL) free(stat_dir);
-                stat_dir = string_replace(temp2, "cpuset", "");
-                free(temp2);
+                if (SUCCEED != zbx_regexp_sub(path, mounts_regex, "\\1", &stat_dir) || NULL == stat_dir)
+                {
+                    zabbix_log(LOG_LEVEL_WARNING, "Cannot detect docker stat directory in /proc/mounts");
+                    return SYSINFO_RET_FAIL;
+                }
                 zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
 
                 pclose(fp);
