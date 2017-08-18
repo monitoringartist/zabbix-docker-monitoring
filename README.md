@@ -220,13 +220,13 @@ You have to compile module, if provided binary doesn't work on your system.
 Basic compilation steps (please use right Zabbix branch version):
 
 ```bash
-# Required CentOS/RHEL packages:   yum install -y wget autoconf automake gcc svn pcre-devel
-# Required Debian/Ubuntu packages: apt-get install -y wget autoconf automake gcc subversion make pkg-config libpcre3-dev
-# Required Fedora packages:        dnf install -y wget autoconf automake gcc subversion make pcre-devel
-# Required openSUSE packages:      zypper install -y wget autoconf automake gcc subversion make pkg-config pcre-devel
-# Required Gentoo packages 1:      emerge net-misc/wget sys-devel/autoconf sys-devel/automake sys-devel/gcc
-# Required Gentoo packages 2:      emerge dev-vcs/subversion sys-devel/make dev-util/pkgconfig dev-libs/libpcre
-# Zabbix source, use your version: svn export svn://svn.zabbix.com/tags/3.2.7 /usr/src/zabbix
+# Required CentOS/RHEL apps:   yum install -y wget autoconf automake gcc svn pcre-devel
+# Required Debian/Ubuntu apps: apt-get install -y wget autoconf automake gcc subversion make pkg-config libpcre3-dev
+# Required Fedora apps:        dnf install -y wget autoconf automake gcc subversion make pcre-devel
+# Required openSUSE apps:      zypper install -y wget autoconf automake gcc subversion make pkg-config pcre-devel
+# Required Gentoo apps 1:      emerge net-misc/wget sys-devel/autoconf sys-devel/automake sys-devel/gcc
+# Required Gentoo apps 2:      emerge dev-vcs/subversion sys-devel/make dev-util/pkgconfig dev-libs/libpcre
+# Source, use your version:    svn export svn://svn.zabbix.com/tags/3.2.7 /usr/src/zabbix
 cd /usr/src/zabbix
 ./bootstrap.sh
 ./configure --enable-agent
