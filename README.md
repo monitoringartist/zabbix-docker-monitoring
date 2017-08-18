@@ -225,7 +225,7 @@ Basic compilation steps (please use right Zabbix branch version):
 # Required Fedora packages:        dnf install -y wget autoconf automake gcc subversion make pcre-devel
 # Required openSUSE packages:      zypper install -y wget autoconf automake gcc subversion make pkg-config pcre-devel
 # Required Gentoo packages 1:      emerge net-misc/wget sys-devel/autoconf sys-devel/automake sys-devel/gcc
-# Required Gentoo packages 1:      emerge dev-vcs/subversion sys-devel/make dev-util/pkgconfig dev-libs/libpcre
+# Required Gentoo packages 2:      emerge dev-vcs/subversion sys-devel/make dev-util/pkgconfig dev-libs/libpcre
 # Zabbix source, use your version: svn export svn://svn.zabbix.com/tags/3.2.7 /usr/src/zabbix
 cd /usr/src/zabbix
 ./bootstrap.sh
