@@ -5,6 +5,8 @@
 If you like or use this project, please provide feedback to author - Star it ★
 and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYIokAyIMs2Qv19fzPxMWBubS9ESOYjJ2w_P222k5SuQuvoA/viewform).
 
+----
+
 **Overview of Monitoring Artist (dockerized) monitoring ecosystem:**
 
 - **[Zabbix XXL](https://hub.docker.com/r/monitoringartist/zabbix-xxl/)** - standard Zabbix server/proxy/UI/snmpd/java gateway with additional XXL extensions
@@ -16,6 +18,8 @@ and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYI
 - **[Grafana dashboards](https://grafana.net/monitoringartist)** - Grafana dashboard collection for [AWS](https://github.com/monitoringartist/grafana-aws-cloudwatch-dashboards) and [Zabbix](https://github.com/monitoringartist/grafana-zabbix-dashboards)
 - **[Monitoring Analytics](https://hub.docker.com/r/monitoringartist/monitoring-analytics/)** - R statistical computing and graphics for monitoring from data scientists
 - **[Docker killer](https://hub.docker.com/r/monitoringartist/docker-killer/)** - Docker image for Docker stress and Docker orchestration testing
+
+----
 
 Monitoring of Docker container by using Zabbix. Available CPU, mem,
 blkio, net container metrics and some containers config details e.g. IP, name, ...
@@ -220,9 +224,10 @@ Basic compilation steps (please use right Zabbix branch version):
 # Required Debian/Ubuntu packages: apt-get install -y wget autoconf automake gcc subversion make pkg-config libpcre3-dev
 # Required Fedora packages:        dnf install -y wget autoconf automake gcc subversion make pcre-devel
 # Required openSUSE packages:      zypper install -y wget autoconf automake gcc subversion make pkg-config pcre-devel
-cd ~
-svn export svn://svn.zabbix.com/branches/3.2 zabbix
-cd zabbix
+# Required Gentoo packages 1:      emerge net-misc/wget sys-devel/autoconf sys-devel/automake sys-devel/gcc
+# Required Gentoo packages 1:      emerge dev-vcs/subversion sys-devel/make dev-util/pkgconfig dev-libs/libpcre
+# Zabbix source, use your version: svn export svn://svn.zabbix.com/tags/3.2.7 /usr/src/zabbix
+cd /usr/src/zabbix
 ./bootstrap.sh
 ./configure --enable-agent
 mkdir src/modules/zabbix_module_docker
