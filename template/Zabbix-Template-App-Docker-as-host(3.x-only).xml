@@ -625,7 +625,7 @@
                     <calc_fnc>9</calc_fnc>
                     <type>0</type>
                     <item>
-                        <host>Template App Docker as host - www.monitoringartist.com</host>
+                        <host>UNTESTED Template App Docker as host - www.monitoringartist.com</host>
                         <key>docker.cstatus[Crashed]</key>
                     </item>
                 </graph_item>
@@ -637,7 +637,7 @@
                     <calc_fnc>9</calc_fnc>
                     <type>0</type>
                     <item>
-                        <host>Template App Docker as host - www.monitoringartist.com</host>
+                        <host>UNTESTED Template App Docker as host - www.monitoringartist.com</host>
                         <key>docker.cstatus[Exited]</key>
                     </item>
                 </graph_item>
@@ -649,7 +649,7 @@
                     <calc_fnc>9</calc_fnc>
                     <type>0</type>
                     <item>
-                        <host>Template App Docker as host - www.monitoringartist.com</host>
+                        <host>UNTESTED Template App Docker as host - www.monitoringartist.com</host>
                         <key>docker.cstatus[Paused]</key>
                     </item>
                 </graph_item>
@@ -661,7 +661,7 @@
                     <calc_fnc>9</calc_fnc>
                     <type>0</type>
                     <item>
-                        <host>Template App Docker as host - www.monitoringartist.com</host>
+                        <host>UNTESTED Template App Docker as host - www.monitoringartist.com</host>
                         <key>docker.cstatus[Up]</key>
                     </item>
                 </graph_item>
