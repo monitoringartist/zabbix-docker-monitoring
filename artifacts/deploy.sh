@@ -317,8 +317,7 @@ cd ../../..
 #cd ../../..
 
 ########## 3.4 section #####################
-#sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/amazonlinux/Dockerfile
-sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=trunk#g" dockerfiles/amazonlinux/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/amazonlinux/Dockerfile
 mkdir -p out/amazonlinux/3.4/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/amazonlinux/Dockerfile .
 docker run --rm -v $PWD/out/amazonlinux/3.4/:/tmp local/zabbix-docker-module-compilation cp /root/zabbix/src/modules/zabbix_module_docker/zabbix_module_docker.so /tmp/zabbix_module_docker.so
@@ -330,8 +329,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 git checkout -- dockerfiles/centos/Dockerfile
-#sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/centos/Dockerfile
-sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=trunk#g" dockerfiles/centos/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/centos/Dockerfile
 
 mkdir -p out/centos7/3.4/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/centos/Dockerfile .
@@ -355,8 +353,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 git checkout -- dockerfiles/debian/Dockerfile
-#sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/debian/Dockerfile
-sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=trunk#g" dockerfiles/debian/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/debian/Dockerfile
 
 mkdir -p out/debian8/3.4/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/debian/Dockerfile .
@@ -391,8 +388,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 git checkout -- dockerfiles/ubuntu/Dockerfile
-#sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/ubuntu/Dockerfile
-sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=trunk#g" dockerfiles/ubuntu/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/ubuntu/Dockerfile
 
 mkdir -p out/ubuntu14/3.4/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/ubuntu/Dockerfile .
@@ -427,8 +423,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 git checkout -- dockerfiles/opensuse/Dockerfile
-#sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/opensuse/Dockerfile
-sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=trunk#g" dockerfiles/opensuse/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/opensuse/Dockerfile
 
 mkdir -p out/opensuse42/3.4/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/opensuse/Dockerfile .
@@ -441,8 +436,7 @@ sha256sum zabbix_module_docker.so > sha256sum.txt
 cd ../../..
 
 git checkout -- dockerfiles/fedora/Dockerfile
-#sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/fedora/Dockerfile
-sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=trunk#g" dockerfiles/fedora/Dockerfile
+sed -i "s#ENV ZABBIX_VERSION=branches/3.2#ENV ZABBIX_VERSION=branches/3.4#g" dockerfiles/fedora/Dockerfile
 
 mkdir -p out/fedora25/3.4/
 docker build --rm=true -t local/zabbix-docker-module-compilation -f dockerfiles/fedora/Dockerfile .
