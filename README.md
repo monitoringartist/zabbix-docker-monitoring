@@ -22,9 +22,9 @@ and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYI
 ----
 
 Monitoring of Docker container by using Zabbix. Available CPU, mem,
-blkio, net container metrics and some containers config details e.g. IP, name, ...
+blkio, net container metrics and some containers config details, e.g. IP, name, ...
 Zabbix Docker module has native support for Docker containers (Systemd included)
-and should support also a few other container type (e.g. LXC) out of the box.
+and should also support a few other container types (e.g. LXC) out of the box.
 Please feel free to test and provide feedback/open issue.
 Module is focused on the performance, see section
 [Module vs. UserParameter script](#module-vs-userparameter-script).
@@ -48,9 +48,9 @@ docker run \
   -d monitoringartist/dockbix-agent-xxl-limited:latest
 ```
 
-Visit [Dockbix agent XXL with Docker monitoring](https://github.com/monitoringartist/dockbix-agent-xxl) for more informations.
+Visit [Dockbix agent XXL with Docker monitoring](https://github.com/monitoringartist/dockbix-agent-xxl) for more information.
 
-Please donate to author, so he can continue to publish other awesome projects
+Please donate to the author, so he can continue to publish other awesome projects
 for free:
 
 [![Paypal donate button](http://jangaraj.com/img/github-donate-button02.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8LB6J222WRUZ4)
@@ -97,13 +97,13 @@ Download latest build of `zabbix_module_docker.so` for Zabbix 3.4/3.2/3.0 agents
 | Ubuntu 16    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu16/3.4/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu16/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu16/3.0/zabbix_module_docker.so) |
 | Ubuntu 14    | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.4/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.2/zabbix_module_docker.so) | [Download](https://github.com/monitoringartist/zabbix-docker-monitoring/raw/gh-pages/ubuntu14/3.0/zabbix_module_docker.so) |
 
-If provided build doesn't work on your system, please see section [Compilation](#compilation).
+If the provided build doesn't work on your system, please see section [Compilation](#compilation).
 Or you can check [folder dockerfiles](https://github.com/monitoringartist/zabbix-docker-monitoring/tree/master/dockerfiles),
-where Dockerfiles for different OS/Zabbix versions can be customized.
+where Dockerfiles for different OS/Zabbix versions can be customised.
 
 # Grafana dashboard
 
-Custom Grafana dashboard for Docker monitoring with used Zabbix Docker (Mesos, Marathon/Chronos) templates is available in [Grafana Zabbix dashboards repo](https://github.com/monitoringartist/grafana-zabbix-dashboards).
+Custom Grafana dashboard for Docker monitoring with used Zabbix Docker (Mesos, Marathon/Chronos) templates are available in [Grafana Zabbix dashboards repo](https://github.com/monitoringartist/grafana-zabbix-dashboards).
 
 ![Grafana dashboard Overview Docker](https://raw.githubusercontent.com/monitoringartist/grafana-zabbix-dashboards/master/overview-docker/overview-docker.png) 
 
@@ -204,7 +204,7 @@ use *AllowRoot=1* option.
 
 SELinux
 -------
-If you are on a system that have `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots. Save it, the run:
+If you are on a system that has `SELinux` in enforcing-mode (check with `getenforce`), you can make it work with this SELinux module. This module will persist reboots. Save it, then run:
 
 ```bash
 wget https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring/master/selinux/zabbix-docker.te
@@ -216,7 +216,7 @@ semodule -i zabbix-docker.pp
 Compilation
 ===========
 
-You have to compile module, if provided binary doesn't work on your system.
+You have to compile the module, if provided binary doesn't work on your system.
 Basic compilation steps (please use right Zabbix branch version):
 
 ```bash
@@ -237,9 +237,9 @@ wget https://raw.githubusercontent.com/monitoringartist/zabbix-docker-monitoring
 make
 ```
 
-Output will be binary file (dynamically linked shared object library) `zabbix_module_docker.so`, which can be loaded by Zabbix agent.
+The output will be the binary file (dynamically linked shared object library) `zabbix_module_docker.so`, which can be loaded by Zabbix agent.
 
-You can use also Docker for compilation. Example of Dockerfiles, which have been prepared for module compilation - https://github.com/monitoringartist/zabbix-docker-monitoring/tree/master/dockerfiles
+You can also use Docker for compilation. Example of Dockerfiles, which have been prepared for module compilation - https://github.com/monitoringartist/zabbix-docker-monitoring/tree/master/dockerfiles
 
 Troubleshooting
 ===============
@@ -248,7 +248,7 @@ Edit your zabbix_agentd.conf and set DebugLevel:
 
     DebugLevel=4
 
-Module debug messages will be available in standard zabbix_agentd.log.
+Module debugs messages will be available in standard zabbix_agentd.log.
 
 Issues and feature requests
 ===========================
@@ -258,7 +258,7 @@ Please use Github issue tracker.
 Module vs. UserParameter script
 ===============================
 
-Module is ~10x quicker, because it's compiled binary code.
+The module is ~10x quicker because it's compiled the binary code.
 I've used my project [Zabbix agent stress test](https://github.com/monitoringartist/zabbix-agent-stress-test)
 for performance tests.
 
@@ -468,7 +468,7 @@ Recommended docs
 [Devops Monitoring Expert](http://www.jangaraj.com 'DevOps / Docker / Kubernetes / AWS ECS / Google GCP / Zabbix / Zenoss / Terraform / Monitoring'),
 who loves monitoring systems and cutting/bleeding edge technologies: Docker,
 Kubernetes, ECS, AWS, Google GCP, Terraform, Lambda, Zabbix, Grafana, Elasticsearch,
-Kibana, Prometheus, Sysdig, ...
+Kibana, Prometheus, Sysdig,...
 
 Summary:
 * 2000+ [GitHub](https://github.com/monitoringartist/) stars
@@ -478,4 +478,3 @@ Summary:
 Professional devops / monitoring / consulting services:
 
 [![Monitoring Artist](http://monitoringartist.com/img/github-monitoring-artist-logo.jpg)](http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Google GCP / Zabbix / Zenoss / Terraform / Monitoring')
-
