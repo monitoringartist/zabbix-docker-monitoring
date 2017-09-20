@@ -1,3 +1,6 @@
+# Changes 0.6.8
+- fixed docker.discovery for newer kernels 4.X ([#80](https://github.com/monitoringartist/zabbix-docker-monitoring/pull/80))
+
 # Changes 0.6.7
 - fixed incorrect docker.cstatus/vstatus/istatus metric ([#74](https://github.com/monitoringartist/zabbix-docker-monitoring/issues/74))
 - removed support for systemd - code has been moved to https://github.com/cavaliercoder/zabbix-module-systemd

@@ -454,14 +454,17 @@ echo -e "GET /containers/json?all=0 HTTP/1.0\r\n" | nc -U /var/run/docker.sock
 curl --unix-socket /var/run/docker.sock --no-buffer -XGET v1.24/containers/json?all=0
 ```
 
-Recommended docs
-================
+# Recommended docs
 
 - https://docs.docker.com/engine/admin/runmetrics/
 - https://www.kernel.org/doc/Documentation/cgroup-v1/blkio-controller.txt
 - https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
 - https://www.kernel.org/doc/Documentation/cgroup-v1/cpuacct.txt
 - https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/index.html
+
+# Contributors
+
+Thank you to all [project contributors](https://github.com/monitoringartist/zabbix-docker-monitoring/graphs/contributors).
 
 # Author
 
