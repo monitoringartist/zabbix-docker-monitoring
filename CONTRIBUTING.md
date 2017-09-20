@@ -1,6 +1,5 @@
 # Contribution Guidelines
 
-**Development*
 - Fork the repository.
 - Create a feature branch (`git checkout -b my-new-feature master`).
 - Commit your changes, preferring one commit per logical unit of work. Often times, this simply means having a single commit.
