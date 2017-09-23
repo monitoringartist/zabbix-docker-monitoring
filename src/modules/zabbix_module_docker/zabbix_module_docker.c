@@ -605,8 +605,7 @@ int     zbx_docker_dir_detect()
             {
                 if (SUCCEED != zbx_regexp_sub(path, mounts_regex, "\\1", &stat_dir) || NULL == stat_dir)
                 {
-                    zabbix_log(LOG_LEVEL_WARNING, "Cannot detect docker stat directory in /proc/mounts");
-                    return SYSINFO_RET_FAIL;
+                    continue;
                 }
                 zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
 
