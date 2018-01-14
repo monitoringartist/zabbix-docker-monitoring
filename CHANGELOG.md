@@ -1,3 +1,6 @@
+# Changes 0.6.9
+- new item key docker.port.discovery
+
 # Changes 0.6.8
 - fixed docker.discovery for newer kernels 4.X ([#80](https://github.com/monitoringartist/zabbix-docker-monitoring/pull/80))
 
