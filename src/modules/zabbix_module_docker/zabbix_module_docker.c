@@ -667,6 +667,39 @@ char*  zbx_module_docker_get_fci(char *fci)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_module_docker_get_cgroup_parent                              *
+ *                                                                            *
+ * Purpose: get container CgroupParent                                        *
+ *                                                                            *
+ * Return value: empty string - function failed                           *
+ *               string - CgroupParent value                                  *
+ ******************************************************************************/
+char*  zbx_module_docker_get_cgroup_parent(char *fci)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_get_cgroup_parent()");
+
+        // Docker API query - docker.inspect[fci,HostConfig,CgroupParent]
+        zabbix_log(LOG_LEVEL_DEBUG, "Translating container name to fci by using docker.inspect");
+        AGENT_REQUEST   request;
+        init_request(&request);
+        add_request_param(&request, zbx_strdup(NULL, fci));
+        add_request_param(&request, zbx_strdup(NULL, "HostConfig"));
+        add_request_param(&request, zbx_strdup(NULL, "CgroupParent"));
+        // TODO dynamic iresult
+        struct inspect_result iresult;
+        iresult = zbx_module_docker_inspect_exec(&request);
+        free_request(&request);
+        if (iresult.return_code == SYSINFO_RET_OK) {
+            zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
+            return iresult.value;
+        } else {
+            zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec FAIL");
+            return "";
+        }
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_docker_dir_detect                                            *
  *                                                                            *
  * Purpose: it should find metric folder - it depends on docker version       *
