@@ -334,8 +334,8 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
 
         if (socket_api == 0 && zbx_docker_api_detect() == 0)
         {
-            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not available");
-            iresult.value = zbx_strdup(NULL, "Docker's socket API is not available");
+            zabbix_log(LOG_LEVEL_DEBUG, "Docker's socket API is not avaliable");
+            iresult.value = zbx_strdup(NULL, "Docker's socket API is not avaliable");
             iresult.return_code = SYSINFO_RET_FAIL;
             return iresult;
         }
