@@ -475,8 +475,8 @@ Kubernetes, ECS, AWS, Google GCP, Terraform, Lambda, Zabbix, Grafana, Elasticsea
 Kibana, Prometheus, Sysdig,...
 
 Summary:
-* 2000+ [GitHub](https://github.com/monitoringartist/) stars
-* 15 000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
+* 3000+ [GitHub](https://github.com/monitoringartist/) stars
+* 20 000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
 * 1 000 000+ [Docker image](https://hub.docker.com/u/monitoringartist/) pulls
 
 Professional devops / monitoring / consulting services:
