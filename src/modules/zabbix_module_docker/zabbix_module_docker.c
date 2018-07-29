@@ -65,6 +65,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_modver(AGENT_REQUEST *request, AGENT_RESULT *result);
+int     kube_flg=0;
 
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG            FUNCTION                TEST PARAMETERS */
@@ -667,6 +668,39 @@ char*  zbx_module_docker_get_fci(char *fci)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_module_docker_get_cgroup_parent                              *
+ *                                                                            *
+ * Purpose: get container CgroupParent                                        *
+ *                                                                            *
+ * Return value: empty string - function failed                           *
+ *               string - CgroupParent value                                  *
+ ******************************************************************************/
+char*  zbx_module_docker_get_cgroup_parent(char *fci)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_get_cgroup_parent()");
+
+        // Docker API query - docker.inspect[fci,HostConfig,CgroupParent]
+        zabbix_log(LOG_LEVEL_DEBUG, "Translating container name to fci by using docker.inspect");
+        AGENT_REQUEST   request;
+        init_request(&request);
+        add_request_param(&request, zbx_strdup(NULL, fci));
+        add_request_param(&request, zbx_strdup(NULL, "HostConfig"));
+        add_request_param(&request, zbx_strdup(NULL, "CgroupParent"));
+        // TODO dynamic iresult
+        struct inspect_result iresult;
+        iresult = zbx_module_docker_inspect_exec(&request);
+        free_request(&request);
+        if (iresult.return_code == SYSINFO_RET_OK) {
+            zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
+            return iresult.value;
+        } else {
+            zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec FAIL");
+            return "";
+        }
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_docker_dir_detect                                            *
  *                                                                            *
  * Purpose: it should find metric folder - it depends on docker version       *
@@ -686,6 +720,7 @@ int     zbx_docker_dir_detect()
             "system.slice/",  // Systemd Docker
             "lxc/",           // Non-systemd LXC: docker -d -e lxc
             "libvirt/lxc/",   // Legacy libvirt-lxc
+            "kubepods.slice/",    // Kubernetes
             // TODO pos = cgroup.find("-lxc\\x2");     // Systemd libvirt-lxc
             // TODO pos = cgroup.find(".libvirt-lxc"); // Non-systemd libvirt-lxc
             ""
@@ -731,12 +766,16 @@ int     zbx_docker_dir_detect()
                         driver = *tdriver;
                         zabbix_log(LOG_LEVEL_DEBUG, "Detected used docker driver dir: %s", driver);
                         // systemd docker
-                        if (strcmp(driver, "system.slice/") == 0)
+                        if (strcmp(driver, "system.slice/") == 0 || strcmp(driver, "kubepods.slice/") == 0)
                         {
                             zabbix_log(LOG_LEVEL_DEBUG, "Detected systemd docker - prefix/suffix will be used");
                             c_prefix = "docker-";
                             c_suffix = ".scope";
                         }
+
+                        if (strcmp(driver, "kubepods.slice/") == 0)
+                           kube_flg=1;
+
                         // detect cpu_cgroup - JoinController cpu,cpuacct
                         cgroup = "cpu,cpuacct/";
                         ddir_size = strlen(cgroup) + strlen(stat_dir) + 1;
@@ -804,11 +843,25 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
                     return SYSINFO_RET_FAIL;
                 }
         }
-
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
+
+        char *cgroupparent;
+        int cgroupparent_len = 0;
+        char kube_dir[30];
+        int kube_dir_len=0;
+        if(kube_flg==1)
+        {
+            cgroupparent = zbx_module_docker_get_cgroup_parent(get_rparam(request, 0));
+            cgroupparent_len = strlen(cgroupparent);
+            if(strstr(cgroupparent,"kubepods-besteffort")!=NULL)
+                 zbx_strlcpy(kube_dir,"kubepods-besteffort.slice/",sizeof(kube_dir));
+            else zbx_strlcpy(kube_dir,"kubepods-burstable.slice/",sizeof(kube_dir));
+            kube_dir_len=strlen(kube_dir);
+        }
+
         char    *stat_file = "/cpuacct.stat";
         char    *cgroup = cpu_cgroup;
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + cgroupparent_len + kube_dir_len + 3;
         if (strstr(container, ".") == NULL) {
             if (c_prefix != NULL)
             {
@@ -823,6 +876,14 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
+
+        if(kube_flg==1)
+        {
+            zbx_strlcat(filename, kube_dir, filename_size);
+            zbx_strlcat(filename, cgroupparent, filename_size);
+            zbx_strlcat(filename, "/", filename_size);
+        }
+
         if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
@@ -883,13 +944,29 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
+
+        char *cgroupparent;
+        int cgroupparent_len = 0;
+        char kube_dir[30];
+        int kube_dir_len=0;
+        if(kube_flg==1)
+        {
+            cgroupparent = zbx_module_docker_get_cgroup_parent(get_rparam(request, 0));
+            cgroupparent_len = strlen(cgroupparent);
+            if(strstr(cgroupparent,"kubepods-besteffort")!=NULL)
+                 zbx_strlcpy(kube_dir,"kubepods-besteffort.slice/",sizeof(kube_dir));
+            else zbx_strlcpy(kube_dir,"kubepods-burstable.slice/",sizeof(kube_dir));
+            kube_dir_len=strlen(kube_dir);
+        }
+
         char    *stat_file = malloc(strlen(get_rparam(request, 1)) + 2);
         zbx_strlcpy(stat_file, "/", strlen(get_rparam(request, 1)) + 2);
         zbx_strlcat(stat_file, get_rparam(request, 1), strlen(get_rparam(request, 1)) + 2);
         metric = get_rparam(request, 2);
 
         char    *cgroup = "blkio/";
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + cgroupparent_len + kube_dir_len + 3;
+
         if (strstr(container, ".") == NULL) {
             if (c_prefix != NULL)
             {
@@ -904,6 +981,14 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
+
+        if(kube_flg==1)
+        {
+            zbx_strlcat(filename, kube_dir, filename_size);
+            zbx_strlcat(filename, cgroupparent, filename_size);
+            zbx_strlcat(filename, "/", filename_size);
+        }
+
         if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
@@ -996,10 +1081,25 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
+
+        char *cgroupparent;
+        int cgroupparent_len = 0;
+        char kube_dir[30];
+        int kube_dir_len=0;
+        if(kube_flg==1)
+        {
+            cgroupparent = zbx_module_docker_get_cgroup_parent(get_rparam(request, 0));
+            cgroupparent_len = strlen(cgroupparent);
+            if(strstr(cgroupparent,"kubepods-besteffort")!=NULL)
+                 zbx_strlcpy(kube_dir,"kubepods-besteffort.slice/",sizeof(kube_dir));
+            else zbx_strlcpy(kube_dir,"kubepods-burstable.slice/",sizeof(kube_dir));
+            kube_dir_len=strlen(kube_dir);
+        }
+
         metric = get_rparam(request, 1);
         char    *stat_file = "/memory.stat";
         char    *cgroup = "memory/";
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + cgroupparent_len + kube_dir_len + 3;
 
         if (strstr(container, ".") == NULL) {
             if (c_prefix != NULL)
@@ -1016,6 +1116,14 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
+
+        if(kube_flg==1)
+        {
+            zbx_strlcat(filename, kube_dir, filename_size);
+            zbx_strlcat(filename, cgroupparent, filename_size);
+            zbx_strlcat(filename, "/", filename_size);
+        }
+
         if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
@@ -1113,6 +1221,20 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
+        char *cgroupparent;
+        int cgroupparent_len = 0;
+        char kube_dir[30];
+        int kube_dir_len=0;
+        if(kube_flg==1)
+        {
+            cgroupparent = zbx_module_docker_get_cgroup_parent(get_rparam(request, 0));
+            cgroupparent_len = strlen(cgroupparent);
+            if(strstr(cgroupparent,"kubepods-besteffort")!=NULL)
+                 zbx_strlcpy(kube_dir,"kubepods-besteffort.slice/",sizeof(kube_dir));
+            else zbx_strlcpy(kube_dir,"kubepods-burstable.slice/",sizeof(kube_dir));
+            kube_dir_len=strlen(kube_dir);
+        }
+
         metric = get_rparam(request, 1);
         char    *cgroup = NULL, *stat_file = NULL;
         if(strcmp(metric, "user") == 0 || strcmp(metric, "system") == 0 || strcmp(metric, "total") == 0) {
@@ -1126,7 +1248,8 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 cgroup = "cpu/";
             }
         }
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + cgroupparent_len + kube_dir_len + 3;
+
         if (strstr(container, ".") == NULL) {
             if (c_prefix != NULL)
             {
@@ -1141,6 +1264,14 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
         zbx_strlcpy(filename, stat_dir, filename_size);
         zbx_strlcat(filename, cgroup, filename_size);
         zbx_strlcat(filename, driver, filename_size);
+
+        if(kube_flg==1)
+        {
+            zbx_strlcat(filename, kube_dir, filename_size);
+            zbx_strlcat(filename, cgroupparent, filename_size);
+            zbx_strlcat(filename, "/", filename_size);
+        }
+
         if (strstr(container, ".") == NULL && c_prefix != NULL)
         {
             zbx_strlcat(filename, c_prefix, filename_size);
