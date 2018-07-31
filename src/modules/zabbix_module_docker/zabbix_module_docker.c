@@ -51,6 +51,7 @@ struct timeval stimeout;
 char    *m_version = "v0.6.9";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
+
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_port_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -372,7 +373,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
             return iresult;
         }
 
-	    struct zbx_json_parse jp_data2;
+        struct zbx_json_parse jp_data2;
         char api_value[buffer_size];
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
@@ -424,10 +425,10 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                     return iresult;
                                 } else {
                                     // find item in array - selector is param3
-    	                            const char	*p_array = NULL;
+                                    const char  *p_array = NULL;
                                     char *result_array, *value, *selector, *string, *tofree;
                                     while (NULL != (p_array = zbx_json_next(&jp_data_array, p_array)))
-   	                                {
+                                    {
                                        if ((result_array = strchr(p_array+1, '"')) != NULL)
                                        {
                                            s_size = strlen(p_array+1) - strlen(result_array) + 1;
@@ -648,7 +649,7 @@ char*  zbx_module_docker_get_fci(char *fci)
 
         // Docker API query - docker.inspect[fci,Id]
         zabbix_log(LOG_LEVEL_DEBUG, "Translating container name to fci by using docker.inspect");
-        AGENT_REQUEST	request;
+        AGENT_REQUEST   request;
         init_request(&request);
         add_request_param(&request, zbx_strdup(NULL, fci));
         add_request_param(&request, zbx_strdup(NULL, "Id"));
@@ -697,7 +698,85 @@ char*  zbx_module_docker_get_cgroup_parent(char *fci)
             return "";
         }
 }
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_module_update_driver                                            *
+ *                                                                            *
+ * Purpose: To update global parameter driver to support kubernetes metric storage path *
+ *                                                                            *
+ * Return value: SYSINFO_RET_FAIL - stat folder was not found                 *
+ *               SYSINFO_RET_OK - stat folder was found                       *
+ *                                                                            *
+ ******************************************************************************/
+int zbx_module_update_driver(char *fci)
+{
+        zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_update_driver()");
+             
+        char *kube_qos[] = {
+            "kubepods.slice/kubepods-besteffort.slice/",        // qos class level: besteffort 
+            "kubepods.slice/kubepods-burstable.slice/",         // qos class level: burstable
+            "kubepods.slice/kubepods-guaranteed.slice/",        // qos class level: guaranteed
+            "kubepods.slice/",
+            "system.slice/",
+            ""
+        }, **tkube_qos;
 
+        tkube_qos = kube_qos;
+        size_t  ddir_size;
+        char    *ddir;
+        char    *cgroup = cpu_cgroup;
+        char    *cgroupParent;
+        DIR     *dir;
+        
+        cgroupParent = zbx_module_docker_get_cgroup_parent(fci);
+        zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_update_driver: Debug 1"); 
+        while (*tkube_qos != "")
+        {
+            ddir_size = strlen(cgroup) + strlen(stat_dir) + strlen(*tkube_qos) + strlen(cgroupParent) + 1;
+            ddir = malloc(ddir_size);
+            zbx_strlcpy(ddir, stat_dir, ddir_size);
+            zbx_strlcat(ddir, cgroup, ddir_size);
+            zbx_strlcat(ddir, *tkube_qos, ddir_size);
+            zbx_strlcat(ddir, cgroupParent, ddir_size);
+            zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_update_driver: Debug 2. ddir : %s, ddir_size: %d", ddir, ddir_size);
+            if (NULL != (dir = opendir(ddir)))
+            {
+                zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_update_driver: Debug 3.0");
+                zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_update_driver: Debug 3.0. driver: %s", driver);
+                closedir(dir);
+                size_t new_driver_size;
+                char *new_driver;
+                //free(driver);
+                
+                zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_update_driver: Debug 3.1");
+                new_driver_size = strlen(*tkube_qos) + strlen(cgroupParent) + 2;
+                new_driver = malloc(new_driver_size);
+
+                zbx_strlcpy(new_driver, *tkube_qos, new_driver_size);
+                if ("" != cgroupParent)
+                {
+                        zbx_strlcat(new_driver, cgroupParent, new_driver_size);
+                        zbx_strlcat(new_driver, "/", new_driver_size);
+                }
+                driver = new_driver;
+                zabbix_log(LOG_LEVEL_DEBUG, "Detected used docker driver dir: %s", driver);
+                free(ddir);
+                if ("" != cgroupParent)
+                {
+                        free(cgroupParent);
+                }
+
+                return SYSINFO_RET_OK;
+            }
+            *tkube_qos++;
+            free(ddir);
+        }
+        zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_update_driver: Debug 4");
+        free(cgroupParent);
+        zabbix_log(LOG_LEVEL_DEBUG, "Cannot detect docker stat directory");
+        
+        return SYSINFO_RET_FAIL;    
+}
 /******************************************************************************
  *                                                                            *
  * Function: zbx_docker_dir_detect                                            *
@@ -738,10 +817,19 @@ int     zbx_docker_dir_detect()
         {
             if ((strstr(path, "cpuset cgroup")) != NULL)
             {
+
+                #ifdef ZBX_VERSION_PRE_3_0_17
+                stat_dir = zbx_regexp_sub(path, mounts_regex, "\\1");
+                if (NULL == stat_dir)
+                {
+                    continue;
+                }
+                #else
                 if (SUCCEED != zbx_regexp_sub(path, mounts_regex, "\\1", &stat_dir) || NULL == stat_dir)
                 {
                     continue;
                 }
+        #endif
                 zabbix_log(LOG_LEVEL_DEBUG, "Detected docker stat directory: %s", stat_dir);
 
                 pclose(fp);
@@ -800,6 +888,39 @@ int     zbx_docker_dir_detect()
         return SYSINFO_RET_FAIL;
 }
 
+
+char * zbx_module_generate_filepath(char * cgroup, char *container, char *stat_file)
+{
+        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
+        if (strstr(container, ".") == NULL) {
+            if (c_prefix != NULL)
+            {
+                filename_size += strlen(c_prefix);
+            }
+            if (c_suffix != NULL)
+            {
+                filename_size += strlen(c_suffix);
+            }
+        }
+        
+        char    *filename = malloc(filename_size);
+        zbx_strlcpy(filename, stat_dir, filename_size);
+        zbx_strlcat(filename, cgroup, filename_size);
+        zbx_strlcat(filename, driver, filename_size);
+        if (strstr(container, ".") == NULL && c_prefix != NULL)
+        {
+            zbx_strlcat(filename, c_prefix, filename_size);
+        }
+        zbx_strlcat(filename, container, filename_size);
+        if (strstr(container, ".") == NULL && c_suffix != NULL)
+        {
+            zbx_strlcat(filename, c_suffix, filename_size);
+        }
+        zbx_strlcat(filename, stat_file, filename_size);
+        zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
+
+        return filename;
+}
 /******************************************************************************
  *                                                                            *
  * Function: zbx_module_docker_up                                             *
@@ -841,43 +962,31 @@ int     zbx_module_docker_up(AGENT_REQUEST *request, AGENT_RESULT *result)
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
         char    *stat_file = "/cpuacct.stat";
         char    *cgroup = cpu_cgroup;
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (strstr(container, ".") == NULL) {
-            if (c_prefix != NULL)
-            {
-                filename_size += strlen(c_prefix);
-            }
-            if (c_suffix != NULL)
-            {
-                filename_size += strlen(c_suffix);
-            }
-        }
-        char    *filename = malloc(filename_size);
-        zbx_strlcpy(filename, stat_dir, filename_size);
-        zbx_strlcat(filename, cgroup, filename_size);
-        zbx_strlcat(filename, driver, filename_size);
-        if (strstr(container, ".") == NULL && c_prefix != NULL)
-        {
-            zbx_strlcat(filename, c_prefix, filename_size);
-        }
-        zbx_strlcat(filename, container, filename_size);
-        if (strstr(container, ".") == NULL && c_suffix != NULL)
-        {
-            zbx_strlcat(filename, c_suffix, filename_size);
-        }
-        free(container);
-        zbx_strlcat(filename, stat_file, filename_size);
-        zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
+        
+        char    *filename = zbx_module_generate_filepath(cgroup, container, stat_file);
+        
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
                 zabbix_log(LOG_LEVEL_DEBUG, "Cannot open metric file: '%s', container doesn't run", filename);
                 free(filename);
-                SET_UI64_RESULT(result, 0);
-                return SYSINFO_RET_OK;
+                
+                //SET_UI64_RESULT(result, 0);
+                //return SYSINFO_RET_OK;
+                zbx_module_update_driver(get_rparam(request, 0));
+                filename = zbx_module_generate_filepath(cgroup, container, stat_file);
+                if (NULL == (file = fopen(filename, "r")))
+                {
+                        zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
+                        free(filename);
+                        free(container);
+                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open %s file", ++stat_file));
+                        return SYSINFO_RET_FAIL;
+                }
         }
         zbx_fclose(file);
         zabbix_log(LOG_LEVEL_DEBUG, "Can open metric file: '%s', container is running", filename);
+        free(container);
         free(filename);
         SET_UI64_RESULT(result, 1);
         return SYSINFO_RET_OK;
@@ -922,41 +1031,29 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         metric = get_rparam(request, 2);
 
         char    *cgroup = "blkio/";
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (strstr(container, ".") == NULL) {
-            if (c_prefix != NULL)
-            {
-                filename_size += strlen(c_prefix);
-            }
-            if (c_suffix != NULL)
-            {
-                filename_size += strlen(c_suffix);
-            }
-        }
-        char    *filename = malloc(filename_size);
-        zbx_strlcpy(filename, stat_dir, filename_size);
-        zbx_strlcat(filename, cgroup, filename_size);
-        zbx_strlcat(filename, driver, filename_size);
-        if (strstr(container, ".") == NULL && c_prefix != NULL)
-        {
-            zbx_strlcat(filename, c_prefix, filename_size);
-        }
-        zbx_strlcat(filename, container, filename_size);
-        if (strstr(container, ".") == NULL && c_suffix != NULL)
-        {
-            zbx_strlcat(filename, c_suffix, filename_size);
-        }
-        zbx_strlcat(filename, stat_file, filename_size);
-        zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
+        char    *filename = zbx_module_generate_filepath(cgroup, container, stat_file);
         FILE    *file;
+        
         if (NULL == (file = fopen(filename, "r")))
         {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
-                free(container);
-                free(stat_file);
+                //free(container);
+                //free(stat_file);
                 free(filename);
                 SET_MSG_RESULT(result, strdup("Cannot open stat file, maybe CONFIG_DEBUG_BLK_CGROUP is not enabled"));
-                return SYSINFO_RET_FAIL;
+                //return SYSINFO_RET_FAIL;
+
+                zbx_module_update_driver(get_rparam(request, 0));
+                filename = zbx_module_generate_filepath(cgroup, container, stat_file);
+                if (NULL == (file = fopen(filename, "r")))
+                {
+                        zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
+                        free(filename);
+                        free(container);
+                        free(stat_file);
+                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open %s file", ++stat_file));
+                        return SYSINFO_RET_FAIL;
+                }
         }
 
         char    line[MAX_STRING_LEN];
@@ -1159,40 +1256,27 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 cgroup = "cpu/";
             }
         }
-        size_t  filename_size = strlen(cgroup) + strlen(container) + strlen(stat_dir) + strlen(driver) + strlen(stat_file) + 2;
-        if (strstr(container, ".") == NULL) {
-            if (c_prefix != NULL)
-            {
-                filename_size += strlen(c_prefix);
-            }
-            if (c_suffix != NULL)
-            {
-                filename_size += strlen(c_suffix);
-            }
-        }
-        char    *filename = malloc(filename_size);
-        zbx_strlcpy(filename, stat_dir, filename_size);
-        zbx_strlcat(filename, cgroup, filename_size);
-        zbx_strlcat(filename, driver, filename_size);
-        if (strstr(container, ".") == NULL && c_prefix != NULL)
-        {
-            zbx_strlcat(filename, c_prefix, filename_size);
-        }
-        zbx_strlcat(filename, container, filename_size);
-        if (strstr(container, ".") == NULL && c_suffix != NULL)
-        {
-            zbx_strlcat(filename, c_suffix, filename_size);
-        }
-        zbx_strlcat(filename, stat_file, filename_size);
-        zabbix_log(LOG_LEVEL_DEBUG, "Metric source file: %s", filename);
+
+        char    *filename = zbx_module_generate_filepath(cgroup, container, stat_file);
         FILE    *file;
         if (NULL == (file = fopen(filename, "r")))
         {
                 zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
                 free(filename);
-                free(container);
-                SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open %s file", ++stat_file));
-                return SYSINFO_RET_FAIL;
+                //free(container);
+                //SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open %s file", ++stat_file));
+                //return SYSINFO_RET_FAIL;
+
+                zbx_module_update_driver(get_rparam(request, 0));
+                filename = zbx_module_generate_filepath(cgroup, container, stat_file);
+                if (NULL == (file = fopen(filename, "r")))
+                {
+                        zabbix_log(LOG_LEVEL_ERR, "Cannot open metric file: '%s'", filename);
+                        free(filename);
+                        free(container);
+                        SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open %s file", ++stat_file));
+                        return SYSINFO_RET_FAIL;
+                }
         }
 
         char    line[MAX_STRING_LEN];
@@ -1216,10 +1300,11 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 result_value += value;
                 ret = SYSINFO_RET_OK;
         }
-
+        zabbix_log(LOG_LEVEL_DEBUG, "Debug: zbx_module_docker_cpu. filename: %s", filename);
         zbx_fclose(file);
         free(filename);
         free(metric2);
+        free(container);
 
         if (SYSINFO_RET_FAIL == ret) {
                 SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with requested metric in cpuacct.stat/cpu.stat file"));
@@ -1233,7 +1318,6 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                 zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, result_value);
                 SET_UI64_RESULT(result, result_value);
         }
-        free(container);
 
         return ret;
 }
@@ -1749,8 +1833,8 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             return SYSINFO_RET_OK;
         }
 
-	    struct zbx_json_parse	jp_data2, jp_row;
-	    const char		*p = NULL;
+        struct zbx_json_parse   jp_data2, jp_row;
+        const char      *p = NULL;
         char cid[cid_length], scontainerid[13];
         size_t  s_size;
 
@@ -1772,16 +1856,16 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         }
 
         // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
-    	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-    	/*         ^-------------------------------------------^  */
+        /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+        /*         ^-------------------------------------------^  */
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
-    	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-    	/*          ^                                             */
-    	while (NULL != (p = zbx_json_next(&jp_data, p)))
-    	{
-    		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-    		/*          ^------------------^                          */
-    		if (FAIL == zbx_json_brackets_open(p, &jp_row))
+        /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+        /*          ^                                             */
+        while (NULL != (p = zbx_json_next(&jp_data, p)))
+        {
+            /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+            /*          ^------------------^                          */
+            if (FAIL == zbx_json_brackets_open(p, &jp_row))
             {
                 zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
                 continue;
@@ -1837,7 +1921,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 
                 if (request->nparam > 1) {
                     // custom item for HCONTAINERID
-                    AGENT_REQUEST	request2;
+                    AGENT_REQUEST   request2;
                     init_request(&request2);
                     add_request_param(&request2, zbx_strdup(NULL, cid));
                     int n;
@@ -1874,21 +1958,21 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                 {
                     zabbix_log(LOG_LEVEL_DEBUG, "IN BRACKET OPEN: %s", jp_data2);
 
-                        char			buf[1024];
+                        char            buf[1024];
                         p = NULL
-                    	while (NULL != (p = zbx_json_pair_next(jp_row, p, buf, sizeof(buf))) && SUCCEED == ret)
-                    	{
+                        while (NULL != (p = zbx_json_pair_next(jp_row, p, buf, sizeof(buf))) && SUCCEED == ret)
+                        {
                         }
 
                     p = NULL
                     while (NULL != (p = zbx_json_next_value_dyn(&jp_row, p, &buf, &buf_alloc, NULL)))
-                	{
-                		if (NULL == (fields[fields_count++] = DBget_field(table, buf)))
-                		{
-                			*error = zbx_dsprintf(*error, "invalid field name \"%s.%s\"", table->table, buf);
-                			goto out;
-                		}
-                	}
+                    {
+                        if (NULL == (fields[fields_count++] = DBget_field(table, buf)))
+                        {
+                            *error = zbx_dsprintf(*error, "invalid field name \"%s.%s\"", table->table, buf);
+                            goto out;
+                        }
+                    }
 
                     while (strchr(&jp_row, ':') != NULL) {
                          // labels listing
@@ -2049,7 +2133,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
             return SYSINFO_RET_FAIL;
         }
 
-	    struct zbx_json_parse jp_data2, jp_data3;
+        struct zbx_json_parse jp_data2, jp_data3;
         char api_value[buffer_size];
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
@@ -2179,7 +2263,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
             if(strcmp(answer, "[]\n") != 0)
             {
-                struct zbx_json_parse	jp_data;
+                struct zbx_json_parse   jp_data;
                 jp_data.start = &answer[0];
                 jp_data.end = &answer[strlen(answer)];
                 count = zbx_json_count(&jp_data);
@@ -2195,7 +2279,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 // Exited = All - Up
                 // # All
                 const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=1 HTTP/1.0\r\n\n", 0);
-                struct zbx_json_parse	jp_data;
+                struct zbx_json_parse   jp_data;
                 int count = 0;
 
                 if(strcmp(answer, "") == 0)
@@ -2251,21 +2335,21 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                     }
 
                     int count = 0;
-            	    struct zbx_json_parse	jp_row;
-            	    const char		*p = NULL;
+                    struct zbx_json_parse   jp_row;
+                    const char      *p = NULL;
                     char status[cid_length];
 
                     // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
-                	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-                	/*         ^-------------------------------------------^  */
+                    /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                    /*         ^-------------------------------------------^  */
                     struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
-                	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-                	/*          ^                                             */
-                	while (NULL != (p = zbx_json_next(&jp_data, p)))
-                	{
-                		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-                		/*          ^------------------^                          */
-                		if (FAIL == zbx_json_brackets_open(p, &jp_row))
+                    /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                    /*          ^                                             */
+                    while (NULL != (p = zbx_json_next(&jp_data, p)))
+                    {
+                        /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                        /*          ^------------------^                          */
+                        if (FAIL == zbx_json_brackets_open(p, &jp_row))
                         {
                             zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
                             continue;
@@ -2303,7 +2387,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         }
                         if(strcmp(answer, "[]\n") != 0)
                         {
-                            struct zbx_json_parse	jp_data;
+                            struct zbx_json_parse   jp_data;
                             jp_data.start = &answer[0];
                             jp_data.end = &answer[strlen(answer)];
                             count = zbx_json_count(&jp_data);
@@ -2333,21 +2417,21 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                             }
 
                             int count = 0;
-                    	    struct zbx_json_parse	jp_row;
-                    	    const char		*p = NULL;
+                            struct zbx_json_parse   jp_row;
+                            const char      *p = NULL;
                             char status[cid_length];
 
                             // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
-                        	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-                        	/*         ^-------------------------------------------^  */
+                            /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                            /*         ^-------------------------------------------^  */
                             struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
-                        	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-                        	/*          ^                                             */
-                        	while (NULL != (p = zbx_json_next(&jp_data, p)))
-                        	{
-                        		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
-                        		/*          ^------------------^                          */
-                        		if (FAIL == zbx_json_brackets_open(p, &jp_row))
+                            /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                            /*          ^                                             */
+                            while (NULL != (p = zbx_json_next(&jp_data, p)))
+                            {
+                                /* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
+                                /*          ^------------------^                          */
+                                if (FAIL == zbx_json_brackets_open(p, &jp_row))
                                 {
                                     zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
                                     continue;
@@ -2413,7 +2497,7 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         char    *state;
         state = get_rparam(request, 0);
-        struct zbx_json_parse	jp_data;
+        struct zbx_json_parse   jp_data;
         int count = 0;
 
         if (strcmp(state, "All") == 0)
@@ -2513,7 +2597,7 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
             }
 
-            struct zbx_json_parse	jp_data, jp_data2;
+            struct zbx_json_parse   jp_data, jp_data2;
             int count;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
@@ -2548,7 +2632,7 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
             }
 
-            struct zbx_json_parse	jp_data, jp_data2;
+            struct zbx_json_parse   jp_data, jp_data2;
             int count;
             jp_data.start = &answer[0];
             jp_data.end = &answer[strlen(answer)];
