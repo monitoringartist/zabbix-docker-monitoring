@@ -887,7 +887,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         char    *arg2 = get_rparam(request, 1);
         char    *stat_file = malloc(strlen(arg2) + 2);
         zbx_strlcpy(stat_file, "/", strlen(arg2) + 2);
-        zbx_strlcat(stat_file, get_rparam(request, 1), strlen(arg1) + 2);
+        zbx_strlcat(stat_file, get_rparam(request, 1), strlen(arg2) + 2);
         metric = get_rparam(request, 2);
 
         char    *cgroup = "blkio/";
