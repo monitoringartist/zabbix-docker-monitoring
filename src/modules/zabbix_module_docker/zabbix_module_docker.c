@@ -46,7 +46,7 @@ struct inspect_result
    char  *value;
    int   return_code;
 };
-struct timeval stimeout;
+struct timeval stimeout = { .tv_sec = 30, .tv_usec = 0 };
 
 char    *m_version = "v0.6.9";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
