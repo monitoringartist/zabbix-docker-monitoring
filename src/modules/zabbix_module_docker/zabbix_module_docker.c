@@ -172,11 +172,11 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         // socket input/output timeout
         if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&stimeout, sizeof(stimeout)) < 0)
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_RCVTIMEO socket timeout: %d seconds", stimeout.tv_sec);
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_RCVTIMEO socket timeout: %ld seconds", stimeout.tv_sec);
         }
         if (setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&stimeout, sizeof(stimeout)) < 0)
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_SNDTIMEO socket timeout: %d seconds", stimeout.tv_sec);
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_SNDTIMEO socket timeout: %ld seconds", stimeout.tv_sec);
         }
 
         temp1 = string_replace(query, "\n", "");
@@ -435,7 +435,8 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                            zbx_strlcpy(value, p_array+1, s_size);
                                            zabbix_log(LOG_LEVEL_DEBUG, "Array item: %s", value);
 
-                                           tofree = string = strdup(get_rparam(request, 3));
+                                           char	  *arg4 = get_rparam(request, 3);
+                                           tofree = string = strdup(arg4);
 
                                            // hacking: Marathon MESOS_TASK_ID, Chronos - mesos_task_id
                                            // docker.inspect[cid,Config,Env,MESOS_TASK_ID=|mesos_task_id=]
@@ -884,9 +885,10 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
-        char    *stat_file = malloc(strlen(get_rparam(request, 1)) + 2);
-        zbx_strlcpy(stat_file, "/", strlen(get_rparam(request, 1)) + 2);
-        zbx_strlcat(stat_file, get_rparam(request, 1), strlen(get_rparam(request, 1)) + 2);
+        char    *arg2 = get_rparam(request, 1);
+        char    *stat_file = malloc(strlen(arg2) + 2);
+        zbx_strlcpy(stat_file, "/", strlen(arg2) + 2);
+        zbx_strlcat(stat_file, get_rparam(request, 1), strlen(arg2) + 2);
         metric = get_rparam(request, 2);
 
         char    *cgroup = "blkio/";
@@ -946,7 +948,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
                          break;
                      }
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; stat file: %s, metric: %s; value: %d", container, stat_file, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; stat file: %s, metric: %s; value: %lu", container, stat_file, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -1053,7 +1055,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %lu", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -1198,7 +1200,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                         result_value /= cpu_num;
                 }
 
-                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, result_value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %lu", container, metric, result_value);
                 SET_UI64_RESULT(result, result_value);
         }
         free(container);
@@ -1353,7 +1355,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
         free(netns);
         if (fp == NULL)
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Cannot execute netns command: %s");
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot execute netns command");
             SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot execute netns command"));
             return SYSINFO_RET_FAIL;
         }
