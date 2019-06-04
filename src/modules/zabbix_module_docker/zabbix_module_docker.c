@@ -435,7 +435,8 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                            zbx_strlcpy(value, p_array+1, s_size);
                                            zabbix_log(LOG_LEVEL_DEBUG, "Array item: %s", value);
 
-                                           tofree = string = strdup(get_rparam(request, 3));
+                                           char	*arg3 = get_rparam(request, 3);
+                                           tofree = string = strdup(arg3);
 
                                            // hacking: Marathon MESOS_TASK_ID, Chronos - mesos_task_id
                                            // docker.inspect[cid,Config,Env,MESOS_TASK_ID=|mesos_task_id=]
@@ -883,9 +884,10 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
         }
 
         container = zbx_module_docker_get_fci(get_rparam(request, 0));
-        char    *stat_file = malloc(strlen(get_rparam(request, 1)) + 2);
-        zbx_strlcpy(stat_file, "/", strlen(get_rparam(request, 1)) + 2);
-        zbx_strlcat(stat_file, get_rparam(request, 1), strlen(get_rparam(request, 1)) + 2);
+        char    *arg1 = get_rparam(request, 1);
+        char    *stat_file = malloc(strlen(arg1) + 2);
+        zbx_strlcpy(stat_file, "/", strlen(arg1) + 2);
+        zbx_strlcat(stat_file, get_rparam(request, 1), strlen(arg1) + 2);
         metric = get_rparam(request, 2);
 
         char    *cgroup = "blkio/";
