@@ -172,11 +172,11 @@ const char*  zbx_module_docker_socket_query(char *query, int stream)
         // socket input/output timeout
         if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&stimeout, sizeof(stimeout)) < 0)
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_RCVTIMEO socket timeout: %d seconds", stimeout.tv_sec);
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_RCVTIMEO socket timeout: %ld seconds", stimeout.tv_sec);
         }
         if (setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&stimeout, sizeof(stimeout)) < 0)
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_SNDTIMEO socket timeout: %d seconds", stimeout.tv_sec);
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot set SO_SNDTIMEO socket timeout: %ld seconds", stimeout.tv_sec);
         }
 
         temp1 = string_replace(query, "\n", "");
@@ -945,7 +945,7 @@ int     zbx_module_docker_dev(AGENT_REQUEST *request, AGENT_RESULT *result)
                          break;
                      }
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; stat file: %s, metric: %s; value: %d", container, stat_file, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; stat file: %s, metric: %s; value: %lu", container, stat_file, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -1052,7 +1052,7 @@ int     zbx_module_docker_mem(AGENT_REQUEST *request, AGENT_RESULT *result)
                         zabbix_log(LOG_LEVEL_ERR, "sscanf failed for matched metric line");
                         continue;
                 }
-                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %lu", container, metric, value);
                 SET_UI64_RESULT(result, value);
                 ret = SYSINFO_RET_OK;
                 break;
@@ -1197,7 +1197,7 @@ int     zbx_module_docker_cpu(AGENT_REQUEST *request, AGENT_RESULT *result)
                         result_value /= cpu_num;
                 }
 
-                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %d", container, metric, result_value);
+                zabbix_log(LOG_LEVEL_DEBUG, "Id: %s; metric: %s; value: %lu", container, metric, result_value);
                 SET_UI64_RESULT(result, result_value);
         }
         free(container);
@@ -1352,7 +1352,7 @@ int     zbx_module_docker_net(AGENT_REQUEST *request, AGENT_RESULT *result)
         free(netns);
         if (fp == NULL)
         {
-            zabbix_log(LOG_LEVEL_WARNING, "Cannot execute netns command: %s");
+            zabbix_log(LOG_LEVEL_WARNING, "Cannot execute netns command");
             SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot execute netns command"));
             return SYSINFO_RET_FAIL;
         }
