@@ -221,13 +221,13 @@ You have to compile the module if provided binary doesn't work on your system.
 Basic compilation steps (please use right Zabbix branch version):
 
 ```bash
-# Required CentOS/RHEL apps:   yum install -y wget autoconf automake gcc svn pcre-devel
-# Required Debian/Ubuntu apps: apt-get install -y wget autoconf automake gcc subversion make pkg-config libpcre3-dev
-# Required Fedora apps:        dnf install -y wget autoconf automake gcc subversion make pcre-devel
-# Required openSUSE apps:      zypper install -y wget autoconf automake gcc subversion make pkg-config pcre-devel
+# Required CentOS/RHEL apps:   yum install -y wget autoconf automake gcc git pcre-devel
+# Required Debian/Ubuntu apps: apt-get install -y wget autoconf automake gcc git make pkg-config libpcre3-dev
+# Required Fedora apps:        dnf install -y wget autoconf automake gcc git make pcre-devel
+# Required openSUSE apps:      zypper install -y wget autoconf automake gcc git make pkg-config pcre-devel
 # Required Gentoo apps 1:      emerge net-misc/wget sys-devel/autoconf sys-devel/automake sys-devel/gcc
-# Required Gentoo apps 2:      emerge dev-vcs/subversion sys-devel/make dev-util/pkgconfig dev-libs/libpcre
-# Source, use your version:    svn export svn://svn.zabbix.com/tags/3.2.7 /usr/src/zabbix
+# Required Gentoo apps 2:      emerge dev-vcs/git sys-devel/make dev-util/pkgconfig dev-libs/libpcre
+# Source, use your version:    git clone -b 4.2.2 --depth 1 https://github.com/zabbix/zabbix.git /usr/src/zabbix
 cd /usr/src/zabbix
 ./bootstrap.sh
 ./configure --enable-agent
@@ -476,7 +476,7 @@ Kibana, Prometheus, Sysdig,...
 
 Summary:
 * 3000+ [GitHub](https://github.com/monitoringartist/) stars
-* 20 000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
+* 50 000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
 * 1 000 000+ [Docker image](https://hub.docker.com/u/monitoringartist/) pulls
 
 Professional devops / monitoring / consulting services:
