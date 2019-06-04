@@ -661,6 +661,7 @@ char*  zbx_module_docker_get_fci(char *fci)
             return iresult.value;
         } else {
             zabbix_log(LOG_LEVEL_DEBUG, "Default fci will be used, because zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
+            free(iresult.value);
             return zbx_strdup(NULL, fci);
         }
 }
