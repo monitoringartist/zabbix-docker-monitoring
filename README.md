@@ -476,8 +476,8 @@ Kibana, Prometheus, Sysdig,...
 
 Summary:
 * 3000+ [GitHub](https://github.com/monitoringartist/) stars
-* 50 000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
-* 1 000 000+ [Docker image](https://hub.docker.com/u/monitoringartist/) pulls
+* 100 000+ [Grafana dashboard](https://grafana.net/monitoringartist) downloads
+* 15 000 000+ [Docker images](https://hub.docker.com/u/monitoringartist/) downloads
 
 Professional devops / monitoring / consulting services:
 
