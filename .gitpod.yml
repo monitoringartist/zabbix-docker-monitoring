@@ -1,0 +1,10 @@
+tasks:
+- init: >-
+    git clone --quiet https://git.zabbix.com/scm/zbx/zabbix.git --depth 1 --single-branch --branch release/5.0 /workspace/zabbix/ &&
+    cd /workspace/zabbix &&
+    ./bootstrap.sh &&
+    ./configure --enable-agent &&
+    cd - &&
+    bear make -C src/modules/zabbix_module_docker ZABBIX_SOURCE=/workspace/zabbix
+image:
+  file: .gitpod.Dockerfile
