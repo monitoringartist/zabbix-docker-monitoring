@@ -1,6 +1,6 @@
 [<img src="https://monitoringartist.github.io/managed-by-monitoringartist.png" alt="Managed by Monitoring Artist: DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Terraform / Monitoring" align="right"/>](http://www.monitoringartist.com 'DevOps / Docker / Kubernetes / AWS ECS / Zabbix / Zenoss / Terraform / Monitoring')
 
-# Zabbix Docker Monitoring [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring)
+# Zabbix Docker Monitoring [![Build Status](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring.svg?branch=master)](https://travis-ci.org/monitoringartist/zabbix-docker-monitoring) [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/monitoringartist/zabbix-docker-monitoring)
 
 If you like or use this project, please provide feedback to author - Star it ★
 and [write what's missing for you](https://docs.google.com/forms/d/e/1FAIpQLSdYIokAyIMs2Qv19fzPxMWBubS9ESOYjJ2w_P222k5SuQuvoA/viewform).
