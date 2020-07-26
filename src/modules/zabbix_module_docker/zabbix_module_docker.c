@@ -1528,7 +1528,6 @@ int     zbx_module_init()
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_inspect()");
-
         struct inspect_result iresult;
         iresult = zbx_module_docker_inspect_exec(get_rparam(request, 0), get_rparam(request, 1), get_rparam(request, 2), get_rparam(request, 3));
         if (iresult.return_code == SYSINFO_RET_OK) {
