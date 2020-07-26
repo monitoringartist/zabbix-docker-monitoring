@@ -33,10 +33,6 @@
 #include <sys/un.h>
 #include <grp.h>
 
-// request parameters
-#include "common/common.h"
-#include "sysinfo.c"
-
 #ifndef ZBX_MODULE_API_VERSION
 #       define ZBX_MODULE_API_VERSION   ZBX_MODULE_API_VERSION_ONE
 #endif
@@ -327,7 +323,7 @@ int     zbx_docker_api_detect()
  * Return value: inspect_result structure                                     *
  *                                                                            *
  ******************************************************************************/
-struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
+struct inspect_result     zbx_module_docker_inspect_exec(const char *container, const char *param1, const char *param2, const char *param3)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_inspect_exec()");
         struct inspect_result iresult;
@@ -340,16 +336,15 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
             return iresult;
         }
 
-        if (1 >= request->nparam)
+        if (container == NULL && param1 == NULL)
         {
-                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  request->nparam);
+                zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  (container != NULL) + (param1 != NULL));
                 iresult.value = zbx_strdup(NULL, "Invalid number of parameters");
                 iresult.return_code = SYSINFO_RET_FAIL;
                 return iresult;
         }
 
-        char    *container, *query;
-        container = get_rparam(request, 0);
+        char    *query;
         // skip leading '/' in case of human name or short container id
         if (container[0] == '/')
         {
@@ -377,10 +372,8 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
 
         struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
 
-        if (request->nparam > 1)
+        if (param1 != NULL)
         {
-            char *param1;
-            param1 = get_rparam(request, 1);
             // 1st level - plain value search
             if (SUCCEED != zbx_json_value_by_name(&jp_data, param1, api_value, buffer_size))
             {
@@ -395,10 +388,9 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                 } else {
                     // 2nd level
                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object", param1);
-                    if (request->nparam > 2)
+                    if (param2 != NULL)
                     {
-                        char *param2, api_value2[buffer_size];
-                        param2 = get_rparam(request, 2);
+                        char api_value2[buffer_size];
                         if (SUCCEED != zbx_json_value_by_name(&jp_data2, param2, api_value2, buffer_size))
                         {
                             struct zbx_json_parse jp_data_array;
@@ -410,7 +402,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                 iresult.return_code = SYSINFO_RET_FAIL;
                                 return iresult;
                             } else {
-                                if (request->nparam < 4)
+                                if (param3 == NULL)
                                 {
                                     free((void*) answer);
                                     char *values;
@@ -435,7 +427,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                            zbx_strlcpy(value, p_array+1, s_size);
                                            zabbix_log(LOG_LEVEL_DEBUG, "Array item: %s", value);
 
-                                           char	  *arg4 = get_rparam(request, 3);
+                                           const char    *arg4 = param3;
                                            tofree = string = strdup(arg4);
 
                                            // hacking: Marathon MESOS_TASK_ID, Chronos - mesos_task_id
@@ -461,16 +453,16 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                                        } else {
                                            free((void*) value);
                                            free((void*) answer);
-                                           zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object (non standard JSON array)", param1, param2, get_rparam(request, 3));
-                                           iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object (non standard JSON array)", param1, param2, get_rparam(request, 3));
+                                           zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object (non standard JSON array)", param1, param2, param3);
+                                           iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object (non standard JSON array)", param1, param2, param3);
                                            iresult.return_code = SYSINFO_RET_FAIL;
                                            return iresult;
                                        }
                                     }
                                     free((void*) value);
                                     free((void*) answer);
-                                    zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object (selector - param3 doesn't match any value)", param1, param2, get_rparam(request, 3));
-                                    iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object (selector - param3 doesn't match any value)", param1, param2, get_rparam(request, 3));
+                                    zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object (selector - param3 doesn't match any value)", param1, param2, param3);
+                                    iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object (selector - param3 doesn't match any value)", param1, param2, param3);
                                     iresult.return_code = SYSINFO_RET_FAIL;
                                     return iresult;
                                  }
@@ -478,10 +470,9 @@ struct inspect_result     zbx_module_docker_inspect_exec(AGENT_REQUEST *request)
                         } else {
                             // 3rd level
                             zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object", param1, param2);
-                            if (request->nparam > 3)
+                            if (param3 != NULL)
                             {
-                               char *param3, api_value3[buffer_size];
-                               param3 = get_rparam(request, 3);
+                               char api_value3[buffer_size];
                                struct zbx_json_parse jp_data3 = {&api_value2[0], &api_value2[strlen(api_value2)]};
                                if (SUCCEED != zbx_json_value_by_name(&jp_data3, param3, api_value3, buffer_size))
                                {
@@ -550,14 +541,8 @@ int zbx_module_docker_port_discovery(AGENT_REQUEST * request, AGENT_RESULT * res
   char * container;
   container = get_rparam(request, 0);
 
-  AGENT_REQUEST request2;
-  init_request(&request2);
-  add_request_param(&request2, zbx_strdup(NULL, container));
-  add_request_param(&request2, zbx_strdup(NULL, "HostConfig"));
-  add_request_param(&request2, zbx_strdup(NULL, "PortBindings"));
   struct inspect_result iresult;
-  iresult = zbx_module_docker_inspect_exec(&request2);
-  free_request(&request2);
+  iresult = zbx_module_docker_inspect_exec(container, "HostConfig", "PortBindings", NULL);
   if (iresult.return_code == SYSINFO_RET_FAIL) {
     zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
     return SYSINFO_RET_FAIL;
@@ -649,14 +634,9 @@ char*  zbx_module_docker_get_fci(char *fci)
 
         // Docker API query - docker.inspect[fci,Id]
         zabbix_log(LOG_LEVEL_DEBUG, "Translating container name to fci by using docker.inspect");
-        AGENT_REQUEST	request;
-        init_request(&request);
-        add_request_param(&request, zbx_strdup(NULL, fci));
-        add_request_param(&request, zbx_strdup(NULL, "Id"));
         // TODO dynamic iresult
         struct inspect_result iresult;
-        iresult = zbx_module_docker_inspect_exec(&request);
-        free_request(&request);
+        iresult = zbx_module_docker_inspect_exec(fci, "Id", NULL, NULL);
         if (iresult.return_code == SYSINFO_RET_OK) {
             zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
             return iresult.value;
@@ -1548,8 +1528,9 @@ int     zbx_module_init()
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_inspect()");
+
         struct inspect_result iresult;
-        iresult = zbx_module_docker_inspect_exec(request);
+        iresult = zbx_module_docker_inspect_exec(get_rparam(request, 0), get_rparam(request, 1), get_rparam(request, 2), get_rparam(request, 3));
         if (iresult.return_code == SYSINFO_RET_OK) {
             zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
             SET_STR_RESULT(result, iresult.value);
@@ -1807,17 +1788,8 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 
                 if (request->nparam > 1) {
                     // custom item for HCONTAINERID
-                    AGENT_REQUEST	request2;
-                    init_request(&request2);
-                    add_request_param(&request2, zbx_strdup(NULL, cid));
-                    int n;
                     struct inspect_result iresult;
-                    for(n = 0; n < request->nparam; n++)
-                    {
-                       add_request_param(&request2, zbx_strdup(NULL, (request)->params[n]));
-                    }
-                    iresult = zbx_module_docker_inspect_exec(&request2);
-                    free_request(&request2);
+                    iresult = zbx_module_docker_inspect_exec(cid, get_rparam(request, 0), get_rparam(request, 1), get_rparam(request, 2));
                     if (iresult.return_code == SYSINFO_RET_OK) {
                         zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
                         free(names);
