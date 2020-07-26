@@ -336,7 +336,7 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
             return iresult;
         }
 
-        if (container == NULL && param1 == NULL)
+        if (container == NULL || param1 == NULL)
         {
                 zabbix_log(LOG_LEVEL_ERR, "Invalid number of parameters: %d",  (container != NULL) + (param1 != NULL));
                 iresult.value = zbx_strdup(NULL, "Invalid number of parameters");
