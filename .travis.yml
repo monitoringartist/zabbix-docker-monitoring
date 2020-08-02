@@ -20,8 +20,17 @@ branches:
    only:
      - master
      
+env:
+  - BRANCH=master
+  - BRANCH=release/5.0
+  - BRANCH=release/4.0
+  # below are tags to test #133 against
+  - BRANCH=4.0.21 # ZBX-17109
+  - BRANCH=4.0.15 # ZBX-9146
+  - BRANCH=4.0.0  # all was working fine
+
 before_script:  
-  - "git clone --quiet https://git.zabbix.com/scm/zbx/zabbix.git --depth 1 --single-branch --branch release/5.0 ~/zabbix/"
+  - "git clone --quiet https://git.zabbix.com/scm/zbx/zabbix.git --depth 1 --single-branch --branch $BRANCH ~/zabbix/"
   - "cd ~/zabbix"
   - "./bootstrap.sh 1>/dev/null"
   - "./configure --enable-agent"  
