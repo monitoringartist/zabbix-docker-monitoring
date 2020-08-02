@@ -20,15 +20,6 @@ branches:
    only:
      - master
      
-env:
-  - BRANCH=master
-  - BRANCH=release/5.0
-  - BRANCH=release/4.0
-  # below are tags to test #133 against
-  - BRANCH=4.0.21 # ZBX-17109
-  - BRANCH=4.0.15 # ZBX-9146
-  - BRANCH=4.0.0  # all was working fine
-
 before_script:  
   - "git clone --quiet https://git.zabbix.com/scm/zbx/zabbix.git --depth 1 --single-branch --branch $BRANCH ~/zabbix/"
   - "cd ~/zabbix"
@@ -48,3 +39,11 @@ env:
   global:
   - ENCRYPTION_LABEL: "469b4b5a68a6"
   - COMMIT_AUTHOR_EMAIL: "jan.garaj@gmail.com"
+  jobs:
+  - BRANCH=master
+  - BRANCH=release/5.0
+  - BRANCH=release/4.0
+  # below are tags to test #133 against
+  - BRANCH=4.0.21 # ZBX-17109
+  - BRANCH=4.0.15 # ZBX-9146
+  - BRANCH=4.0.0  # all was working fine
