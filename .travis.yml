@@ -7,7 +7,7 @@ notifications:
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq -y wget autoconf automake gcc git make pkg-config
+  - sudo apt-get install -qq -y wget autoconf automake gcc git make pkg-config libjansson-dev
 
 services:
   - docker
