@@ -1690,7 +1690,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
         zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
 
-        // empty reponse
+        // empty response
         if (strcmp(answer, "[]\n") == 0) {
             zbx_json_close(&j);
             SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
@@ -2184,7 +2184,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         return SYSINFO_RET_FAIL;
                     }
 
-                    // empty reponse
+                    // empty response
                     if (strcmp(answer, "[]\n") == 0) {
                        SET_UI64_RESULT(result, 0);
                        free((void*) answer);
@@ -2266,7 +2266,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                                 return SYSINFO_RET_FAIL;
                             }
 
-                            // empty reponse
+                            // empty response
                             if (strcmp(answer, "[]\n") == 0) {
                                SET_UI64_RESULT(result, 0);
                                free((void*) answer);
