@@ -133,7 +133,7 @@ ZBX_METRIC      *zbx_module_item_list()
  *                                                                            *
  * Function: zbx_module_docker_socket_query                                   *
  *                                                                            *
- * Purpose: quering details via Docker socket API (permission is needed)      *
+ * Purpose: querying details via Docker socket API (permission is needed)      *
  *                                                                            *
  * Return value: empty string - function failed                               *
  *               string - response from Docker's socket API                   *
