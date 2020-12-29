@@ -133,7 +133,7 @@ ZBX_METRIC      *zbx_module_item_list()
  *                                                                            *
  * Function: zbx_module_docker_socket_query                                   *
  *                                                                            *
- * Purpose: quering details via Docker socket API (permission is needed)      *
+ * Purpose: querying details via Docker socket API (permission is needed)      *
  *                                                                            *
  * Return value: empty string - function failed                               *
  *               string - response from Docker's socket API                   *
@@ -1674,7 +1674,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             return SYSINFO_RET_FAIL;
         }
 
-        // empty reponse
+        // empty response
         if (strcmp(answer, "[]\n") == 0) {
             json_t *j = json_object();
             json_object_set_new(j, "data", json_array());
@@ -2181,7 +2181,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         return SYSINFO_RET_FAIL;
                     }
 
-                    // empty reponse
+                    // empty response
                     if (strcmp(answer, "[]\n") == 0) {
                        SET_UI64_RESULT(result, 0);
                        free((void*) answer);

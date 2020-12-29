@@ -1,3 +1,6 @@
+# Changes 0.7.0
+- Zabbix JSON processing functions replaced with Jansson library, ([#152](https://github.com/monitoringartist/zabbix-docker-monitoring/pull/152), thanks to [@i-ky](https://github.com/i-ky))
+
 # Changes 0.6.9
 - new item key docker.port.discovery
 
