@@ -22,7 +22,6 @@
 #include "comms.h"
 #include "module.h"
 #include "sysinc.h"
-#include "zbxjson.h"
 #include "zbxregexp.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +31,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <grp.h>
+#include <jansson.h>
 
 #ifndef ZBX_MODULE_API_VERSION
 #       define ZBX_MODULE_API_VERSION   ZBX_MODULE_API_VERSION_ONE
@@ -367,20 +367,19 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
             return iresult;
         }
 
-	    struct zbx_json_parse jp_data2;
-        char api_value[buffer_size];
-
-        struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+        json_t *jp_data = json_loads(answer, 0, NULL);
 
         if (param1 != NULL)
         {
             // 1st level - plain value search
-            if (SUCCEED != zbx_json_value_by_name(&jp_data, param1, api_value, buffer_size))
+            json_t *jp_data2 = json_object_get(jp_data, param1);
+            if (!json_is_string(jp_data2))
             {
                 // 1st level - json object search
-                if (SUCCEED != zbx_json_brackets_by_name(&jp_data, param1, &jp_data2))
+                if (NULL == jp_data2)
                 {
                     free((void*) answer);
+                    json_decref(jp_data);
                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s] item in the received JSON object", param1);
                     iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s] item in the received JSON object", param1);
                     iresult.return_code = SYSINFO_RET_FAIL;
@@ -390,13 +389,13 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object", param1);
                     if (param2 != NULL)
                     {
-                        char api_value2[buffer_size];
-                        if (SUCCEED != zbx_json_value_by_name(&jp_data2, param2, api_value2, buffer_size))
+                        json_t *jp_data3 = json_object_get(jp_data2, param2);
+                        if (!json_is_string(jp_data3))
                         {
-                            struct zbx_json_parse jp_data_array;
-                            if (SUCCEED != zbx_json_brackets_by_name(&jp_data2, param2, &jp_data_array))
+                            if (NULL == jp_data3)
                             {
                                 free((void*) answer);
+                                json_decref(jp_data);
                                 zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s] item in the received JSON object", param1, param2);
                                 iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s] item in the received JSON object", param1, param2);
                                 iresult.return_code = SYSINFO_RET_FAIL;
@@ -405,29 +404,24 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
                                 if (param3 == NULL)
                                 {
                                     free((void*) answer);
-                                    char *values;
-                                    s_size = jp_data_array.end - jp_data_array.start + 2;
-                                    values = malloc(s_size);
-                                    zbx_strlcpy(values, jp_data_array.start, s_size);
+                                    char *values = json_dumps(jp_data3, 0);
                                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object: %s", param1, param2, values);
-                                    iresult.value = zbx_strdup(NULL, values);
+                                    iresult.value = values;
                                     iresult.return_code = SYSINFO_RET_OK;
-                                    free((void*) values);
                                     return iresult;
                                 } else {
                                     // find item in array - selector is param3
-    	                            const char	*p_array = NULL;
-                                    char *result_array, *value, *selector, *string, *tofree;
-                                    while (NULL != (p_array = zbx_json_next(&jp_data_array, p_array)))
+                                    json_t *element;
+                                    size_t index;
+                                    json_array_foreach(jp_data3, index, element)
    	                                {
-                                       if ((result_array = strchr(p_array+1, '"')) != NULL)
+                                       if (json_is_string(element))
                                        {
-                                           s_size = strlen(p_array+1) - strlen(result_array) + 1;
-                                           value = malloc(s_size);
-                                           zbx_strlcpy(value, p_array+1, s_size);
+                                           const char *value = json_string_value(element);
                                            zabbix_log(LOG_LEVEL_DEBUG, "Array item: %s", value);
 
                                            const char    *arg4 = param3;
+                                           char *tofree, *string, *selector;
                                            tofree = string = strdup(arg4);
 
                                            // hacking: Marathon MESOS_TASK_ID, Chronos - mesos_task_id
@@ -442,8 +436,6 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
                                                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, selector, value);
                                                     iresult.value = zbx_strdup(NULL, value);
                                                     iresult.return_code = SYSINFO_RET_OK;
-                                                    value -= strlen(selector);
-                                                    free((void*) value);
                                                     free((void*) answer);
                                                     free((void*) tofree);
                                                     return iresult;
@@ -451,7 +443,6 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
                                            }
                                            free(tofree);
                                        } else {
-                                           free((void*) value);
                                            free((void*) answer);
                                            zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object (non standard JSON array)", param1, param2, param3);
                                            iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object (non standard JSON array)", param1, param2, param3);
@@ -459,23 +450,22 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
                                            return iresult;
                                        }
                                     }
-                                    free((void*) value);
                                     free((void*) answer);
+                                    json_decref(jp_data);
                                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object (selector - param3 doesn't match any value)", param1, param2, param3);
                                     iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object (selector - param3 doesn't match any value)", param1, param2, param3);
                                     iresult.return_code = SYSINFO_RET_FAIL;
                                     return iresult;
-                                 }
+                                }
                             }
                         } else {
                             // 3rd level
                             zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object", param1, param2);
                             if (param3 != NULL)
                             {
-                               char api_value3[buffer_size];
-                               struct zbx_json_parse jp_data3 = {&api_value2[0], &api_value2[strlen(api_value2)]};
-                               if (SUCCEED != zbx_json_value_by_name(&jp_data3, param3, api_value3, buffer_size))
-                               {
+                                json_t *jp_data4 = json_object_get(jp_data3, param3);
+                                if (!json_is_string(jp_data4))
+                                {
                                     free((void*) answer);
                                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3);
                                     iresult.value = zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3);
@@ -483,21 +473,26 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
                                     return iresult;
                                 } else {
                                     free((void*) answer);
+                                    const char *api_value3 = json_string_value(jp_data4);
                                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, param3, api_value3);
                                     iresult.value = zbx_strdup(NULL, api_value3);
                                     iresult.return_code = SYSINFO_RET_OK;
+                                    json_decref(jp_data);
                                     return iresult;
                                 }
                             } else {
                                 free((void*) answer);
+                                const char *api_value2 = json_string_value(jp_data3);
                                 zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object: %s", param1, param2, api_value2);
                                 iresult.value = zbx_strdup(NULL, api_value2);
                                 iresult.return_code = SYSINFO_RET_OK;
+                                json_decref(jp_data);
                                 return iresult;
                             }
                         }
                     } else {
                         free((void*) answer);
+                        json_decref(jp_data);
                         zabbix_log(LOG_LEVEL_WARNING, "Item [%s] found in the received JSON object, but it's not plain value object", param1);
                         iresult.value = zbx_dsprintf(NULL, "Can find the [%s] item in the received JSON object, but it's not plain value object", param1);
                         iresult.return_code = SYSINFO_RET_FAIL;
@@ -506,13 +501,16 @@ struct inspect_result     zbx_module_docker_inspect_exec(const char *container, 
                 }
             } else {
                 free((void*) answer);
+                const char *api_value = json_string_value(jp_data2);
                 zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object: %s", param1, api_value);
                 iresult.value = zbx_strdup(NULL, api_value);
                 iresult.return_code = SYSINFO_RET_OK;
+                json_decref(jp_data);
                 return iresult;
             }
         }
         free((void*) answer);
+        json_decref(jp_data);
         iresult.value = zbx_strdup(NULL, "");
         iresult.return_code = SYSINFO_RET_OK;
         return iresult;
@@ -549,27 +547,24 @@ int zbx_module_docker_port_discovery(AGENT_REQUEST * request, AGENT_RESULT * res
   }
 
   // now parse the value we get back from zbx_module_docker_inspect_exec()
-  struct zbx_json_parse jp_data = {
-    iresult.value,
-    &iresult.value[strlen(iresult.value)]
-  };
+  json_t *jp_data = json_loads(iresult.value, 0, NULL);
 
-  char buf[10], host_port[6], container_port[6];
+  char container_port[6];
   int port_len;
-  const char *p = NULL,
+  const char
     *p2 = NULL,
     *proto = NULL,
     *request_proto = NULL;
-  struct zbx_json_parse jp_obj;
+  json_t *jp_obj;
 
-  struct zbx_json j;
-  zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-  zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+  json_t *a = json_array();
 
   if (1 < request->nparam) {
     request_proto = get_rparam(request, 1);
   }
-  while (NULL != (p = zbx_json_pair_next(&jp_data, p, buf, sizeof(buf)))) {
+  const char *buf;
+  json_t *p;
+  json_object_foreach(jp_data, buf, p) {
     // Split "12345/tcp" specifier
     proto = strstr(buf, "/") + 1;
     port_len = proto - buf;
@@ -580,34 +575,30 @@ int zbx_module_docker_port_discovery(AGENT_REQUEST * request, AGENT_RESULT * res
     }
 
     // Open list of HostIP/HostPort dicts
-    if (FAIL == zbx_json_brackets_open(p, &jp_obj)) {
-      zabbix_log(LOG_LEVEL_DEBUG, "zbx_json_brackets_open FAIL: %s", zbx_json_strerror());
-      continue;
-    }
-
-    // Open dict of HostIP, HostPort values
-    p2 = zbx_json_next(&jp_obj, NULL);
-    if (FAIL == zbx_json_brackets_open(p2, &jp_obj)) {
-      zabbix_log(LOG_LEVEL_DEBUG, "zbx_json_brackets_open FAIL: %s", zbx_json_strerror());
+    json_t *jp_obj = json_array_get(p, 0);
+    if (NULL == jp_obj) {
+      //zabbix_log(LOG_LEVEL_DEBUG, "zbx_json_brackets_open FAIL: %s", zbx_json_strerror());
       continue;
     }
 
     // Lookup HostPort value
-    if (FAIL == zbx_json_value_by_name(&jp_obj, "HostPort", host_port, sizeof(host_port))) {
-      zabbix_log(LOG_LEVEL_DEBUG, "zbx_json_value_by_name FAIL: %s", zbx_json_strerror());
+    const char *host_port = json_string_value(json_object_get(jp_obj, "HostPort"));
+    if (NULL == host_port) {
+      //zabbix_log(LOG_LEVEL_DEBUG, "zbx_json_value_by_name FAIL: %s", zbx_json_strerror());
       continue;
     }
 
-    zbx_json_addobject(&j, NULL);
-    zbx_json_addstring(&j, "{#HOSTPORT}", host_port, ZBX_JSON_TYPE_STRING);
-    zbx_json_addstring(&j, "{#CONTAINERPORT}", container_port, ZBX_JSON_TYPE_STRING);
-    zbx_json_addstring(&j, "{#PROTO}", proto, ZBX_JSON_TYPE_STRING);
-    zbx_json_close(&j);
+    json_t *o = json_object();
+    json_object_set_new(o, "{#HOSTPORT}", json_string(host_port));
+    json_object_set_new(o, "{#CONTAINERPORT}", json_string(container_port));
+    json_object_set_new(o, "{#PROTO}", json_string(proto));
+    json_array_append_new(a, o);
 
   }
-  zbx_json_close(&j);
-  SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-  zbx_json_free(&j);
+  json_t *j = json_object();
+  json_object_set_new(j, "data", a);
+  SET_STR_RESULT(result, json_dumps(j, 0));
+  json_decref(j);
 
   return SYSINFO_RET_OK;
 }
@@ -1556,15 +1547,13 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_discovery_basic()");
 
-        struct zbx_json j;
         if(stat_dir == NULL && zbx_docker_dir_detect() == SYSINFO_RET_FAIL)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "docker.discovery is not available at the moment - no stat directory - empty discovery");
-            zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-            zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
-            zbx_json_close(&j);
-            SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-            zbx_json_free(&j);
+            json_t *j = json_object();
+            json_object_set_new(j, "data", json_array());
+            SET_STR_RESULT(result, json_dumps(j, 0));
+            json_decref(j);
             return SYSINFO_RET_FAIL;
         }
 
@@ -1586,8 +1575,7 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
             return SYSINFO_RET_FAIL;
         }
 
-        zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-        zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+        json_t *a = json_array();
 
         size_t hostname_len = 128;
         while (1) {
@@ -1633,13 +1621,13 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
                     containerid = d->d_name;
                 }
 
-                zbx_json_addobject(&j, NULL);
-                zbx_json_addstring(&j, "{#FCONTAINERID}", containerid, ZBX_JSON_TYPE_STRING);
+                json_t *o = json_object();
+                json_object_set_new(o, "{#FCONTAINERID}", json_string(containerid));
                 zbx_strlcpy(scontainerid, containerid, 13);
-                zbx_json_addstring(&j, "{#HCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
-                zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
-                zbx_json_addstring(&j, "{#SYSTEM.HOSTNAME}", hostname, ZBX_JSON_TYPE_STRING);
-                zbx_json_close(&j);
+                json_object_set_new(o, "{#HCONTAINERID}", json_string(scontainerid));
+                json_object_set_new(o, "{#SCONTAINERID}", json_string(scontainerid));
+                json_object_set_new(o, "{#SYSTEM.HOSTNAME}", json_string(hostname));
+                json_array_append_new(a, o);
 
         }
 
@@ -1648,11 +1636,12 @@ int     zbx_module_docker_discovery_basic(AGENT_REQUEST *request, AGENT_RESULT *
             zabbix_log(LOG_LEVEL_WARNING, "%s: %s\n", ddir, zbx_strerror(errno));
         }
 
-        zbx_json_close(&j);
+        json_t *j = json_object();
+        json_object_set_new(j, "data", a);
 
-        SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
+        SET_STR_RESULT(result, json_dumps(j, 0));
 
-        zbx_json_free(&j);
+        json_decref(j);
 
         free(ddir);
 
@@ -1674,34 +1663,30 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 {
         zabbix_log(LOG_LEVEL_DEBUG, "In zbx_module_docker_discovery_extended()");
 
-        struct zbx_json j;
         const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=0 HTTP/1.0\r\n\n", 0);
         if(strcmp(answer, "") == 0)
         {
             zabbix_log(LOG_LEVEL_DEBUG, "docker.discovery is not available at the moment - some problem with Docker's socket API");
-            zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-            zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
-            zbx_json_close(&j);
-            SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-            zbx_json_free(&j);
+            json_t *j = json_object();
+            json_object_set_new(j, "data", json_array());
+            SET_STR_RESULT(result, json_dumps(j, 0));
+            json_decref(j);
             return SYSINFO_RET_FAIL;
         }
 
-        zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-        zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
-
         // empty reponse
         if (strcmp(answer, "[]\n") == 0) {
-            zbx_json_close(&j);
-            SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-            zbx_json_free(&j);
+            json_t *j = json_object();
+            json_object_set_new(j, "data", json_array());
+            SET_STR_RESULT(result, json_dumps(j, 0));
+            json_decref(j);
             free((void*) answer);
             return SYSINFO_RET_OK;
         }
 
-	    struct zbx_json_parse	jp_data2, jp_row;
-	    const char		*p = NULL;
-        char cid[cid_length], scontainerid[13];
+        json_t *jp_row;
+        size_t index;
+        char scontainerid[13];
         size_t  s_size;
 
         size_t hostname_len = 128;
@@ -1721,69 +1706,67 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
             hostname_len *= 2;
         }
 
+        json_t *a = json_array();
+
         // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
     	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
     	/*         ^-------------------------------------------^  */
-        struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+        json_t *jp_data = json_loads(answer, 0, NULL);
     	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
     	/*          ^                                             */
-    	while (NULL != (p = zbx_json_next(&jp_data, p)))
+        json_array_foreach(jp_data, index, jp_row)
     	{
     		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
     		/*          ^------------------^                          */
-    		if (FAIL == zbx_json_brackets_open(p, &jp_row))
+    		if (!json_is_object(jp_row))
             {
-                zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
+                zabbix_log(LOG_LEVEL_WARNING, "Array element is not an object");
                 continue;
             }
 
-            if (SUCCEED != zbx_json_brackets_by_name(&jp_row, "Names", &jp_data2))
+            json_t *jp_data2 = json_object_get(jp_row, "Names");
+
+            if (NULL == jp_data2)
             {
                 zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Names\" array in the received JSON object");
                 continue;
             } else {
                 // HCONTAINERID
                 // "Names": ["/redisclient1/redis", "/redis1"],
-                jp_data2.start += 3;
-                char *result, *names;
-                if ((result = strchr(jp_data2.start, '"')) != NULL)
+                const char *names;
+                if (json_is_array(jp_data2) || json_array_size(jp_data2) > 0)
                 {
-                    s_size = strlen(jp_data2.start) - strlen(result) + 1;
-                    names = malloc(s_size);
-                    zbx_strlcpy(names, jp_data2.start, s_size);
-                    while (strstr(names, "/") != NULL) {
-                         // linked name - search another one
-                         jp_data2.start = jp_data2.start + s_size + 3;
-                         if ((result = strchr(jp_data2.start, '"')) != NULL)
-                         {
-                            s_size = strlen(jp_data2.start) - strlen(result) + 1;
-                            names = realloc(names, s_size);
-                            zbx_strlcpy(names, jp_data2.start, s_size);
-                         } else {
-                            zabbix_log(LOG_LEVEL_DEBUG, "This should never happen - \" not found in non-first Names values");
-                            break;
-                         }
+                    json_t *element;
+                    size_t index;
+                    json_array_foreach(jp_data2, index, element) {
+                        names = json_string_value(element) + 1;
+
+                        if (strstr(names, "/") != NULL)
+                            continue; // linked name - search another one
+
+                        break;
                     }
+
+                    names = zbx_strdup(NULL, names);
                 } else {
-                    s_size = jp_data2.end - jp_data2.start;
-                    names = malloc(s_size);
-                    zbx_strlcpy(names, jp_data2.start, s_size-3);
+                    names = json_dumps(jp_data2, 0);
                 }
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsed container name: %s", names);
 
                 // FCONTAINERID - full container id
-                if (SUCCEED != zbx_json_value_by_name(&jp_row, "Id", cid, cid_length))
+                const char *cid = json_string_value(json_object_get(jp_row, "Id"));
+                if (NULL == cid)
                 {
                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Id\" array in the received JSON object");
                     continue;
                 }
                 zabbix_log(LOG_LEVEL_DEBUG, "Parsed container id: %s", cid);
 
-                zbx_json_addobject(&j, NULL);
-                zbx_json_addstring(&j, "{#FCONTAINERID}", cid, ZBX_JSON_TYPE_STRING);
+                json_t *o = json_object();
+                json_object_set_new(o, "{#FCONTAINERID}", json_string(cid));
                 zbx_strlcpy(scontainerid, cid, 13);
-                zbx_json_addstring(&j, "{#SCONTAINERID}", scontainerid, ZBX_JSON_TYPE_STRING);
-                zbx_json_addstring(&j, "{#SYSTEM.HOSTNAME}", hostname, ZBX_JSON_TYPE_STRING);
+                json_object_set_new(o, "{#SCONTAINERID}", json_string(scontainerid));
+                json_object_set_new(o, "{#SYSTEM.HOSTNAME}", json_string(hostname));
 
                 if (request->nparam > 1) {
                     // custom item for HCONTAINERID
@@ -1791,18 +1774,18 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                     iresult = zbx_module_docker_inspect_exec(cid, get_rparam(request, 0), get_rparam(request, 1), get_rparam(request, 2));
                     if (iresult.return_code == SYSINFO_RET_OK) {
                         zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec OK: %s", iresult.value);
-                        free(names);
+                        free((void *)names);
                         names = iresult.value;
-                        zbx_json_addstring(&j, "{#HCONTAINERID}", names, ZBX_JSON_TYPE_STRING);
+                        json_object_set_new(o, "{#HCONTAINERID}", json_string(names));
                     } else {
                         zabbix_log(LOG_LEVEL_DEBUG, "Default HCONTAINERID is used, because zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
-                        zbx_json_addstring(&j, "{#HCONTAINERID}", names, ZBX_JSON_TYPE_STRING);
+                        json_object_set_new(o, "{#HCONTAINERID}", json_string(names));
                     }
                 } else {
-                    zbx_json_addstring(&j, "{#HCONTAINERID}", names, ZBX_JSON_TYPE_STRING);
+                    json_object_set_new(o, "{#HCONTAINERID}", json_string(names));
                 }
-                zbx_json_close(&j);
-                free(names);
+                json_array_append_new(a, o);
+                free((void *)names);
             }
 
             // TODO expose labels in discovery
@@ -1853,10 +1836,12 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
 */
         }
 
-        zbx_json_close(&j);
-        SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
-        zbx_json_free(&j);
+        json_t *j = json_object();
+        json_object_set_new(j, "data", a);
+        SET_STR_RESULT(result, json_dumps(j, 0));
+        json_decref(j);
         free((void*) answer);
+        json_decref(jp_data);
 
         return SYSINFO_RET_OK;
 }
@@ -1921,18 +1906,20 @@ int     zbx_module_docker_info(AGENT_REQUEST *request, AGENT_RESULT *result)
             return SYSINFO_RET_FAIL;
         }
 
-        char api_value[buffer_size];
-        struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
-        if (SUCCEED != zbx_json_value_by_name(&jp_data, info, api_value, buffer_size))
+        json_t *jp_data = json_loads(answer, 0, NULL);
+        const char* api_value = json_string_value(json_object_get(jp_data, info));
+        if (NULL == api_value)
         {
             zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s] item in the received JSON object", info);
             SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s] item in the received JSON object", info));
             free((void*) answer);
+            json_decref(jp_data);
             return SYSINFO_RET_FAIL;
         } else {
             zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object: %s", info, api_value);
             SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
             free((void*) answer);
+            json_decref(jp_data);
             return SYSINFO_RET_OK;
         }
 }
@@ -1990,86 +1977,98 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
             return SYSINFO_RET_FAIL;
         }
 
-	    struct zbx_json_parse jp_data2, jp_data3;
-        char api_value[buffer_size];
-
-        struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+        json_t *jp_data = json_loads(answer, 0, NULL);
 
         if (request->nparam > 1)
         {
             char *param1;
             param1 = get_rparam(request, 1);
             // 1st level - plain value search
-            if (SUCCEED != zbx_json_value_by_name(&jp_data, param1, api_value, buffer_size))
+            json_t *jp_data2 = json_object_get(jp_data, param1);
+            if (!json_is_string(jp_data2))
             {
                  // 1st level - json object search
-                if (SUCCEED != zbx_json_brackets_by_name(&jp_data, param1, &jp_data2))
+                if (NULL == jp_data2)
                 {
                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s] item in the received JSON object", param1);
                     SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s] item in the received JSON object", param1));
                     free((void*) answer);
+                    json_decref(jp_data);
                     return SYSINFO_RET_FAIL;
                 } else {
                     // 2nd level
                     if (request->nparam > 2)
                     {
-                        char *param2, api_value2[buffer_size];
+                        char *param2;
                         param2 = get_rparam(request, 2);
-                        if (SUCCEED != zbx_json_value_by_name(&jp_data2, param2, api_value2, buffer_size))
+                        json_t *jp_data3 = json_object_get(jp_data2, param2);
+                        if (!json_is_string(jp_data3))
                         {
                             // 2nd level - json object search
-                            if (SUCCEED != zbx_json_brackets_by_name(&jp_data2, param2, &jp_data3))
+                            if (NULL == jp_data3)
                             {
                                 zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s] item in the received JSON object", param1, param2);
                                 SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s][%s] item in the received JSON object", param1, param2));
                                 free((void*) answer);
+                                json_decref(jp_data);
                                 return SYSINFO_RET_FAIL;
                             } else {
                                 // 3rd level
                                 if (request->nparam > 3)
                                 {
-                                    char *param3, api_value3[buffer_size];
+                                    char *param3;
                                     param3 = get_rparam(request, 3);
-                                    if (SUCCEED != zbx_json_value_by_name(&jp_data3, param3, api_value3, buffer_size))
+                                    const char *api_value3 = json_string_value(json_object_get(jp_data3, param3));
+                                    if (NULL == api_value3)
                                     {
                                         zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3);
                                         SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3));
                                         free((void*) answer);
+                                        json_decref(jp_data);
                                         return SYSINFO_RET_FAIL;
                                     } else {
                                         zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, param3, api_value3);
                                         SET_STR_RESULT(result, zbx_strdup(NULL, api_value3));
                                         free((void*) answer);
+                                        json_decref(jp_data);
                                         return SYSINFO_RET_OK;
                                     }
                                 } else {
+                                    const char *api_value2 = json_dumps(jp_data3, 0);
                                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found the received JSON object: %s", param1, param2, api_value2);
                                     SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
                                     free((void*) answer);
+                                    json_decref(jp_data);
                                     return SYSINFO_RET_OK;
                                 }
                             }
                         } else {
+                            const char *api_value2 = json_string_value(jp_data3);
                             zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found in the received JSON object: %s", param1, param2, api_value2);
                             SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
                             free((void*) answer);
+                            json_decref(jp_data);
                             return SYSINFO_RET_OK;
                         }
                     } else {
                         zabbix_log(LOG_LEVEL_WARNING, "Item [%s] found in the received JSON object, but it's not plain value object", param1);
                         SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Item [%s] found in the received JSON object, but it's not plain value object", param1));
                         free((void*) answer);
+                        json_decref(jp_data);
                         return SYSINFO_RET_FAIL;
                     }
                 }
             } else {
+                    const char* api_value = json_string_value(jp_data2);
                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s] found in the received JSON object: %s", param1, api_value);
                     SET_STR_RESULT(result, zbx_strdup(NULL, api_value));
                     free((void*) answer);
+                    json_decref(jp_data);
                     return SYSINFO_RET_OK;
             }
         }
         free((void*) answer);
+        json_decref(jp_data);
         return SYSINFO_RET_OK;
 }
 
@@ -2120,10 +2119,9 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
             if(strcmp(answer, "[]\n") != 0)
             {
-                struct zbx_json_parse	jp_data;
-                jp_data.start = &answer[0];
-                jp_data.end = &answer[strlen(answer)];
-                count = zbx_json_count(&jp_data);
+                json_t *jp_data = json_loads(answer, 0, NULL);
+                count = json_array_size(jp_data);
+                json_decref(jp_data);
             }
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
@@ -2136,7 +2134,6 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 // Exited = All - Up
                 // # All
                 const char *answer = zbx_module_docker_socket_query("GET /containers/json?all=1 HTTP/1.0\r\n\n", 0);
-                struct zbx_json_parse	jp_data;
                 int count = 0;
 
                 if(strcmp(answer, "") == 0)
@@ -2147,9 +2144,9 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 }
                 if(strcmp(answer, "[]\n") != 0)
                 {
-                    jp_data.start = &answer[0];
-                    jp_data.end = &answer[strlen(answer)];
-                    count = zbx_json_count(&jp_data);
+                    json_t *jp_data = json_loads(answer, 0, NULL);
+                    count = json_array_size(jp_data);
+                    json_decref(jp_data);
                 }
                 free((void*) answer);
 
@@ -2163,9 +2160,9 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 }
                 if(strcmp(answer2, "[]\n") != 0)
                 {
-                    jp_data.start = &answer2[0];
-                    jp_data.end = &answer2[strlen(answer2)];
-                    count = count - zbx_json_count(&jp_data);
+                    json_t *jp_data = json_loads(answer2, 0, NULL);
+                    count = count - json_array_size(jp_data);
+                    json_decref(jp_data);
                 }
                 free((void*) answer2);
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
@@ -2192,27 +2189,22 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                     }
 
                     int count = 0;
-            	    struct zbx_json_parse	jp_row;
+                    json_t *jp_row;
+                    size_t index;
             	    const char		*p = NULL;
-                    char status[cid_length];
 
                     // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                 	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
                 	/*         ^-------------------------------------------^  */
-                    struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+                    json_t *jp_data = json_loads(answer, 0, NULL);
                 	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
                 	/*          ^                                             */
-                	while (NULL != (p = zbx_json_next(&jp_data, p)))
+                    json_array_foreach(jp_data, index, jp_row)
                 	{
                 		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
                 		/*          ^------------------^                          */
-                		if (FAIL == zbx_json_brackets_open(p, &jp_row))
-                        {
-                            zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
-                            continue;
-                        }
-
-                        if (SUCCEED != zbx_json_value_by_name(&jp_row, "Status", status, cid_length))
+                        const char *status = json_string_value(json_object_get(jp_row, "Status"));
+                        if (NULL == status)
                         {
                             zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Status\" array in the received JSON object");
                             continue;
@@ -2229,6 +2221,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                     zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
                     SET_UI64_RESULT(result, count);
                     free((void*) answer);
+                    json_decref(jp_data);
                     return SYSINFO_RET_OK;
                 } else {
                     if (strcmp(state, "All") == 0)
@@ -2244,10 +2237,9 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                         }
                         if(strcmp(answer, "[]\n") != 0)
                         {
-                            struct zbx_json_parse	jp_data;
-                            jp_data.start = &answer[0];
-                            jp_data.end = &answer[strlen(answer)];
-                            count = zbx_json_count(&jp_data);
+                            json_t *jp_data = json_loads(answer, 0, NULL);
+                            count = json_array_size(jp_data);
+                            json_decref(jp_data);
                         }
                         free((void*) answer);
                         zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
@@ -2274,27 +2266,23 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                             }
 
                             int count = 0;
-                    	    struct zbx_json_parse	jp_row;
+                            json_t *jp_row;
+                            size_t index;
                     	    const char		*p = NULL;
-                            char status[cid_length];
 
                             // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                         	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
                         	/*         ^-------------------------------------------^  */
-                            struct zbx_json_parse jp_data = {&answer[0], &answer[strlen(answer)]};
+                            json_t *jp_data = json_loads(answer, 0, NULL);
                         	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
                         	/*          ^                                             */
-                        	while (NULL != (p = zbx_json_next(&jp_data, p)))
+                            json_array_foreach(jp_data, index, jp_row)
                         	{
                         		/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
                         		/*          ^------------------^                          */
-                        		if (FAIL == zbx_json_brackets_open(p, &jp_row))
-                                {
-                                    zabbix_log(LOG_LEVEL_WARNING, "Expected brackets, but zbx_json_brackets_open failed");
-                                    continue;
-                                }
+                                const char *status = json_string_value(json_object_get(jp_row, "Status"));
 
-                                if (SUCCEED != zbx_json_value_by_name(&jp_row, "Status", status, cid_length))
+                                if (NULL == status)
                                 {
                                     zabbix_log(LOG_LEVEL_WARNING, "Cannot find the \"Status\" array in the received JSON object");
                                     continue;
@@ -2307,6 +2295,7 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                             }
 
                             free((void*) answer);
+                            json_decref(jp_data);
                             zabbix_log(LOG_LEVEL_DEBUG, "Count of containers in %s status: %d", state, count);
                             SET_UI64_RESULT(result, count);
                             return SYSINFO_RET_OK;
@@ -2354,7 +2343,6 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
 
         char    *state;
         state = get_rparam(request, 0);
-        struct zbx_json_parse	jp_data;
         int count = 0;
 
         if (strcmp(state, "All") == 0)
@@ -2370,9 +2358,9 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
             if(strcmp(answer, "[]\n") != 0)
             {
-                jp_data.start = &answer[0];
-                jp_data.end = &answer[strlen(answer)];
-                count = zbx_json_count(&jp_data);
+                json_t *jp_data = json_loads(answer, 0, NULL);
+                count = json_array_size(jp_data);
+                json_decref(jp_data);
             }
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of images in %s status: %d", state, count);
@@ -2389,9 +2377,9 @@ int     zbx_module_docker_istatus(AGENT_REQUEST *request, AGENT_RESULT *result)
             }
             if(strcmp(answer, "[]\n") != 0)
             {
-                jp_data.start = &answer[0];
-                jp_data.end = &answer[strlen(answer)];
-                count = zbx_json_count(&jp_data);
+                json_t *jp_data = json_loads(answer, 0, NULL);
+                count = json_array_size(jp_data);
+                json_decref(jp_data);
             }
             free((void*) answer);
             zabbix_log(LOG_LEVEL_DEBUG, "Count of images in %s status: %d", state, count);
@@ -2454,19 +2442,20 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
             }
 
-            struct zbx_json_parse	jp_data, jp_data2;
+            json_t *jp_data = json_loads(answer, 0, NULL);
+            json_t *jp_data2 = json_object_get(jp_data, "Volumes");
             int count;
-            jp_data.start = &answer[0];
-            jp_data.end = &answer[strlen(answer)];
 
-            if (SUCCEED == zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
-                count = zbx_json_count(&jp_data2);
+            if (NULL != jp_data2) {
+                count = json_array_size(jp_data2);
                 free((void*) answer);
+                json_decref(jp_data);
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
                 SET_UI64_RESULT(result, count);
                 return SYSINFO_RET_OK;
             } else {
                 free((void*) answer);
+                json_decref(jp_data);
                 count = 0;
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
                 SET_UI64_RESULT(result, count);
@@ -2489,19 +2478,20 @@ int     zbx_module_docker_vstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                 return SYSINFO_RET_FAIL;
             }
 
-            struct zbx_json_parse	jp_data, jp_data2;
+            json_t *jp_data = json_loads(answer, 0, NULL);
+            json_t *jp_data2 = json_object_get(jp_data, "Volumes");
             int count;
-            jp_data.start = &answer[0];
-            jp_data.end = &answer[strlen(answer)];
 
-            if (SUCCEED == zbx_json_brackets_by_name(&jp_data, "Volumes", &jp_data2)) {
-                count = zbx_json_count(&jp_data2);
+            if (NULL != jp_data2) {
+                count = json_array_size(jp_data2);
                 free((void*) answer);
+                json_decref(jp_data);
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
                 SET_UI64_RESULT(result, count);
                 return SYSINFO_RET_OK;
             } else {
                 free((void*) answer);
+                json_decref(jp_data);
                 count = 0;
                 zabbix_log(LOG_LEVEL_DEBUG, "Count of volumes in %s status: %d", state, count);
                 SET_UI64_RESULT(result, count);

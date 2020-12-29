@@ -221,12 +221,12 @@ You have to compile the module if provided binary doesn't work on your system.
 Basic compilation steps (please use right Zabbix branch version):
 
 ```bash
-# Required CentOS/RHEL apps:   yum install -y wget autoconf automake gcc git pcre-devel
-# Required Debian/Ubuntu apps: apt-get install -y wget autoconf automake gcc git make pkg-config libpcre3-dev
-# Required Fedora apps:        dnf install -y wget autoconf automake gcc git make pcre-devel
-# Required openSUSE apps:      zypper install -y wget autoconf automake gcc git make pkg-config pcre-devel
+# Required CentOS/RHEL apps:   yum install -y wget autoconf automake gcc git pcre-devel jansson-devel
+# Required Debian/Ubuntu apps: apt-get install -y wget autoconf automake gcc git make pkg-config libpcre3-dev libjansson-dev
+# Required Fedora apps:        dnf install -y wget autoconf automake gcc git make pcre-devel jansson-devel
+# Required openSUSE apps:      zypper install -y wget autoconf automake gcc git make pkg-config pcre-devel libjansson-devel
 # Required Gentoo apps 1:      emerge net-misc/wget sys-devel/autoconf sys-devel/automake sys-devel/gcc
-# Required Gentoo apps 2:      emerge dev-vcs/git sys-devel/make dev-util/pkgconfig dev-libs/libpcre
+# Required Gentoo apps 2:      emerge dev-vcs/git sys-devel/make dev-util/pkgconfig dev-libs/libpcre dev-libs/jansson
 # Source, use your version:    git clone -b 4.2.2 --depth 1 https://github.com/zabbix/zabbix.git /usr/src/zabbix
 cd /usr/src/zabbix
 ./bootstrap.sh
