@@ -1,0 +1,1 @@
+c109112b23ab85a99c89862fd17e435566892fee  /tmp/ghpages/ubuntu20/5.0/zabbix_module_docker.so

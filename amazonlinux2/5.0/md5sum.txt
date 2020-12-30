@@ -1,0 +1,1 @@
+58fa5593dec3eeefdd888499218d49a3  /tmp/ghpages/amazonlinux2/5.0/zabbix_module_docker.so

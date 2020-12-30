@@ -1,0 +1,1 @@
+e40e53c50c23afd54aab6581697d6010  /tmp/ghpages/fedora32/4.0/zabbix_module_docker.so

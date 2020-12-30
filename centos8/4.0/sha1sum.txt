@@ -1,0 +1,1 @@
+f78993a0c9d3b5aa4887ad2104ffb244a8671b03  /tmp/ghpages/centos8/4.0/zabbix_module_docker.so

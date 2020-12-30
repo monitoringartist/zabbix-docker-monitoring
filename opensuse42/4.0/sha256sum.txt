@@ -1,0 +1,1 @@
+436de931ae48a199c9e61aa054490afadd3feea177480f6e4cd64070de621709  /tmp/ghpages/opensuse42/4.0/zabbix_module_docker.so

@@ -1,0 +1,1 @@
+88d6ea3eb02b19e754ad533964525743dc31cbaf  /tmp/ghpages/fedora33/5.0/zabbix_module_docker.so

@@ -1,0 +1,1 @@
+629c5bb28c78ddebab24974a22f16c48d1e8cb4c  /tmp/ghpages/ubuntu18/5.2/zabbix_module_docker.so
