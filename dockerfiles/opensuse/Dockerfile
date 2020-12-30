@@ -5,14 +5,16 @@ FROM opensuse/leap:latest
 
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
-# Define required Zabbix version (<version>) or release (release/<version>), e.g. 4.2.2, or release/4.2
-ARG ZABBIX_VERSION=release/5.2
-
 WORKDIR /root
 
 RUN \
-   zypper install --no-confirm --no-recommends git automake autoconf gcc make pkg-config pcre-devel libjansson-devel 1>/dev/null && \
+   zypper install --no-confirm --no-recommends git automake autoconf gcc make pkg-config pcre-devel libjansson-devel 1>/dev/null
+
+RUN \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring
+
+# Define required Zabbix version (<version>) or release (release/<version>), e.g. 4.2.2, or release/4.2
+ARG ZABBIX_VERSION=release/5.2
 
 RUN \
    git clone -b ${ZABBIX_VERSION} --depth 1 https://github.com/zabbix/zabbix.git ~/zabbix && \

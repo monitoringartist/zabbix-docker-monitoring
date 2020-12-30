@@ -1,46 +1,163 @@
-name: Build binaries
+name: Test and Build
 
-# Controls when the action will run. 
-on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ master ]
+on: [push, pull_request, workflow_dispatch]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  test:
+    name: CI tests
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-- name: Docker Login
-  # You may pin to the exact commit or the version.
-  # uses: docker/login-action@f3364599c6aa293cdc2b8391b1b56d0c30e45c8a
-  uses: docker/login-action@v1.8.0
-  with:
-    # Server address of Docker registry. If not set then will default to Docker Hub
-    registry: # optional
-    # Username used to log against the Docker registry
-    username: # optional
-    # Password or personal access token used to log against the Docker registry
-    password: # optional
-    # Log out from the Docker registry at the end of a job
-    logout: # optional, default is true
+      - name: Docker Login
+        uses: docker/login-action@v1.8.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_LOGIN }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Prepare Environment
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+         sudo apt-get -qq update
+         sudo ln -snf /usr/share/zoneinfo/UTC /etc/localtime
+         sudo apt-get -qq --assume-yes install git automake autoconf gcc make pkg-config libpcre3-dev libjansson-dev
+
+      - name: Build Zabbix binaries
+        run: |
+          ZABBIX_VERSION=release/5.2
+          git clone -b ${ZABBIX_VERSION} --depth 1 https://github.com/zabbix/zabbix.git ~/zabbix
+          cd ~/zabbix/
+          ./bootstrap.sh 1>/dev/null
+          ./configure --enable-agent 1>/dev/null
+          make
+          sudo make install
+          zabbix_agentd --version
+
+      - name: Build Docker module
+        run: |
+          cp -R $GITHUB_WORKSPACE/src/modules/zabbix_module_docker/ ~/zabbix/src/modules/
+          cd ~/zabbix/src/modules/zabbix_module_docker
+          make
+          cp zabbix_module_docker.so /tmp
+
+      - name: Run Zabbix Agent with Docker module
+        run: |
+         sudo zabbix_agentd -c $GITHUB_WORKSPACE/.github/workflows/zabbix_agentd.conf
+
+      - name: Run test container
+        run: sudo docker run -d --name testcontainer -e ENV=env --rm alpine sleep 600
+
+      - name: Test discovery 1 - zabbix_get -s 127.0.0.1 -k docker.discovery
+        run: |
+          NEED="testcontainer"
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.discovery)
+          if [[ ${RESP} != *${NEED}* ]]; then echo $RESP; exit 1; fi
+          echo $RESP
+
+      - name: Test discovery 2 - zabbix_get -s 127.0.0.1 -k docker.discovery[Config,Env,ENV=]
+        run: |
+          NEED="env"
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.discovery[Config,Env,ENV=])
+          if [[ ${RESP} != *${NEED}* ]]; then echo $RESP; exit 1; fi
+          echo $RESP
+
+      - name: Test cpu - zabbix_get -s 127.0.0.1 -k docker.cpu[/testcontainer,system]
+        run: |
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.cpu[/testcontainer,system])
+          echo $RESP
+
+      - name: Test mem - zabbix_get -s 127.0.0.1 -k docker.mem[/testcontainer,rss]
+        run: |
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.mem[/testcontainer,rss])
+          echo $RESP
+
+      - name: Test up - zabbix_get -s 127.0.0.1 -k docker.up[/testcontainer]
+        run: |
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.up[/testcontainer])
+          echo $RESP
+
+      - name: Test cstatus - zabbix_get -s 127.0.0.1 -k docker.cstatus[All]
+        run: |
+          NEED='^[0-9]+$'
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.cstatus[All])
+          if ! [[ ${RESP} =~ ${NEED} ]]; then echo $RESP; exit 1; fi
+          echo $RESP
+
+      - name: Test istatus - zabbix_get -s 127.0.0.1 -k docker.istatus[All]
+        run: |
+          NEED='^[0-9]+$'
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.istatus[All])
+          if ! [[ ${RESP} =~ ${NEED} ]]; then echo $RESP; exit 1; fi
+          echo $RESP
+
+      - name: Test vstatus - zabbix_get -s 127.0.0.1 -k docker.vstatus[All]
+        run: |
+          NEED='^[0-9]+$'
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.vstatus[All])
+          if ! [[ ${RESP} =~ ${NEED} ]]; then echo $RESP; exit 1; fi
+          echo $RESP
+
+      - name: Test modver - zabbix_get -s 127.0.0.1 -k docker.modver
+        run: |
+          RESP=$(zabbix_get -s 127.0.0.1 -k docker.modver)
+          echo $RESP
+
+      - name: Zabbix agent logs
+        run: cat /tmp/zabbix_agentd.log
+
+      - name: Cgroups structure /sys/fs/cgroup/
+        run: find /sys/fs/cgroup/ -type f
+
+      - name: Cgroups list /proc/cgroups
+        run: cat /proc/cgroups
+
+      - name: /proc/cmdline
+        run: cat /proc/cmdline
+
+      - name: cgroup versions
+        run: grep cgroup /proc/filesystems
+
+      - name: cgroup kernel config
+        run: cat /boot/config-* | grep CGROUP | grep -v ^#
+
+      - name: mounted cgroups
+        run: mount | grep cgroup     
+
+      - name: Docker info
+        run: sudo docker info
+
+  build:
+    name: Build binaries
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker Login
+        uses: docker/login-action@v1.8.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_LOGIN }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Build Binaries
+        run: pwd && ls -lah .github/workflows/ && .github/workflows/releases.sh
+
+      - name: List Artifacts
+        run: find /tmp/ghpages/ -type f 
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+
+      - name: Update Binaries
+        run: cp -R /tmp/ghpages/* .
+
+      - name: Commit Binaries
+        uses: EndBug/add-and-commit@v6
+        with:
+          branch: gh-pages
+          message: 'Binaries update by GitHub Action'
+

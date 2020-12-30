@@ -5,15 +5,17 @@ FROM debian:latest
 
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
-# Define required Zabbix version (<version>) or release (branches/<version>), e.g. 4.2.2, or release/4.2
-ARG ZABBIX_VERSION=release/5.2
-
 WORKDIR /root
 
 RUN \
    apt-get -qq update  1>/dev/null && \
-   apt-get -qq --assume-yes install git automake autoconf gcc make pkg-config libpcre3-dev libjansson-dev 1>/dev/null && \
+   apt-get -qq --assume-yes install git automake autoconf gcc make pkg-config libpcre3-dev libjansson-dev 1>/dev/null
+
+RUN \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring
+
+# Define required Zabbix version (<version>) or release (branches/<version>), e.g. 4.2.2, or release/4.2
+ARG ZABBIX_VERSION=release/5.2
 
 RUN \
    git clone -b ${ZABBIX_VERSION} --depth 1 https://github.com/zabbix/zabbix.git ~/zabbix && \
