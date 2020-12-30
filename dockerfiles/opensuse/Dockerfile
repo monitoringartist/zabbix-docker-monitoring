@@ -1,17 +1,17 @@
 # https://github.com/monitoringartist/zabbix-docker-monitoring
 
-# Define required Debian version by using FROM tag. Avalaible: wheezy/jessie/...
-FROM opensuse/leap:42.3
+# Define required openSuse version by using FROM tag. Avalaible: wheezy/jessie/...
+FROM opensuse/leap:latest
 
 MAINTAINER "Jan Garaj" <info@monitoringartist.com>
 
 # Define required Zabbix version (<version>) or release (release/<version>), e.g. 4.2.2, or release/4.2
-ENV ZABBIX_VERSION=release/4.2
+ARG ZABBIX_VERSION=release/5.2
 
 WORKDIR /root
 
 RUN \
-   zypper install --no-confirm --no-recommends git automake autoconf gcc make pkg-config pcre-devel 1>/dev/null && \
+   zypper install --no-confirm --no-recommends git automake autoconf gcc make pkg-config pcre-devel libjansson-devel 1>/dev/null && \
    git clone -q https://github.com/monitoringartist/zabbix-docker-monitoring
 
 RUN \
