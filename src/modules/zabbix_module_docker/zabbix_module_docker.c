@@ -44,7 +44,7 @@ struct inspect_result
 };
 struct timeval stimeout = { .tv_sec = 30, .tv_usec = 0 };
 
-char    *m_version = "v0.6.9";
+char    *m_version = "v0.7.0";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
 static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
