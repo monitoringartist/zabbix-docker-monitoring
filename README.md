@@ -2,8 +2,6 @@
 
 # Zabbix Docker Monitoring ![Build binaries](https://github.com/monitoringartist/zabbix-docker-monitoring/workflows/Test%20and%20Build/badge.svg) [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/monitoringartist/zabbix-docker-monitoring)
 
-----
-
 **Overview of Monitoring Artist (dockerized) monitoring ecosystem:**
 
 - **[Dockbix XXL](https://hub.docker.com/r/monitoringartist/dockbix-xxl/)** - Zabbix server/proxy/UI/snmpd/java gateway with additional extensions
