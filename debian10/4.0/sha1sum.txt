@@ -1,1 +1,1 @@
-83dadb24393a84f2387acea451990d0b1a5ba444  /tmp/ghpages/debian10/4.0/zabbix_module_docker.so
+ffeb4cbfbc29fa1cfa1a8785a53ba95e26d99ab5  zabbix_module_docker.so

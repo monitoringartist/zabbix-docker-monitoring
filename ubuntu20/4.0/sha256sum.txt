@@ -1,1 +1,1 @@
-bf24a5cadcbf1f6ec308cc6f2e79f1c6b1bca4eece21081a07b42cf072ba0d16  /tmp/ghpages/ubuntu20/4.0/zabbix_module_docker.so
+816aff24a1294b43a2beee4b123adbfe59c62727f3ec6500126cb7c27154a51e  zabbix_module_docker.so

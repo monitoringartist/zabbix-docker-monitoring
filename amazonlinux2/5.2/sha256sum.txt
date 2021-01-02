@@ -1,1 +1,1 @@
-670fc02c1f205bc7239716c82ed613d337ea9882690d3cd2fff74e4ddb41ad0f  /tmp/ghpages/amazonlinux2/5.2/zabbix_module_docker.so
+d9bc7e4815bc2876f7d39b12710c7aa9506d93e98dfc88aa74f0368c1aaa402b  zabbix_module_docker.so

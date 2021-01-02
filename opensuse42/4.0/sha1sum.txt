@@ -1,1 +1,1 @@
-885da23da8855e3f23f79b61d2f1b2ca36d8ff2e  /tmp/ghpages/opensuse42/4.0/zabbix_module_docker.so
+373fdc93ba0014ae38a4c4a903bf316f36971f94  zabbix_module_docker.so

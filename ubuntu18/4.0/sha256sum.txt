@@ -1,1 +1,1 @@
-29c04be0cf86bc15de9b13644a2dff29eb1133ea9ce5178bfebab1dfc3cc1deb  /tmp/ghpages/ubuntu18/4.0/zabbix_module_docker.so
+d3b43ff470858db85a294a4adac7395542881f6d174ca56d75b5fe119a137d7d  zabbix_module_docker.so
