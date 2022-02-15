@@ -1,0 +1,8 @@
+# compiled module
+*.so
+
+# clangd cache
+.cache/
+
+# compilation database
+compile_commands.json
