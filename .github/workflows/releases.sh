@@ -26,7 +26,7 @@ EOF
 
 set -e
 
-versions=(5.2 5.0 4.0)
+versions=(5.4 5.0 4.0)
 
 GREEN='\033[0;32m'
 NC='\033[0m'

@@ -31,7 +31,7 @@ jobs:
 
       - name: Build Zabbix binaries
         run: |
-          ZABBIX_VERSION=release/5.2
+          ZABBIX_VERSION=release/5.4
           git clone -b ${ZABBIX_VERSION} --depth 1 https://github.com/zabbix/zabbix.git ~/zabbix
           cd ~/zabbix/
           ./bootstrap.sh 1>/dev/null
