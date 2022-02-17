@@ -2018,8 +2018,8 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
                                 {
                                     char *param3;
                                     param3 = get_rparam(request, 3);
-                                    const char *api_value3 = json_string_value(json_object_get(jp_data3, param3));
-                                    if (NULL == api_value3)
+                                    json_t *jp_data4 = json_object_get(jp_data3, param3);
+                                    if (NULL == jp_data4)
                                     {
                                         zabbix_log(LOG_LEVEL_WARNING, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3);
                                         SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot find the [%s][%s][%s] item in the received JSON object", param1, param2, param3));
@@ -2027,8 +2027,9 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
                                         json_decref(jp_data);
                                         return SYSINFO_RET_FAIL;
                                     } else {
+                                        const char *api_value3 = json_dumps(jp_data4, JSON_ENCODE_ANY);
                                         zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s][%s] found in the received JSON object: %s", param1, param2, param3, api_value3);
-                                        SET_STR_RESULT(result, zbx_strdup(NULL, api_value3));
+                                        SET_STR_RESULT(result, api_value3);
                                         free((void*) answer);
                                         json_decref(jp_data);
                                         return SYSINFO_RET_OK;
@@ -2036,7 +2037,7 @@ int     zbx_module_docker_stats(AGENT_REQUEST *request, AGENT_RESULT *result)
                                 } else {
                                     const char *api_value2 = json_dumps(jp_data3, 0);
                                     zabbix_log(LOG_LEVEL_DEBUG, "Item [%s][%s] found the received JSON object: %s", param1, param2, api_value2);
-                                    SET_STR_RESULT(result, zbx_strdup(NULL, api_value2));
+                                    SET_STR_RESULT(result, api_value2);
                                     free((void*) answer);
                                     json_decref(jp_data);
                                     return SYSINFO_RET_OK;
