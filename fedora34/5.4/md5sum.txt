@@ -1,0 +1,1 @@
+44ba1a2e40d72e60d4a1ccbaa43c9a69  zabbix_module_docker.so
