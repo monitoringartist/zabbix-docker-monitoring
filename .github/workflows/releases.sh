@@ -8,14 +8,13 @@ mkdir /tmp/ghpages
 read -d '' systems << EOF
 amazonlinux2,amazonlinux:2
 amazonlinux1,amazonlinux:1
-centos8,centos:8
 centos7,centos:7
+debian11,debian:11
 debian10,debian:10
 debian9,debian:9
-debian8,debian:8
+fedora35,fedora:35
+fedora34,fedora:34
 fedora33,fedora:33
-fedora32,fedora:32
-fedora31,fedora:31
 opensuse15,opensuse/leap:15
 opensuse42,opensuse/leap:42
 ubuntu20,ubuntu:20.04
@@ -26,7 +25,7 @@ EOF
 
 set -e
 
-versions=(5.4 5.0 4.0)
+versions=(6.0 5.4 5.0 4.0)
 
 GREEN='\033[0;32m'
 NC='\033[0m'
