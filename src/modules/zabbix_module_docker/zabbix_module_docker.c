@@ -543,6 +543,7 @@ int zbx_module_docker_port_discovery(AGENT_REQUEST * request, AGENT_RESULT * res
   iresult = zbx_module_docker_inspect_exec(container, "HostConfig", "PortBindings", NULL);
   if (iresult.return_code == SYSINFO_RET_FAIL) {
     zabbix_log(LOG_LEVEL_DEBUG, "zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
+    free(iresult.value);
     return SYSINFO_RET_FAIL;
   }
 
@@ -1776,6 +1777,7 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
                         json_object_set_new(o, "{#HCONTAINERID}", json_string(names));
                     } else {
                         zabbix_log(LOG_LEVEL_DEBUG, "Default HCONTAINERID is used, because zbx_module_docker_inspect_exec FAIL: %s", iresult.value);
+                        free(iresult.value);
                         json_object_set_new(o, "{#HCONTAINERID}", json_string(names));
                     }
                 } else {
