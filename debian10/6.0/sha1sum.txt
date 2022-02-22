@@ -1,1 +1,1 @@
-128725182d114b8dc4720909b0f7bac159708747  zabbix_module_docker.so
+39e5a54e00f02041aa318337890adc6dca89e05c  zabbix_module_docker.so
