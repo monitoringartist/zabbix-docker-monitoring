@@ -46,7 +46,7 @@ struct timeval stimeout = { .tv_sec = 30, .tv_usec = 0 };
 
 char    *m_version = "v0.7.0";
 char    *stat_dir = NULL, *driver, *c_prefix = NULL, *c_suffix = NULL, *cpu_cgroup = NULL, *hostname = 0;
-static int item_timeout = 1, buffer_size = 1024, cid_length = 66, socket_api;
+static int item_timeout = 1, buffer_size = 1024, socket_api;
 int     zbx_module_docker_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_port_discovery(AGENT_REQUEST *request, AGENT_RESULT *result);
 int     zbx_module_docker_inspect(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -552,10 +552,8 @@ int zbx_module_docker_port_discovery(AGENT_REQUEST * request, AGENT_RESULT * res
   char container_port[6];
   int port_len;
   const char
-    *p2 = NULL,
     *proto = NULL,
     *request_proto = NULL;
-  json_t *jp_obj;
 
   json_t *a = json_array();
 
@@ -1687,7 +1685,6 @@ int     zbx_module_docker_discovery_extended(AGENT_REQUEST *request, AGENT_RESUL
         json_t *jp_row;
         size_t index;
         char scontainerid[13];
-        size_t  s_size;
 
         size_t hostname_len = 128;
         while (1) {
@@ -2192,7 +2189,6 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                     int count = 0;
                     json_t *jp_row;
                     size_t index;
-            	    const char		*p = NULL;
 
                     // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                 	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
@@ -2269,7 +2265,6 @@ int     zbx_module_docker_cstatus(AGENT_REQUEST *request, AGENT_RESULT *result)
                             int count = 0;
                             json_t *jp_row;
                             size_t index;
-                    	    const char		*p = NULL;
 
                             // skipped zbx_json_brackets_open and zbx_json_brackets_by_name
                         	/* {"data":[{"{#IFNAME}":"eth0"},{"{#IFNAME}":"lo"},...]} */
